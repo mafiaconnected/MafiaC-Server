@@ -1,0 +1,62 @@
+<!--
+	Please see https://wiki.gtaconnected.com/ServerConfiguration for a list of options and information
+-->
+
+<server>
+	<!-- General Information -->
+	<servername>Default Server</servername>
+	<game>mafia:one</game>
+	<gamemode>Free Roam</gamemode>
+	<serverbrowser>false</serverbrowser>
+	<maxplayers>32</maxplayers>
+	<password></password>
+	<minclientversion>1.0.0</minclientversion>
+	<duplicatenames>true</duplicatenames>
+	<mapname>FREERIDENOC</mapname>
+
+	<!-- Networking -->
+	<port>22000</port>
+	<httpport>22000</httpport>
+	<httpserver>true</httpserver>
+	<syncinterval>30</syncinterval>
+	<processinterval>30</processinterval>
+	<syncmethod>replay</syncmethod>
+	<compresspackets>false</compresspackets>
+	<packetcompressionlevel>default</packetcompressionlevel>
+	<synclocalentities>true</synclocalentities>
+
+	<!-- Element Streaming -->
+	<streamindistance>200</streamindistance>
+	<streamoutdistance>250</streamoutdistance>
+
+	<!-- Logging -->
+	<logpath>logs</logpath>
+	<logtimestamp>[%d/%m/%Y - %X]</logtimestamp>
+
+	<!-- Modules -->
+	<!-- https://wiki.gtaconnected.com/Modules -->
+	<modules>
+		<!--<module src="modules/mod_geoip_x64" />-->
+	</modules>
+
+	<!-- Global CVars -->
+	<!-- https://wiki.gtaconnected.com/CVars -->
+	<cvar name="nametags" value="1" />
+
+	<!-- Rules -->
+	<!-- https://wiki.gtaconnected.com/ServerRules -->
+	<rule name="Owner" value="Nobody" />
+	<rule name="Website" value="https://mafiaconnected.com" />
+
+	<!-- Resources -->
+	<!-- https://wiki.gtaconnected.com/Resources -->
+	<resources>
+		<resource src="freeroam" />
+		<resource src="runcode" />
+		<resource src="admin" />
+		<resource src="scoreboard" />
+		<resource src="playercolours" />
+		<resource src="chat" />
+		<resource src="joinquit" />
+	</resources>
+</server>
