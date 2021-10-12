@@ -22,7 +22,7 @@ void CUnleashedGameProtocolHandler::UpdateResponse()
 {
 	CLockable::CLock Lock(&m_Lock, true);
 
-	m_pResponse->m_ucGameID = m_pServer->m_GameId;
+	m_pResponse->m_ucGameID = (uint8_t)m_pServer->m_GameId;
 
 	_gstrcpy_s(m_pResponse->m_ServerInfo.m_szGameName, ARRAY_COUNT(m_pResponse->m_ServerInfo.m_szGameName), _gstr("Mafia Connected"));
 	m_pResponse->m_ServerInfo.m_bPassworded = m_pServer->m_Password.HasPassword();
