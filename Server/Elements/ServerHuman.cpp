@@ -96,12 +96,6 @@ bool CServerHuman::ReadCreatePacket(Stream* pStream)
 
 	CBinaryReader Reader(pStream);
 
-	//size_t size = 0;
-	//_gstrcpy_s(m_szModel, ARRAY_COUNT(m_szModel), Reader.ReadString(&size));
-
-	//Reader.ReadVector3D(&m_Position, 1);
-	//Reader.ReadVector3D(&m_Rotation, 1);
-
 	m_RelPosition = { 0,0,0 };
 	m_RelRotation = { 0,0,0 };
 
@@ -122,24 +116,16 @@ bool CServerHuman::ReadSyncPacket(Stream* pStream)
 
 	CBinaryReader Reader(pStream);
 
-	//Reader.ReadVector3D(&m_Position, 1);
-	//Reader.ReadVector3D(&m_RelPosition, 1);
-	//Reader.ReadVector3D(&m_Rotation, 1);
-	//Reader.ReadVector3D(&m_RelRotation, 1);
-
 	Reader.ReadSingle(&m_fHealth, 1);
 	Reader.ReadInt32(&m_nVehicleNetworkIndex, 1);
 	Reader.ReadBoolean(m_IsCrouching);
 	Reader.ReadBoolean(m_IsAiming);
 	Reader.ReadUInt8(&m_AnimationState, 1);
 
-	//auto machine = m_pServerManager->m_pNetMachines->GetMachine(GetSyncer());
-	//GChar szHost[256];
-	//machine->m_IPAddress.ToString(szHost, ARRAY_SIZE(szHost));
-	//_glogprintf(L"Got sync packet for element #%d (%s - ip %s):\n\tPosition: [%f, %f, %f]\n\tPos. difference: [%f, %f, %f]\n\tRotation: [%f, %f, %f]\n\tRot. difference: [%f, %f, %f]\n\tHealth: %f\n\tVehicle index: %d\n\tDucking: %s\n\tAiming: %s\n\tAnim state: %d", GetId(), machine->GetName(), szHost, m_Position.x, m_Position.y, m_Position.z, m_RelPosition.x, m_RelPosition.y, m_RelPosition.z, m_Rotation.x, m_Rotation.y, m_Rotation.z, m_RelRotation.x, m_RelRotation.y, m_RelRotation.z, m_fHealth, m_nVehicleNetworkIndex, m_IsCrouching ? L"Yes" : L"No", m_IsAiming ? L"Yes" : L"No", m_AnimationState);
-
-	CNetObject::SetPosition(m_Position);
-	CNetObject::SetRotation(m_Rotation);
+	auto machine = m_pServerManager->m_pNetMachines->GetMachine(GetSyncer());
+	GChar szHost[256];
+	machine->m_IPAddress.ToString(szHost, ARRAY_SIZE(szHost));
+	_glogprintf(L"Got sync packet for element #%d (%s - ip %s):\n\tPosition: [%f, %f, %f]\n\tPos. difference: [%f, %f, %f]\n\tRotation: [%f, %f, %f]\n\tRot. difference: [%f, %f, %f]\n\tHealth: %f\n\tVehicle index: %d\n\tDucking: %s\n\tAiming: %s\n\tAnim state: %d", GetId(), machine->GetName(), szHost, m_Position.x, m_Position.y, m_Position.z, m_RelPosition.x, m_RelPosition.y, m_RelPosition.z, m_Rotation.x, m_Rotation.y, m_Rotation.z, m_RelRotation.x, m_RelRotation.y, m_RelRotation.z, m_fHealth, m_nVehicleNetworkIndex, m_IsCrouching ? L"Yes" : L"No", m_IsAiming ? L"Yes" : L"No", m_AnimationState);
 
 	return true;
 }
@@ -151,14 +137,7 @@ bool CServerHuman::WriteCreatePacket(Stream* pStream)
 
 	CBinaryWriter Writer(pStream);
 
-	//_glogprintf(_gstr("WriteCreatePacket - Player Model: %s"), m_szModel);
-	//Writer.WriteString(m_szModel);
-
-	//m_RelPosition = { 0,0,0 };
-	//m_RelRotation = { 0,0,0 };
-
-	//Writer.WriteVector3D(&m_Position, 1);
-	//Writer.WriteVector3D(&m_Rotation, 1);
+	_glogprintf(_gstr("WriteCreatePacket - Player Model: %s"), m_szModel);
 
 	Writer.WriteSingle(&m_fHealth, 1);
 	Writer.WriteInt32(&m_nVehicleNetworkIndex, 1);
@@ -177,13 +156,6 @@ bool CServerHuman::WriteSyncPacket(Stream* pStream)
 
 	CBinaryWriter Writer(pStream);
 
-	//Writer.WriteInt32(&m_nRelativeElement, 1);
-
-	//Writer.WriteVector3D(&m_Position, 1);
-	//Writer.WriteVector3D(&m_RelPosition, 1);
-	//Writer.WriteVector3D(&m_Rotation, 1);
-	//Writer.WriteVector3D(&m_RelRotation, 1);
-
 	Writer.WriteSingle(&m_fHealth, 1);
 	Writer.WriteInt32(&m_nVehicleNetworkIndex, 1);
 	Writer.WriteBoolean(m_IsCrouching);
@@ -191,10 +163,10 @@ bool CServerHuman::WriteSyncPacket(Stream* pStream)
 	Writer.WriteUInt8(&m_AnimationState, 1);
 	//Writer.WriteUInt32(&m_Behavior, 1);
 
-	//auto machine = m_pServerManager->m_pNetMachines->GetMachine(GetSyncer());
-	//GChar szHost[256];
-	//machine->m_IPAddress.ToString(szHost, ARRAY_SIZE(szHost));
-	//_glogprintf(L"Sent sync packet for element #%d (%s - ip %s):\n\tPosition: [%f, %f, %f]\n\tPos. difference: [%f, %f, %f]\n\tRotation: [%f, %f, %f]\n\tRot. difference: [%f, %f, %f]\n\tHealth: %f\n\tVehicle index: %d\n\tDucking: %s\n\tAiming: %s\n\tAnim state: %d", GetId(), machine->GetName(), szHost, m_Position.x, m_Position.y, m_Position.z, m_RelPosition.x, m_RelPosition.y, m_RelPosition.z, m_Rotation.x, m_Rotation.y, m_Rotation.z, m_RelRotation.x, m_RelRotation.y, m_RelRotation.z, m_fHealth, m_nVehicleNetworkIndex, m_IsCrouching ? L"Yes" : L"No", m_IsAiming ? L"Yes" : L"No", m_AnimationState);
+	auto machine = m_pServerManager->m_pNetMachines->GetMachine(GetSyncer());
+	GChar szHost[256];
+	machine->m_IPAddress.ToString(szHost, ARRAY_SIZE(szHost));
+	_glogprintf(L"Sent sync packet for element #%d (%s - ip %s):\n\tPosition: [%f, %f, %f]\n\tPos. difference: [%f, %f, %f]\n\tRotation: [%f, %f, %f]\n\tRot. difference: [%f, %f, %f]\n\tHealth: %f\n\tVehicle index: %d\n\tDucking: %s\n\tAiming: %s\n\tAnim state: %d", GetId(), machine->GetName(), szHost, m_Position.x, m_Position.y, m_Position.z, m_RelPosition.x, m_RelPosition.y, m_RelPosition.z, m_Rotation.x, m_Rotation.y, m_Rotation.z, m_RelRotation.x, m_RelRotation.y, m_RelRotation.z, m_fHealth, m_nVehicleNetworkIndex, m_IsCrouching ? L"Yes" : L"No", m_IsAiming ? L"Yes" : L"No", m_AnimationState);
 
 	return true;
 }
