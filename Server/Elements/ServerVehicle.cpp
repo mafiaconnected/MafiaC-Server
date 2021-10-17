@@ -46,8 +46,6 @@ bool CServerVehicle::ReadCreatePacket(Stream* pStream)
 	if (!CServerEntity::ReadSyncPacket(pStream))
 		return false;
 
-	CBinaryReader Reader(pStream);
-
 	m_RelPosition = { 0,0,0 };
 	m_RelRotation = { 0,0,0 };
 
@@ -86,8 +84,6 @@ bool CServerVehicle::ReadSyncPacket(Stream* pStream)
 	if (!CServerEntity::ReadSyncPacket(pStream))
 		return false;
 
-	Galactic3D::CBinaryReader Reader(pStream);
-
 	tVehicleSyncPacket Packet;
 
 	if (pStream->Read(&Packet, sizeof(Packet)) != sizeof(Packet))
@@ -123,8 +119,6 @@ bool CServerVehicle::WriteCreatePacket(Stream* pStream)
 	if (!CServerEntity::WriteCreatePacket(pStream))
 		return false;
 
-	CBinaryWriter Writer(pStream);
-
 	tVehicleCreatePacket Packet;
 
 	Packet.health = m_Health;
@@ -159,8 +153,6 @@ bool CServerVehicle::WriteSyncPacket(Stream* pStream)
 {
 	if (!CServerEntity::WriteSyncPacket(pStream))
 		return false;
-
-	CBinaryWriter Writer(pStream);
 
 	tVehicleCreatePacket Packet;
 
