@@ -96,11 +96,11 @@ bool CServerHuman::ReadCreatePacket(Stream* pStream)
 
 	CBinaryReader Reader(pStream);
 
-	size_t size = 0;
-	_gstrcpy_s(m_szModel, ARRAY_COUNT(m_szModel), Reader.ReadString(&size));
+	//size_t size = 0;
+	//_gstrcpy_s(m_szModel, ARRAY_COUNT(m_szModel), Reader.ReadString(&size));
 
-	Reader.ReadVector3D(&m_Position, 1);
-	Reader.ReadVector3D(&m_Rotation, 1);
+	//Reader.ReadVector3D(&m_Position, 1);
+	//Reader.ReadVector3D(&m_Rotation, 1);
 
 	m_RelPosition = { 0,0,0 };
 	m_RelRotation = { 0,0,0 };
@@ -122,10 +122,10 @@ bool CServerHuman::ReadSyncPacket(Stream* pStream)
 
 	CBinaryReader Reader(pStream);
 
-	Reader.ReadVector3D(&m_Position, 1);
-	Reader.ReadVector3D(&m_RelPosition, 1);
-	Reader.ReadVector3D(&m_Rotation, 1);
-	Reader.ReadVector3D(&m_RelRotation, 1);
+	//Reader.ReadVector3D(&m_Position, 1);
+	//Reader.ReadVector3D(&m_RelPosition, 1);
+	//Reader.ReadVector3D(&m_Rotation, 1);
+	//Reader.ReadVector3D(&m_RelRotation, 1);
 
 	Reader.ReadSingle(&m_fHealth, 1);
 	Reader.ReadInt32(&m_nVehicleNetworkIndex, 1);
@@ -152,13 +152,13 @@ bool CServerHuman::WriteCreatePacket(Stream* pStream)
 	CBinaryWriter Writer(pStream);
 
 	//_glogprintf(_gstr("WriteCreatePacket - Player Model: %s"), m_szModel);
-	Writer.WriteString(m_szModel);
+	//Writer.WriteString(m_szModel);
 
-	m_RelPosition = { 0,0,0 };
-	m_RelRotation = { 0,0,0 };
+	//m_RelPosition = { 0,0,0 };
+	//m_RelRotation = { 0,0,0 };
 
-	Writer.WriteVector3D(&m_Position, 1);
-	Writer.WriteVector3D(&m_Rotation, 1);
+	//Writer.WriteVector3D(&m_Position, 1);
+	//Writer.WriteVector3D(&m_Rotation, 1);
 
 	Writer.WriteSingle(&m_fHealth, 1);
 	Writer.WriteInt32(&m_nVehicleNetworkIndex, 1);
@@ -179,10 +179,10 @@ bool CServerHuman::WriteSyncPacket(Stream* pStream)
 
 	//Writer.WriteInt32(&m_nRelativeElement, 1);
 
-	Writer.WriteVector3D(&m_Position, 1);
-	Writer.WriteVector3D(&m_RelPosition, 1);
-	Writer.WriteVector3D(&m_Rotation, 1);
-	Writer.WriteVector3D(&m_RelRotation, 1);
+	//Writer.WriteVector3D(&m_Position, 1);
+	//Writer.WriteVector3D(&m_RelPosition, 1);
+	//Writer.WriteVector3D(&m_Rotation, 1);
+	//Writer.WriteVector3D(&m_RelRotation, 1);
 
 	Writer.WriteSingle(&m_fHealth, 1);
 	Writer.WriteInt32(&m_nVehicleNetworkIndex, 1);
