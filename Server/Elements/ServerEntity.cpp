@@ -106,14 +106,17 @@ bool CServerEntity::ReadCreatePacket(Stream* pStream)
 		return false;
 
 	CBinaryReader Reader(pStream);
-	Reader.ReadVector3D(&m_Position, 1);
-	Reader.ReadVector3D(&m_Rotation, 1);
-
-	m_RelPosition = m_Position;
-	m_RelRotation = m_Rotation;
 
 	size_t size;
 	_gstrcpy_s(m_szModel, ARRAY_COUNT(m_szModel), Reader.ReadString(&size));
+
+	Reader.ReadVector3D(&m_Position, 1);
+	Reader.ReadVector3D(&m_RelPosition, 1);
+	Reader.ReadVector3D(&m_Rotation, 1);
+	Reader.ReadVector3D(&m_RelRotation, 1);
+
+	m_RelPosition = m_Position;
+	m_RelRotation = m_Rotation;
 
 	return true;
 }
@@ -159,7 +162,9 @@ bool CServerEntity::WriteSyncPacket(Stream* pStream)
 	CBinaryWriter Writer(pStream);
 
 	Writer.WriteVector3D(&m_Position, 1);
+	Writer.WriteVector3D(&m_RelPosition, 1);
 	Writer.WriteVector3D(&m_Rotation, 1);
+	Writer.WriteVector3D(&m_RelRotation, 1);
 	return true;
 }
 
