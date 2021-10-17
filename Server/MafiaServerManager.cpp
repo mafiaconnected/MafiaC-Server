@@ -49,7 +49,7 @@ CMafiaServerManager::CMafiaServerManager(Context* pContext, CServer* pServer) :
 	auto pMafia = m_pServer->m_ResourceMgr.m_pScripting->m_Global.AddNamespace(_gstr("mafia"));
 	pMafia->SetAlias(_gstr("game"));
 
-	m_pServerEntityClass = pMafia->NewClass(_gstr("Entity"), m_pNetObjectTransformableClass);
+	m_pServerEntityClass = pMafia->NewClass(_gstr("Entity"), m_pNetObjectClass);
 	m_pServerHumanClass = pMafia->NewClass(_gstr("Ped"), m_pServerEntityClass);
 	m_pServerPlayerClass = pMafia->NewClass(_gstr("Player"), m_pServerHumanClass);
 	m_pServerVehicleClass = pMafia->NewClass(_gstr("Vehicle"), m_pServerEntityClass);
@@ -906,10 +906,10 @@ void CMafiaServerManager::RegisterFunctions(CScripting* pScripting)
 		m_pServerEntityClass->AddProperty(this, _gstr("heading"), ARGUMENT_FLOAT, FunctionEntityGetHeading, FunctionEntitySetHeading);
 	}
 
-	{
-		m_pNetObjectTransformableClass->AddProperty(this, _gstr("streamInDistance"), ARGUMENT_FLOAT, FunctionEntityGetStreamInDistance, FunctionEntitySetStreamInDistance);
-		m_pNetObjectTransformableClass->AddProperty(this, _gstr("streamOutDistance"), ARGUMENT_FLOAT, FunctionEntityGetStreamOutDistance, FunctionEntitySetStreamOutDistance);
-	}
+	//{
+	//	m_pNetObjectTransformableClass->AddProperty(this, _gstr("streamInDistance"), ARGUMENT_FLOAT, FunctionEntityGetStreamInDistance, FunctionEntitySetStreamInDistance);
+	//	m_pNetObjectTransformableClass->AddProperty(this, _gstr("streamOutDistance"), ARGUMENT_FLOAT, FunctionEntityGetStreamOutDistance, FunctionEntitySetStreamOutDistance);
+	//}
 
 	//{
 	//	m_pServerEntityClass->AddProperty(this, _gstr("velocity"), ARGUMENT_VECTOR3D, FunctionEntityGetVelocity, FunctionEntitySetVelocity);
