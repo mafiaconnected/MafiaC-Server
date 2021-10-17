@@ -88,30 +88,32 @@ bool CServerVehicle::ReadSyncPacket(Stream* pStream)
 
 	Galactic3D::CBinaryReader Reader(pStream);
 
-	Reader.ReadSingle(&m_Health, 1);
-	Reader.ReadSingle(&m_EngineHealth, 1);
-	Reader.ReadSingle(&m_Fuel, 1);
-	Reader.ReadBoolean(m_Engine);
+	tVehicleSyncPacket Packet;
 
-	Reader.ReadBoolean(m_SoundEnabled);
-	Reader.ReadBoolean(m_Horn);
-	Reader.ReadBoolean(m_Siren);
-	Reader.ReadBoolean(m_Lights);
+	if (pStream->Read(&Packet, sizeof(Packet)) != sizeof(Packet))
+		return false;
 
-	Reader.ReadInt32(&m_Gear, 1);
-	Reader.ReadSingle(&m_EngineRPM, 1);
-	Reader.ReadSingle(&m_Accelerating, 1);
-	Reader.ReadSingle(&m_Breakval, 1);
-	Reader.ReadSingle(&m_Handbrake, 1);
-	Reader.ReadSingle(&m_SpeedLimit, 1);
-	Reader.ReadSingle(&m_Clutch, 1);
-	Reader.ReadSingle(&m_WheelAngle, 1);
+	m_Health = Packet.health;
+	m_EngineHealth = Packet.engineHealth;
+	m_Fuel = Packet.fuel;
 
-	Reader.ReadVector3D(&m_Velocity, 1);
-	Reader.ReadVector3D(&m_RotVelocity, 1);
+	m_SoundEnabled = Packet.sound;
+	m_Engine = Packet.engineOn;
+	m_Horn = Packet.horn;
+	m_Siren = Packet.siren;
+	m_Lights = Packet.lights;
 
-	CServerEntity::SetPosition(m_Position);
-	CServerEntity::SetRotation(m_Rotation);
+	m_Gear = Packet.gear;
+	m_EngineRPM = Packet.rpm;
+	m_Accelerating = Packet.accel;
+	m_Breakval = Packet.brake;
+	m_Handbrake = Packet.handBrake;
+	m_SpeedLimit = Packet.speedLimit;
+	m_Clutch = Packet.clutch;
+	m_WheelAngle = Packet.wheelAngle;
+
+	m_Velocity = Packet.speed;
+	m_RotVelocity = Packet.rotSpeed;
 
 	return true;
 }
@@ -160,34 +162,39 @@ bool CServerVehicle::WriteSyncPacket(Stream* pStream)
 
 	CBinaryWriter Writer(pStream);
 
-	Writer.WriteSingle(&m_Health, 1);
-	Writer.WriteSingle(&m_EngineHealth, 1);
-	Writer.WriteSingle(&m_Fuel, 1);
+	tVehicleCreatePacket Packet;
 
-	Writer.WriteBoolean(m_SoundEnabled);
-	Writer.WriteBoolean(m_Engine);
-	Writer.WriteBoolean(m_Horn);
-	Writer.WriteBoolean(m_Siren);
-	Writer.WriteBoolean(m_Lights);
+	Packet.health = m_Health;
+	Packet.engineHealth = m_EngineHealth;
+	Packet.fuel = m_Fuel;
 
-	Writer.WriteInt32(&m_Gear, 1);
-	Writer.WriteSingle(&m_EngineRPM, 1);
-	Writer.WriteSingle(&m_Accelerating, 1);
-	Writer.WriteSingle(&m_Breakval, 1);
-	Writer.WriteSingle(&m_Handbrake, 1);
-	Writer.WriteSingle(&m_SpeedLimit, 1);
-	Writer.WriteSingle(&m_Clutch, 1);
-	Writer.WriteSingle(&m_WheelAngle, 1);
+	Packet.sound = m_SoundEnabled;
+	Packet.engineOn = m_Engine;
+	Packet.horn = m_Horn;
+	Packet.siren = m_Siren;
+	Packet.lights = m_Lights;
 
-	Writer.WriteVector3D(&m_Velocity, 1);
-	Writer.WriteVector3D(&m_RotVelocity, 1);
+	Packet.gear = m_Gear;
+	Packet.rpm = m_EngineRPM;
+	Packet.accel = m_Accelerating;
+	Packet.brake = m_Breakval;
+	Packet.handBrake = m_Handbrake;
+	Packet.speedLimit = m_SpeedLimit;
+	Packet.clutch = m_Clutch;
+	Packet.wheelAngle = m_WheelAngle;
+
+	Packet.speed = m_Velocity;
+	Packet.rotSpeed = m_RotVelocity;
+
+	if (pStream->Write(&Packet, sizeof(Packet)) != sizeof(Packet))
+		return false;
 
 	return true;
 }
 
 void CServerVehicle::SetModel(const GChar* sModel)
 {
-	_gstrcpy_s(m_szModel, ARRAY_COUNT(m_szModel), sModel);
+	CServerEntity::SetModel(sModel);
 }
 
 void CServerVehicle::Remove(void)

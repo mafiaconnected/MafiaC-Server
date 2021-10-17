@@ -105,18 +105,20 @@ bool CServerEntity::ReadCreatePacket(Stream* pStream)
 	if (!CNetObject::ReadCreatePacket(pStream))
 		return false;
 
-	CBinaryReader Reader(pStream);
+	tEntityCreatePacket Packet;
 
-	size_t size;
-	_gstrcpy_s(m_szModel, ARRAY_COUNT(m_szModel), Reader.ReadString(&size));
+	if (pStream->Read(&Packet, sizeof(Packet)) != sizeof(Packet))
+		return false;
 
-	Reader.ReadVector3D(&m_Position, 1);
-	Reader.ReadVector3D(&m_RelPosition, 1);
-	Reader.ReadVector3D(&m_Rotation, 1);
-	Reader.ReadVector3D(&m_RelRotation, 1);
+	_gstrcpy_s(m_szModel, ARRAY_COUNT(m_szModel), Packet.model);
 
-	m_RelPosition = m_Position;
-	m_RelRotation = m_Rotation;
+	m_Position = Packet.position;
+	m_RelPosition = Packet.positionRel;
+	m_Rotation = Packet.rotation;
+	m_RelRotation = Packet.rotationRel;
+
+	//m_RelPosition = m_Position;
+	//m_RelRotation = m_Rotation;
 
 	return true;
 }
@@ -126,15 +128,15 @@ bool CServerEntity::ReadSyncPacket(Stream* pStream)
 	if (!CNetObject::ReadSyncPacket(pStream))
 		return false;
 
-	CBinaryReader Reader(pStream);
+	tEntitySyncPacket Packet;
 
-	Reader.ReadVector3D(&m_Position, 1);
-	Reader.ReadVector3D(&m_RelPosition, 1);
-	Reader.ReadVector3D(&m_Rotation, 1);
-	Reader.ReadVector3D(&m_RelRotation, 1);
+	if (pStream->Read(&Packet, sizeof(Packet)) != sizeof(Packet))
+		return false;
 
-	CNetObject::SetPosition(m_Position);
-	CNetObject::SetRotation(m_Rotation);
+	m_Position = Packet.position;
+	m_RelPosition = Packet.positionRel;
+	m_Rotation = Packet.rotation;
+	m_RelRotation = Packet.rotationRel;
 
 	return true;
 }
@@ -144,13 +146,18 @@ bool CServerEntity::WriteCreatePacket(Stream* pStream)
 	if (!CNetObject::WriteCreatePacket(pStream))
 		return false;
 
-	CBinaryWriter Writer(pStream);
+	tEntityCreatePacket Packet;
 
-	Writer.WriteString(m_szModel);
-	Writer.WriteVector3D(&m_Position, 1);
-	Writer.WriteVector3D(&m_RelPosition, 1);
-	Writer.WriteVector3D(&m_Rotation, 1);
-	Writer.WriteVector3D(&m_RelRotation, 1);
+	_gstrcpy_s(Packet.model, ARRAY_COUNT(Packet.model), m_szModel);
+
+	Packet.position = m_Position;
+	Packet.positionRel = m_RelPosition;
+	Packet.rotation = m_Rotation;
+	Packet.rotationRel = m_RelRotation;
+
+	if (pStream->Write(&Packet, sizeof(Packet)) != sizeof(Packet))
+		return false;
+
 	return true;
 }
 
@@ -159,12 +166,16 @@ bool CServerEntity::WriteSyncPacket(Stream* pStream)
 	if (!CNetObject::WriteSyncPacket(pStream))
 		return false;
 
-	CBinaryWriter Writer(pStream);
+	tEntityCreatePacket Packet;
 
-	Writer.WriteVector3D(&m_Position, 1);
-	Writer.WriteVector3D(&m_RelPosition, 1);
-	Writer.WriteVector3D(&m_Rotation, 1);
-	Writer.WriteVector3D(&m_RelRotation, 1);
+	Packet.position = m_Position;
+	Packet.positionRel = m_RelPosition;
+	Packet.rotation = m_Rotation;
+	Packet.rotationRel = m_RelRotation;
+
+	if (pStream->Write(&Packet, sizeof(Packet)) != sizeof(Packet))
+		return false;
+
 	return true;
 }
 

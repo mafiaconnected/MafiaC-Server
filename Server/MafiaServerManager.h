@@ -82,7 +82,7 @@ public:
 	CVector3D m_RelPosition;
 	CVector3D m_Rotation;
 	CVector3D m_RelRotation;
-	GChar m_szModel[32];
+	GChar m_szModel[64];
 	unsigned char m_ucInterior;
 	int32_t m_nRelativeElement;
 	CVector3D m_vecRelativePos;
@@ -133,8 +133,6 @@ class CServerHuman : public CServerEntity
 {
 public:
 	CServerHuman(CMafiaServerManager* pServerManager);
-
-	GChar m_szModel[32];
 
 	InventoryItem items[8];
 

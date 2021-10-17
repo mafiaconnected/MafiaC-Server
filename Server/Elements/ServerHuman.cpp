@@ -20,7 +20,7 @@ float CServerHuman::GetHeading(void)
 
 void CServerHuman::SetModel(const GChar* sModel)
 {
-	_gstrcpy_s(m_szModel, ARRAY_COUNT(m_szModel), sModel);
+	CServerEntity::SetModel(sModel);
 
 	if (GetId() != INVALID_NETWORK_ID)
 	{
@@ -91,36 +91,42 @@ bool CServerHuman::ShouldDeleteForMachine(CNetMachine* pClient)
 
 bool CServerHuman::ReadCreatePacket(Stream* pStream)
 {
-	if (!CNetObject::ReadCreatePacket(pStream))
+	if (!CServerEntity::ReadCreatePacket(pStream))
 		return false;
 
-	CBinaryReader Reader(pStream);
+	tHumanSyncPacket Packet;
+
+	if (pStream->Read(&Packet, sizeof(Packet)) != sizeof(Packet))
+		return false;
+
+	m_fHealth = Packet.health;
+	m_nVehicleNetworkIndex = Packet.vehicleNetworkIndex;
+	m_ucSeat = Packet.seat;
+	m_IsCrouching = Packet.isCrouching;
+	m_IsAiming = Packet.isAiming;
+	m_AnimationState = Packet.animationState;
 
 	m_RelPosition = { 0,0,0 };
 	m_RelRotation = { 0,0,0 };
-
-	Reader.ReadSingle(&m_fHealth, 1);
-	Reader.ReadInt32(&m_nVehicleNetworkIndex, 1);
-	Reader.ReadUInt32((Uint32*)&m_ucSeat, 1);
-	Reader.ReadBoolean(m_IsCrouching);
-	Reader.ReadBoolean(m_IsAiming);
-	Reader.ReadUInt8(&m_AnimationState, 1);
 
 	return true;
 }
 
 bool CServerHuman::ReadSyncPacket(Stream* pStream)
 {
-	if (!CNetObject::ReadSyncPacket(pStream))
+	if (!CServerEntity::ReadSyncPacket(pStream))
 		return false;
 
-	CBinaryReader Reader(pStream);
+	tHumanSyncPacket Packet;
 
-	Reader.ReadSingle(&m_fHealth, 1);
-	Reader.ReadInt32(&m_nVehicleNetworkIndex, 1);
-	Reader.ReadBoolean(m_IsCrouching);
-	Reader.ReadBoolean(m_IsAiming);
-	Reader.ReadUInt8(&m_AnimationState, 1);
+	if (pStream->Read(&Packet, sizeof(Packet)) != sizeof(Packet))
+		return false;
+
+	m_fHealth = Packet.health;
+	m_nVehicleNetworkIndex = Packet.vehicleNetworkIndex;
+	m_IsCrouching = Packet.isCrouching;
+	m_IsAiming = Packet.isAiming;
+	m_AnimationState = Packet.animationState;
 
 	auto machine = m_pServerManager->m_pNetMachines->GetMachine(GetSyncer());
 	GChar szHost[256];
@@ -132,36 +138,39 @@ bool CServerHuman::ReadSyncPacket(Stream* pStream)
 
 bool CServerHuman::WriteCreatePacket(Stream* pStream)
 {
-	if (!CNetObject::WriteCreatePacket(pStream))
+	if (!CServerEntity::WriteCreatePacket(pStream))
 		return false;
 
-	CBinaryWriter Writer(pStream);
+	tHumanCreatePacket Packet;
 
-	_glogprintf(_gstr("WriteCreatePacket - Player Model: %s"), m_szModel);
+	Packet.health = m_fHealth;
+	Packet.vehicleNetworkIndex = m_nVehicleNetworkIndex;
+	Packet.seat = m_ucSeat;
+	Packet.isCrouching = m_IsCrouching;
+	Packet.isAiming = m_IsAiming;
+	Packet.animationState = m_AnimationState;
 
-	Writer.WriteSingle(&m_fHealth, 1);
-	Writer.WriteInt32(&m_nVehicleNetworkIndex, 1);
-	Writer.WriteUInt32((Uint32*)&m_ucSeat, 1);
-	Writer.WriteBoolean(m_IsCrouching);
-	Writer.WriteBoolean(m_IsAiming);
-	Writer.WriteUInt8(&m_AnimationState, 1);
+	if (pStream->Write(&Packet, sizeof(Packet)) != sizeof(Packet))
+		return false;
 
 	return true;
 }
 
 bool CServerHuman::WriteSyncPacket(Stream* pStream)
 {
-	if (!CNetObject::WriteSyncPacket(pStream))
+	if (!CServerEntity::WriteSyncPacket(pStream))
 		return false;
 
-	CBinaryWriter Writer(pStream);
+	tHumanSyncPacket Packet;
 
-	Writer.WriteSingle(&m_fHealth, 1);
-	Writer.WriteInt32(&m_nVehicleNetworkIndex, 1);
-	Writer.WriteBoolean(m_IsCrouching);
-	Writer.WriteBoolean(m_IsAiming);
-	Writer.WriteUInt8(&m_AnimationState, 1);
-	//Writer.WriteUInt32(&m_Behavior, 1);
+	Packet.health = m_fHealth;
+	Packet.vehicleNetworkIndex = m_nVehicleNetworkIndex;
+	Packet.isCrouching = m_IsCrouching;
+	Packet.isAiming = m_IsAiming;
+	Packet.animationState = m_AnimationState;
+
+	if (pStream->Write(&Packet, sizeof(Packet)) != sizeof(Packet))
+		return false;
 
 	auto machine = m_pServerManager->m_pNetMachines->GetMachine(GetSyncer());
 	GChar szHost[256];

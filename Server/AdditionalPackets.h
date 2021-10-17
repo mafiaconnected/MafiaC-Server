@@ -69,18 +69,53 @@ enum eMafiaPacket : unsigned int
 	MAFIAPACKET_VEHICLE_SETDAMAGE,
 };
 
+struct tEntityCreatePacket
+{
+	GChar model[64];
+	CVector3D position;
+	CVector3D positionRel;
+	CVector3D rotation;
+	CVector3D rotationRel;
+};
+
+struct tEntitySyncPacket
+{
+	CVector3D position;
+	CVector3D positionRel;
+	CVector3D rotation;
+	CVector3D rotationRel;
+};
+
+struct tHumanCreatePacket
+{
+	float health;
+	uint32_t vehicleNetworkIndex;
+	uint32_t seat;
+	bool isCrouching;
+	bool isAiming;
+	uint8_t animationState;
+};
+
+struct tHumanSyncPacket
+{
+	float health;
+	uint32_t vehicleNetworkIndex;
+	uint32_t seat;
+	bool isCrouching;
+	bool isAiming;
+	uint8_t animationState;
+};
+
 struct tVehicleCreatePacket
 {
 	float health;
 	float engineHealth;
 	float fuel;
-
 	bool sound;
 	bool engineOn;
 	bool horn;
 	bool siren;
 	bool lights;
-
 	int32_t gear;
 	float rpm;
 	float accel;
@@ -89,7 +124,28 @@ struct tVehicleCreatePacket
 	float speedLimit;
 	float clutch;
 	float wheelAngle;
+	CVector3D speed;
+	CVector3D rotSpeed;
+};
 
+struct tVehicleSyncPacket
+{
+	float health;
+	float engineHealth;
+	float fuel;
+	bool sound;
+	bool engineOn;
+	bool horn;
+	bool siren;
+	bool lights;
+	int32_t gear;
+	float rpm;
+	float accel;
+	float brake;
+	float handBrake;
+	float speedLimit;
+	float clutch;
+	float wheelAngle;
 	CVector3D speed;
 	CVector3D rotSpeed;
 };
