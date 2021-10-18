@@ -165,6 +165,7 @@ bool CServerHuman::WriteSyncPacket(Stream* pStream)
 
 	Packet.health = m_fHealth;
 	Packet.vehicleNetworkIndex = m_nVehicleNetworkIndex;
+	Packet.seat = m_ucSeat;
 	Packet.isCrouching = m_IsCrouching;
 	Packet.isAiming = m_IsAiming;
 	Packet.animationState = m_AnimationState;
