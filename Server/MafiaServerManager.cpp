@@ -449,14 +449,15 @@ static bool FunctionSpawnPlayer(IScriptState* pState, int argc, void* pUser)
 	CMafiaClient* pClient;
 	if (!pState->CheckClass(pServerManager->m_pServer->m_pManager->m_pNetMachineClass, 0, false, &pClient))
 		return false;
+
+	const GChar* sModel = pState->CheckString(1);
+
 	CVector3D vecPos;
-	if (!pState->CheckVector3D(1, vecPos))
+	if (!pState->CheckVector3D(2, vecPos))
 		return false;
+
 	float fRotation = 0.0f;
-	if (argc > 2 && !pState->CheckNumber(2, fRotation))
-		return false;
-	const GChar* sModel = pState->CheckString(3);
-	if (argc > 3 && !sModel)
+	if (argc > 2 && !pState->CheckNumber(3, fRotation))
 		return false;
 
 	pClient->SpawnPlayer(vecPos, fRotation, sModel);
@@ -466,21 +467,17 @@ static bool FunctionSpawnPlayer(IScriptState* pState, int argc, void* pUser)
 static bool FunctionPlayerHudMsg(IScriptState* pState, int argc, void* pUser)
 {
 	CMafiaServerManager* pServerManager = (CMafiaServerManager*)pUser;
+	CMafiaClient* pClient;
+	if (!pState->CheckClass(pServerManager->m_pServer->m_pManager->m_pNetMachineClass, 0, false, &pClient))
+		return false;
 
-	CServerPlayer* pPlayer = nullptr;
-	CMafiaClient* pClient = nullptr;
-
-	pClient = (CMafiaClient*)&pServerManager->m_pNetMachines[pPlayer->GetId()];
-
-	if (!pState->GetThis(pServerManager->m_pServerPlayerClass, &pPlayer)) return false;
-
-	const GChar* msg = pState->CheckString(0);
+	const GChar* msg = pState->CheckString(1);
 	if (!msg) return false;
 
 	Packet Packet(MAFIAPACKET_GUI_ADDMSG);
 
 	unsigned int color = 0;
-	if (!pState->CheckNumber(1, color)) return false;
+	if (!pState->CheckNumber(2, color)) return false;
 
 	Packet.Write<GChar*>((GChar*)msg);
 	Packet.Write<unsigned int>(color);
@@ -493,22 +490,18 @@ static bool FunctionPlayerHudMsg(IScriptState* pState, int argc, void* pUser)
 static bool FunctionPlayerFadeScreen(IScriptState* pState, int argc, void* pUser)
 {
 	CMafiaServerManager* pServerManager = (CMafiaServerManager*)pUser;
-
-	CServerPlayer* pPlayer = nullptr;
-	CMafiaClient* pClient = nullptr;
-
-	pClient = (CMafiaClient*)&pServerManager->m_pNetMachines[pPlayer->GetId()];
-
-	if (!pState->GetThis(pServerManager->m_pServerPlayerClass, &pPlayer)) return false;
+	CMafiaClient* pClient;
+	if (!pState->CheckClass(pServerManager->m_pServer->m_pManager->m_pNetMachineClass, 0, false, &pClient))
+		return false;
 
 	uint8_t fadeInOut;
-	if (!pState->CheckNumber(0, fadeInOut)) return false;
+	if (!pState->CheckNumber(1, fadeInOut)) return false;
 
 	int time;
-	if (!pState->CheckNumber(1, time)) return false;
+	if (!pState->CheckNumber(2, time)) return false;
 
 	unsigned int color;
-	if (!pState->CheckNumber(2, color)) return false;
+	if (!pState->CheckNumber(3, color)) return false;
 
 	Packet Packet(MAFIAPACKET_GUI_FADE);
 	Packet.Write<uint8_t>(fadeInOut);
@@ -523,16 +516,12 @@ static bool FunctionPlayerFadeScreen(IScriptState* pState, int argc, void* pUser
 static bool FunctionPlayerEnableMap(IScriptState* pState, int argc, void* pUser)
 {
 	CMafiaServerManager* pServerManager = (CMafiaServerManager*)pUser;
-
-	CServerPlayer* pPlayer = nullptr;
-	CMafiaClient* pClient = nullptr;
-
-	pClient = (CMafiaClient*)&pServerManager->m_pNetMachines[pPlayer->GetId()];
-
-	if (!pState->GetThis(pServerManager->m_pServerPlayerClass, &pPlayer)) return false;
+	CMafiaClient* pClient;
+	if (!pState->CheckClass(pServerManager->m_pServer->m_pManager->m_pNetMachineClass, 0, false, &pClient))
+		return false;
 
 	bool state;
-	if (!pState->CheckBoolean(0, state)) return false;
+	if (!pState->CheckBoolean(1, state)) return false;
 
 	Packet Packet(MAFIAPACKET_GUI_ENABLEMAP);
 	Packet.Write<uint8_t>(state);
@@ -545,21 +534,17 @@ static bool FunctionPlayerEnableMap(IScriptState* pState, int argc, void* pUser)
 static bool FunctionPlayerAnnounce(IScriptState* pState, int argc, void* pUser)
 {
 	CMafiaServerManager* pServerManager = (CMafiaServerManager*)pUser;
+	CMafiaClient* pClient;
+	if (!pState->CheckClass(pServerManager->m_pServer->m_pManager->m_pNetMachineClass, 0, false, &pClient))
+		return false;
 
-	CServerPlayer* pPlayer = nullptr;
-	CMafiaClient* pClient = nullptr;
-
-	pClient = (CMafiaClient*)&pServerManager->m_pNetMachines[pPlayer->GetId()];
-
-	if (!pState->GetThis(pServerManager->m_pServerPlayerClass, &pPlayer)) return false;
-
-	const GChar* msg = pState->CheckString(0);
+	const GChar* msg = pState->CheckString(1);
 	if (!msg) return false;
 
 	Packet Packet(MAFIAPACKET_GUI_ANNOUNCE);
 
 	float time = 0;
-	if (!pState->CheckNumber(1, time)) return false;
+	if (!pState->CheckNumber(2, time)) return false;
 
 	Packet.Write<GChar*>((GChar*)msg);
 	Packet.Write<float>(time);
@@ -572,19 +557,15 @@ static bool FunctionPlayerAnnounce(IScriptState* pState, int argc, void* pUser)
 static bool FunctionPlayerCountdown(IScriptState* pState, int argc, void* pUser)
 {
 	CMafiaServerManager* pServerManager = (CMafiaServerManager*)pUser;
-
-	CServerPlayer* pPlayer = nullptr;
-	CMafiaClient* pClient = nullptr;
-
-	pClient = (CMafiaClient*)&pServerManager->m_pNetMachines[pPlayer->GetId()];
-
-	if (!pState->GetThis(pServerManager->m_pServerPlayerClass, &pPlayer)) return false;
+	CMafiaClient* pClient;
+	if (!pState->CheckClass(pServerManager->m_pServer->m_pManager->m_pNetMachineClass, 0, false, &pClient))
+		return false;
 
 	Packet Packet(MAFIAPACKET_GUI_COUNTDOWN);
 
 	uint8_t raceFlags;
 
-	if (!pState->CheckNumber(0, raceFlags)) return false;
+	if (!pState->CheckNumber(1, raceFlags)) return false;
 
 	Packet.Write<uint8_t>(raceFlags);
 
@@ -898,8 +879,8 @@ static bool FunctionPedGetOccupiedVehicle(IScriptState* pState, int argc, void* 
 
 void CMafiaServerManager::RegisterFunctions(CScripting* pScripting)
 {
-	auto pMafia = pScripting->m_Global.AddNamespace(_gstr("mafia"));
-	pMafia->SetAlias(_gstr("game"));
+	auto pGameNamespace = pScripting->m_Global.AddNamespace(_gstr("mafia"));
+	pGameNamespace->SetAlias(_gstr("game"));
 
 	{
 		m_pServerEntityClass->AddProperty(this, _gstr("model"), ARGUMENT_STRING, FunctionEntityGetModel, FunctionEntitySetModel);
@@ -943,42 +924,43 @@ void CMafiaServerManager::RegisterFunctions(CScripting* pScripting)
 	}
 
 	{
-		m_pServerPlayerClass->RegisterFunction(_gstr("hudMessage"), _gstr("tsi"), FunctionPlayerHudMsg, this);
-		m_pServerPlayerClass->RegisterFunction(_gstr("hudFadeScreen"), _gstr("tbfi"), FunctionPlayerFadeScreen, this);
-		m_pServerPlayerClass->RegisterFunction(_gstr("hudEnableMap"), _gstr("tb"), FunctionPlayerEnableMap, this);
-		m_pServerPlayerClass->RegisterFunction(_gstr("hudAnnounce"), _gstr("tsf"), FunctionPlayerAnnounce, this);
-		m_pServerPlayerClass->RegisterFunction(_gstr("hudShowCountdown"), _gstr("ti"), FunctionPlayerCountdown, this);
+		auto pHUDNamespace = pGameNamespace->AddNamespace(_gstr("hud"));
+		m_pServerPlayerClass->RegisterFunction(_gstr("message"), _gstr("xsi"), FunctionPlayerHudMsg, this);
+		m_pServerPlayerClass->RegisterFunction(_gstr("enableMap"), _gstr("xb"), FunctionPlayerEnableMap, this);
+		m_pServerPlayerClass->RegisterFunction(_gstr("announce"), _gstr("xsf"), FunctionPlayerAnnounce, this);
+		m_pServerPlayerClass->RegisterFunction(_gstr("showCountdown"), _gstr("xi"), FunctionPlayerCountdown, this);
 	}
 
-	pScripting->m_Global.RegisterFunction(_gstr("spawnPlayer"), _gstr("xv|fs"), FunctionSpawnPlayer, this);
+	pScripting->m_Global.RegisterFunction(_gstr("spawnPlayer"), _gstr("xsv|f"), FunctionSpawnPlayer, this);
 
-	pMafia->AddProperty(this, _gstr("mapName"), ARGUMENT_STRING, FunctionGameGetLevel);
-	pMafia->RegisterFunction(_gstr("changeMap"), _gstr("s"), FunctionGameSetLevel, this);
+	pGameNamespace->AddProperty(this, _gstr("mapName"), ARGUMENT_STRING, FunctionGameGetLevel);
+	pGameNamespace->RegisterFunction(_gstr("changeMap"), _gstr("s"), FunctionGameSetLevel, this);
 
-	pMafia->RegisterFunction(_gstr("createExplosion"), _gstr("vff"), FunctionCreateExplosion, this);
-	pMafia->RegisterFunction(_gstr("createVehicle"), _gstr("sv|f"), FunctionCreateVehicle, this);
-	pMafia->RegisterFunction(_gstr("createPlayer"), _gstr("sv|f"), FunctionCreatePlayer, this);
-	pMafia->RegisterFunction(_gstr("createPed"), _gstr("sv|f"), FunctionCreateHuman, this);
+	pGameNamespace->RegisterFunction(_gstr("createExplosion"), _gstr("vff"), FunctionCreateExplosion, this);
+	pGameNamespace->RegisterFunction(_gstr("createVehicle"), _gstr("sv|f"), FunctionCreateVehicle, this);
+	pGameNamespace->RegisterFunction(_gstr("createPlayer"), _gstr("sv|f"), FunctionCreatePlayer, this);
+	pGameNamespace->RegisterFunction(_gstr("createPed"), _gstr("sv|f"), FunctionCreateHuman, this);
+	pGameNamespace->RegisterFunction(_gstr("fadeScreen"), _gstr("xbf|i"), FunctionPlayerFadeScreen, this);
 
 	{
-		Galactic3D::ReflectedNamespace* pServerNS = pScripting->m_Global.AddNamespace(_gstr("server"));
+		Galactic3D::ReflectedNamespace* pServerNamespace = pScripting->m_Global.AddNamespace(_gstr("server"));
 
-		pServerNS->AddProperty(this, _gstr("rcon"), ARGUMENT_BOOLEAN, FunctionGetServerRcon);
-		pServerNS->AddProperty(this, _gstr("rconPort"), ARGUMENT_INTEGER, FunctionGetServerRconPort);
-		pServerNS->AddProperty(this, _gstr("listed"), ARGUMENT_BOOLEAN, FunctionGetServerListed);
-		pServerNS->AddProperty(this, _gstr("httpServer"), ARGUMENT_BOOLEAN, FunctionGetServerHttpServer);
-		pServerNS->AddProperty(this, _gstr("httpPort"), ARGUMENT_INTEGER, FunctionGetServerHttpPort);
-		pServerNS->AddProperty(this, _gstr("minClientVersion"), ARGUMENT_STRING, FunctionGetServerMinClientVersion);
-		pServerNS->AddProperty(this, _gstr("syncInterval"), ARGUMENT_INTEGER, FunctionGetServerSyncInterval);
-		pServerNS->AddProperty(this, _gstr("syncMethod"), ARGUMENT_INTEGER, FunctionGetServerSyncMethod);
-		pServerNS->AddProperty(this, _gstr("duplicateNames"), ARGUMENT_BOOLEAN, FunctionGetServerDuplicateNames);
-		pServerNS->AddProperty(this, _gstr("streamInDistance"), ARGUMENT_FLOAT, FunctionGetServerStreamInDistance);
-		pServerNS->AddProperty(this, _gstr("streamOutDistance"), ARGUMENT_FLOAT, FunctionGetServerStreamOutDistance);
-		pServerNS->AddProperty(this, _gstr("pickupStreamInDistance"), ARGUMENT_FLOAT, FunctionGetServerPickupStreamInDistance);
-		pServerNS->AddProperty(this, _gstr("pickupStreamOutDistance"), ARGUMENT_FLOAT, FunctionGetServerPickupStreamOutDistance);
-		pServerNS->AddProperty(this, _gstr("logPath"), ARGUMENT_STRING, FunctionGetServerLogPath);
+		pServerNamespace->AddProperty(this, _gstr("rcon"), ARGUMENT_BOOLEAN, FunctionGetServerRcon);
+		pServerNamespace->AddProperty(this, _gstr("rconPort"), ARGUMENT_INTEGER, FunctionGetServerRconPort);
+		pServerNamespace->AddProperty(this, _gstr("listed"), ARGUMENT_BOOLEAN, FunctionGetServerListed);
+		pServerNamespace->AddProperty(this, _gstr("httpServer"), ARGUMENT_BOOLEAN, FunctionGetServerHttpServer);
+		pServerNamespace->AddProperty(this, _gstr("httpPort"), ARGUMENT_INTEGER, FunctionGetServerHttpPort);
+		pServerNamespace->AddProperty(this, _gstr("minClientVersion"), ARGUMENT_STRING, FunctionGetServerMinClientVersion);
+		pServerNamespace->AddProperty(this, _gstr("syncInterval"), ARGUMENT_INTEGER, FunctionGetServerSyncInterval);
+		pServerNamespace->AddProperty(this, _gstr("syncMethod"), ARGUMENT_INTEGER, FunctionGetServerSyncMethod);
+		pServerNamespace->AddProperty(this, _gstr("duplicateNames"), ARGUMENT_BOOLEAN, FunctionGetServerDuplicateNames);
+		pServerNamespace->AddProperty(this, _gstr("streamInDistance"), ARGUMENT_FLOAT, FunctionGetServerStreamInDistance);
+		pServerNamespace->AddProperty(this, _gstr("streamOutDistance"), ARGUMENT_FLOAT, FunctionGetServerStreamOutDistance);
+		pServerNamespace->AddProperty(this, _gstr("pickupStreamInDistance"), ARGUMENT_FLOAT, FunctionGetServerPickupStreamInDistance);
+		pServerNamespace->AddProperty(this, _gstr("pickupStreamOutDistance"), ARGUMENT_FLOAT, FunctionGetServerPickupStreamOutDistance);
+		pServerNamespace->AddProperty(this, _gstr("logPath"), ARGUMENT_STRING, FunctionGetServerLogPath);
 
-		pServerNS->RegisterFunction(_gstr("getCVar"), _gstr("s"), FunctionGetServerCVar, this);
+		pServerNamespace->RegisterFunction(_gstr("getCVar"), _gstr("s"), FunctionGetServerCVar, this);
 		//pServerNS->RegisterFunction("setCVar", "s*", FunctionSetServerCVar, this);
 	}
 }
