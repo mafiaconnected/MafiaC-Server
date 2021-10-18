@@ -43,7 +43,7 @@ bool CServerVehicle::ShouldDeleteForMachine(CNetMachine* pClient)
 
 bool CServerVehicle::ReadCreatePacket(Stream* pStream)
 {
-	if (!CServerEntity::ReadSyncPacket(pStream))
+	if (!CServerEntity::ReadCreatePacket(pStream))
 		return false;
 
 	m_RelPosition = { 0,0,0 };
@@ -57,13 +57,11 @@ bool CServerVehicle::ReadCreatePacket(Stream* pStream)
 	m_Health = Packet.health;
 	m_EngineHealth = Packet.engineHealth;
 	m_Fuel = Packet.fuel;
-
 	m_SoundEnabled = Packet.sound;
 	m_Engine = Packet.engineOn;
 	m_Horn = Packet.horn;
 	m_Siren = Packet.siren;
 	m_Lights = Packet.lights;
-
 	m_Gear = Packet.gear;
 	m_EngineRPM = Packet.rpm;
 	m_Accelerating = Packet.accel;
@@ -72,7 +70,6 @@ bool CServerVehicle::ReadCreatePacket(Stream* pStream)
 	m_SpeedLimit = Packet.speedLimit;
 	m_Clutch = Packet.clutch;
 	m_WheelAngle = Packet.wheelAngle;
-
 	m_Velocity = Packet.speed;
 	m_RotVelocity = Packet.rotSpeed;
 
@@ -92,13 +89,11 @@ bool CServerVehicle::ReadSyncPacket(Stream* pStream)
 	m_Health = Packet.health;
 	m_EngineHealth = Packet.engineHealth;
 	m_Fuel = Packet.fuel;
-
 	m_SoundEnabled = Packet.sound;
 	m_Engine = Packet.engineOn;
 	m_Horn = Packet.horn;
 	m_Siren = Packet.siren;
 	m_Lights = Packet.lights;
-
 	m_Gear = Packet.gear;
 	m_EngineRPM = Packet.rpm;
 	m_Accelerating = Packet.accel;
@@ -107,7 +102,6 @@ bool CServerVehicle::ReadSyncPacket(Stream* pStream)
 	m_SpeedLimit = Packet.speedLimit;
 	m_Clutch = Packet.clutch;
 	m_WheelAngle = Packet.wheelAngle;
-
 	m_Velocity = Packet.speed;
 	m_RotVelocity = Packet.rotSpeed;
 
@@ -124,13 +118,11 @@ bool CServerVehicle::WriteCreatePacket(Stream* pStream)
 	Packet.health = m_Health;
 	Packet.engineHealth = m_EngineHealth;
 	Packet.fuel = m_Fuel;
-
 	Packet.sound = m_SoundEnabled;
 	Packet.engineOn = m_Engine;
 	Packet.horn = m_Horn;
 	Packet.siren = m_Siren;
 	Packet.lights = m_Lights;
-
 	Packet.gear = m_Gear;
 	Packet.rpm = m_EngineRPM;
 	Packet.accel = m_Accelerating;
@@ -139,7 +131,6 @@ bool CServerVehicle::WriteCreatePacket(Stream* pStream)
 	Packet.speedLimit = m_SpeedLimit;
 	Packet.clutch = m_Clutch;
 	Packet.wheelAngle = m_WheelAngle;
-
 	Packet.speed = m_Velocity;
 	Packet.rotSpeed = m_RotVelocity;
 
@@ -154,18 +145,16 @@ bool CServerVehicle::WriteSyncPacket(Stream* pStream)
 	if (!CServerEntity::WriteSyncPacket(pStream))
 		return false;
 
-	tVehicleCreatePacket Packet;
+	tVehicleSyncPacket Packet;
 
 	Packet.health = m_Health;
 	Packet.engineHealth = m_EngineHealth;
 	Packet.fuel = m_Fuel;
-
 	Packet.sound = m_SoundEnabled;
 	Packet.engineOn = m_Engine;
 	Packet.horn = m_Horn;
 	Packet.siren = m_Siren;
 	Packet.lights = m_Lights;
-
 	Packet.gear = m_Gear;
 	Packet.rpm = m_EngineRPM;
 	Packet.accel = m_Accelerating;
@@ -174,7 +163,6 @@ bool CServerVehicle::WriteSyncPacket(Stream* pStream)
 	Packet.speedLimit = m_SpeedLimit;
 	Packet.clutch = m_Clutch;
 	Packet.wheelAngle = m_WheelAngle;
-
 	Packet.speed = m_Velocity;
 	Packet.rotSpeed = m_RotVelocity;
 

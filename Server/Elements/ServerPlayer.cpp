@@ -18,7 +18,6 @@ bool CServerPlayer::ReadSyncPacket(Stream* pStream)
 	if (!CServerHuman::ReadSyncPacket(pStream))
 		return false;
 
-
 	return true;
 }
 
@@ -26,7 +25,6 @@ bool CServerPlayer::WriteSyncPacket(Stream* pStream)
 {
 	if (!CServerHuman::WriteSyncPacket(pStream))
 		return false;
-
 
 	return true;
 }

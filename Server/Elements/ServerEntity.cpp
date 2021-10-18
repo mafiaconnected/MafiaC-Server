@@ -166,7 +166,7 @@ bool CServerEntity::WriteSyncPacket(Stream* pStream)
 	if (!CNetObject::WriteSyncPacket(pStream))
 		return false;
 
-	tEntityCreatePacket Packet;
+	tEntitySyncPacket Packet;
 
 	Packet.position = m_Position;
 	Packet.positionRel = m_RelPosition;

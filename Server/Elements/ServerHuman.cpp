@@ -94,7 +94,7 @@ bool CServerHuman::ReadCreatePacket(Stream* pStream)
 	if (!CServerEntity::ReadCreatePacket(pStream))
 		return false;
 
-	tHumanSyncPacket Packet;
+	tHumanCreatePacket Packet;
 
 	if (pStream->Read(&Packet, sizeof(Packet)) != sizeof(Packet))
 		return false;
