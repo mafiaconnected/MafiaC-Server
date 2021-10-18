@@ -9,7 +9,7 @@ bindEventHandler("OnResourceStart", thisResource, (event, resource) => {
 
 addEventHandler("OnPlayerJoined", (event, client) => {
 	console.log(`${client.name} has joined!`);
-	spawnPlayer(client, new Vec3(-1981.51, -4.66, 29.37), 0.0, "TommyCOATHAT.i3d");
+	spawnPlayer(client, "TommyCOATHAT.i3d", [-1981.51, -4.66, 29.37], 0.0);
 });
 
 // ===========================================================================
