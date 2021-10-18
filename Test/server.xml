@@ -20,7 +20,7 @@
 	<httpserver>true</httpserver>
 	<syncinterval>30</syncinterval>
 	<processinterval>30</processinterval>
-	<syncmethod>replay</syncmethod>
+	<syncmethod>interval</syncmethod>
 	<compresspackets>false</compresspackets>
 	<packetcompressionlevel>default</packetcompressionlevel>
 	<synclocalentities>true</synclocalentities>
