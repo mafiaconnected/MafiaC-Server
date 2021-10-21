@@ -8,16 +8,6 @@ CServerHuman::CServerHuman(CMafiaServerManager* pServerManager) : CServerEntity(
 	m_Type = ELEMENT_PED;
 }
 
-void CServerHuman::SetHeading(float fHeading)
-{
-	CServerEntity::SetHeading(fHeading);
-}
-
-float CServerHuman::GetHeading(void)
-{
-	return m_fCurrentRotation;
-}
-
 void CServerHuman::SetModel(const GChar* sModel)
 {
 	CServerEntity::SetModel(sModel);

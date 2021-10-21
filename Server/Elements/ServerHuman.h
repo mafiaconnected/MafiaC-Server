@@ -31,9 +31,6 @@ public:
 
 	Galactic3D::Weak<CServerVehicle> m_pCurrentVehicle;
 
-	virtual void SetHeading(float fHeading) override;
-	virtual float GetHeading(void) override;
-
 	virtual void SetModel(const GChar* sModel) override;
 
 	virtual ReflectedClass* GetReflectedClass(void) override;
