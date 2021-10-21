@@ -882,11 +882,6 @@ void CMafiaServerManager::RegisterFunctions(CScripting* pScripting)
 	auto pGameNamespace = pScripting->m_Global.AddNamespace(_gstr("mafia"));
 	pGameNamespace->SetAlias(_gstr("game"));
 
-	{
-		m_pServerEntityClass->AddProperty(this, _gstr("model"), ARGUMENT_STRING, FunctionEntityGetModel, FunctionEntitySetModel);
-		m_pServerEntityClass->AddProperty(this, _gstr("heading"), ARGUMENT_FLOAT, FunctionEntityGetHeading, FunctionEntitySetHeading);
-	}
-
 	//{
 	//	m_pNetObjectTransformableClass->AddProperty(this, _gstr("streamInDistance"), ARGUMENT_FLOAT, FunctionEntityGetStreamInDistance, FunctionEntitySetStreamInDistance);
 	//	m_pNetObjectTransformableClass->AddProperty(this, _gstr("streamOutDistance"), ARGUMENT_FLOAT, FunctionEntityGetStreamOutDistance, FunctionEntitySetStreamOutDistance);
@@ -898,6 +893,9 @@ void CMafiaServerManager::RegisterFunctions(CScripting* pScripting)
 	//}
 
 	{
+		m_pServerVehicleClass->AddProperty(this, _gstr("model"), ARGUMENT_STRING, FunctionEntityGetModel, FunctionEntitySetModel);
+		m_pServerVehicleClass->AddProperty(this, _gstr("heading"), ARGUMENT_FLOAT, FunctionEntityGetHeading, FunctionEntitySetHeading);
+
 		m_pServerVehicleClass->AddProperty(this, _gstr("locked"), ARGUMENT_BOOLEAN, FunctionVehicleGetLocked, FunctionVehicleSetLocked);
 		m_pServerVehicleClass->AddProperty(this, _gstr("siren"), ARGUMENT_BOOLEAN, FunctionVehicleGetSiren, FunctionVehicleSetSiren);
 		m_pServerVehicleClass->AddProperty(this, _gstr("engine"), ARGUMENT_BOOLEAN, FunctionVehicleGetEngine, FunctionVehicleSetEngine);
@@ -910,6 +908,9 @@ void CMafiaServerManager::RegisterFunctions(CScripting* pScripting)
 	}
 
 	{
+		m_pServerHumanClass->AddProperty(this, _gstr("model"), ARGUMENT_STRING, FunctionEntityGetModel, FunctionEntitySetModel);
+		m_pServerHumanClass->AddProperty(this, _gstr("heading"), ARGUMENT_FLOAT, FunctionEntityGetHeading, FunctionEntitySetHeading);
+
 		m_pServerHumanClass->AddProperty(this, _gstr("vehicle"), ARGUMENT_OBJECT, FunctionPedGetOccupiedVehicle);
 		m_pServerHumanClass->AddProperty(this, _gstr("seat"), ARGUMENT_INTEGER, FunctionPedGetSeat);
 		m_pServerHumanClass->AddProperty(this, _gstr("health"), ARGUMENT_FLOAT, FunctionPedGetHealth);
