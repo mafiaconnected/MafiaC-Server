@@ -24,7 +24,7 @@ void CServerEntity::SetHeading(float fHeading)
 
 float CServerEntity::GetHeading(void)
 {
-	return CVecTools::DirToRotation180(CVecTools::EulerToDir(m_Rotation));
+	return CVecTools::DirToRotation360(CVecTools::EulerToDir(m_Rotation));
 }
 
 ReflectedClass* CServerEntity::GetReflectedClass(void)
