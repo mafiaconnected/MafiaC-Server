@@ -110,6 +110,9 @@ struct tHumanSyncPacket
 
 struct tVehicleCreatePacket
 {
+	CVector3D rotationFront;
+	CVector3D rotationUp;
+	CVector3D rotationRight;
 	float health;
 	float engineHealth;
 	float fuel;
@@ -132,6 +135,9 @@ struct tVehicleCreatePacket
 
 struct tVehicleSyncPacket
 {
+	CVector3D rotationFront;
+	CVector3D rotationUp;
+	CVector3D rotationRight;
 	float health;
 	float engineHealth;
 	float fuel;

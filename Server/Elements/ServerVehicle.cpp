@@ -54,6 +54,9 @@ bool CServerVehicle::ReadCreatePacket(Stream* pStream)
 	if (pStream->Read(&Packet, sizeof(Packet)) != sizeof(Packet))
 		return false;
 
+	m_RotationFront = Packet.rotationFront;
+	m_RotationUp = Packet.rotationUp;
+	m_RotationRight = Packet.rotationRight;
 	m_Health = Packet.health;
 	m_EngineHealth = Packet.engineHealth;
 	m_Fuel = Packet.fuel;
@@ -76,7 +79,7 @@ bool CServerVehicle::ReadCreatePacket(Stream* pStream)
 	auto machine = m_pServerManager->m_pNetMachines->GetMachine(GetSyncer());
 	GChar szHost[256];
 	machine->m_IPAddress.ToString(szHost, ARRAY_SIZE(szHost));
-	_glogprintf(_gstr("Got create packet for vehicle #%d (%s - ip %s):\n\tPosition: [%f, %f, %f]\n\tPos. difference: [%f, %f, %f]\n\tRotation: [%f, %f, %f]\n\tRot. difference: [%f, %f, %f]\n\tHealth: %f\n"), GetId(), machine->GetName(), szHost, m_Position.x, m_Position.y, m_Position.z, m_RelPosition.x, m_RelPosition.y, m_RelPosition.z, m_Rotation.x, m_Rotation.y, m_Rotation.z, m_RelRotation.x, m_RelRotation.y, m_RelRotation.z);
+	//_glogprintf(_gstr("Got create packet for vehicle #%d (%s - ip %s):\n\tPosition: [%f, %f, %f]\n\tPos. difference: [%f, %f, %f]\n\tRotation: [%f, %f, %f]\n\tRot. difference: [%f, %f, %f]\n\tHealth: %f\n"), GetId(), machine->GetName(), szHost, m_Position.x, m_Position.y, m_Position.z, m_RelPosition.x, m_RelPosition.y, m_RelPosition.z, m_Rotation.x, m_Rotation.y, m_Rotation.z, m_RelRotation.x, m_RelRotation.y, m_RelRotation.z);
 
 	return true;
 }
@@ -91,6 +94,9 @@ bool CServerVehicle::ReadSyncPacket(Stream* pStream)
 	if (pStream->Read(&Packet, sizeof(Packet)) != sizeof(Packet))
 		return false;
 
+	m_RotationFront = Packet.rotationFront;
+	m_RotationUp = Packet.rotationUp;
+	m_RotationRight = Packet.rotationRight;
 	m_Health = Packet.health;
 	m_EngineHealth = Packet.engineHealth;
 	m_Fuel = Packet.fuel;
@@ -125,6 +131,9 @@ bool CServerVehicle::WriteCreatePacket(Stream* pStream)
 
 	tVehicleCreatePacket Packet;
 
+	Packet.rotationFront = m_RotationFront;
+	Packet.rotationUp = m_RotationUp;
+	Packet.rotationRight = m_RotationRight;
 	Packet.health = m_Health;
 	Packet.engineHealth = m_EngineHealth;
 	Packet.fuel = m_Fuel;
@@ -144,7 +153,7 @@ bool CServerVehicle::WriteCreatePacket(Stream* pStream)
 	Packet.speed = m_Velocity;
 	Packet.rotSpeed = m_RotVelocity;
 
-	_glogprintf(_gstr("Sent create packet for vehicle #%d:\n\tPosition: [%f, %f, %f]\n\tPos. difference: [%f, %f, %f]\n\tRotation: [%f, %f, %f]\n\tRot. difference: [%f, %f, %f]\n\tHealth: %f\n"), GetId(), m_Position.x, m_Position.y, m_Position.z, m_RelPosition.x, m_RelPosition.y, m_RelPosition.z, m_Rotation.x, m_Rotation.y, m_Rotation.z, m_RelRotation.x, m_RelRotation.y, m_RelRotation.z);
+	//_glogprintf(_gstr("Sent create packet for vehicle #%d:\n\tPosition: [%f, %f, %f]\n\tPos. difference: [%f, %f, %f]\n\tRotation: [%f, %f, %f]\n\tRot. difference: [%f, %f, %f]\n\tHealth: %f\n"), GetId(), m_Position.x, m_Position.y, m_Position.z, m_RelPosition.x, m_RelPosition.y, m_RelPosition.z, m_Rotation.x, m_Rotation.y, m_Rotation.z, m_RelRotation.x, m_RelRotation.y, m_RelRotation.z);
 
 	if (pStream->Write(&Packet, sizeof(Packet)) != sizeof(Packet))
 		return false;
@@ -159,6 +168,9 @@ bool CServerVehicle::WriteSyncPacket(Stream* pStream)
 
 	tVehicleSyncPacket Packet;
 
+	Packet.rotationFront = m_RotationFront;
+	Packet.rotationUp = m_RotationUp;
+	Packet.rotationRight = m_RotationRight;
 	Packet.health = m_Health;
 	Packet.engineHealth = m_EngineHealth;
 	Packet.fuel = m_Fuel;
@@ -178,7 +190,7 @@ bool CServerVehicle::WriteSyncPacket(Stream* pStream)
 	Packet.speed = m_Velocity;
 	Packet.rotSpeed = m_RotVelocity;
 
-	_glogprintf(_gstr("Sent sync packet for vehicle #%d:\n\tPosition: [%f, %f, %f]\n\tPos. difference: [%f, %f, %f]\n\tRotation: [%f, %f, %f]\n\tRot. difference: [%f, %f, %f]\n\tHealth: %f\n"), GetId(), m_Position.x, m_Position.y, m_Position.z, m_RelPosition.x, m_RelPosition.y, m_RelPosition.z, m_Rotation.x, m_Rotation.y, m_Rotation.z, m_RelRotation.x, m_RelRotation.y, m_RelRotation.z);
+	//_glogprintf(_gstr("Sent sync packet for vehicle #%d:\n\tPosition: [%f, %f, %f]\n\tPos. difference: [%f, %f, %f]\n\tRotation: [%f, %f, %f]\n\tRot. difference: [%f, %f, %f]\n\tHealth: %f\n"), GetId(), m_Position.x, m_Position.y, m_Position.z, m_RelPosition.x, m_RelPosition.y, m_RelPosition.z, m_Rotation.x, m_Rotation.y, m_Rotation.z, m_RelRotation.x, m_RelRotation.y, m_RelRotation.z);
 
 	if (pStream->Write(&Packet, sizeof(Packet)) != sizeof(Packet))
 		return false;

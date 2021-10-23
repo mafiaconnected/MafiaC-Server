@@ -639,7 +639,7 @@ static bool FunctionCreateVehicle(IScriptState* pState, int argc, void* pUser)
 
 	pServerVehicle->m_pResource = pState->GetResource();
 	pServerManager->RegisterObject(pServerVehicle);
-	pServerVehicle->SetPosition(vecPos);
+	//pServerVehicle->SetPosition(vecPos);
 	pState->ReturnObject(pServerVehicle);
 	return true;
 }
