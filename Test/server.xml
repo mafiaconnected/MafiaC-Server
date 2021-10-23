@@ -7,7 +7,7 @@
 	<servername>Default Server</servername>
 	<game>mafia:one</game>
 	<gamemode>Free Roam</gamemode>
-	<serverbrowser>false</serverbrowser>
+	<serverbrowser>true</serverbrowser>
 	<maxplayers>32</maxplayers>
 	<password></password>
 	<minclientversion>1.0.0</minclientversion>

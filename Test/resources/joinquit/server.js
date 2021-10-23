@@ -22,17 +22,16 @@ let disconnectReasons = [
 
 // ----------------------------------------------------------------------------
 
-let gtaGameNames = [
+let gameNames = [
 	"Unknown",
 	"GTA III",
 	"GTA Vice City",
 	"GTA San Andreas",
-	"GTA Underground",
+	"Unknown",
 	"GTA IV",
-	"GTA IV (EFLC)"
-];
-
-let mafiaGameNames = [
+	"GTA IV (EFLC)",
+	"Unknown",
+	"Unknown",
 	"Unknown",
 	"Mafia",
 	"Mafia 2",
@@ -45,11 +44,18 @@ let mafiaGameNames = [
 let gameAnnounceColour = [
 	COLOUR_BLACK,
 	COLOUR_SILVER,
+	COLOUR_AQUA,
+	COLOUR_ORANGE,
+	COLOUR_BLACK,
 	COLOUR_SILVER,
 	COLOUR_SILVER,
-	COLOUR_SILVER,
-	COLOUR_SILVER,
-	COLOUR_SILVER
+	COLOUR_BLACK,
+	COLOUR_BLACK,
+	COLOUR_BLACK,
+	COLOUR_RED,
+	COLOUR_RED,
+	COLOUR_RED,
+	COLOUR_RED,
 ];
 
 // ----------------------------------------------------------------------------
@@ -65,24 +71,24 @@ addEventHandler("OnPlayerJoined", function(event, client) {
 	messageClient(`Use /help for commands and info`, client, COLOUR_YELLOW);
 
 	let messageText = `${client.name} has joined the game.`;
-	if(typeof module.geoip != "undefined") {
-		let countryName = "Unknown";
-		try {
-			countryName = module.geoip.getCountryName("geoip-country.mmdb", client.ip);
-		} catch(error) {
-			if(countryName != "Unknown") {
-				message(messageText, gameAnnounceColour[server.game]);
-				console.log(messageText);
-				return false;
-			}
-		}
 
-		messageText = `👋 [#0099FF]${client.name} [#FFFFFF]has joined the game from ${countryName}`;
-	}
+	//if(typeof module.geoip != "undefined") {
+	//	let countryName = "Unknown";
+	//	try {
+	//		countryName = module.geoip.getCountryName("geoip-country.mmdb", client.ip);
+	//	} catch(error) {
+	//		if(countryName != "Unknown") {
+	//			message(messageText, gameAnnounceColour[server.game]);
+	//			console.log(messageText);
+	//			return false;
+	//		}
+	//	}
+	//
+	//	messageText = `👋 [#0099FF]${client.name} [#FFFFFF]has joined the game from ${countryName}`;
+	//}
+
 	message(messageText, gameAnnounceColour[server.game]);
 	console.log(messageText);
-
-
 });
 
 // ----------------------------------------------------------------------------

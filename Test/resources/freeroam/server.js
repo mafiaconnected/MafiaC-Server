@@ -9,7 +9,7 @@ bindEventHandler("OnResourceStart", thisResource, (event, resource) => {
 
 addEventHandler("OnPlayerJoined", (event, client) => {
 	console.log(`${client.name} has joined!`);
-	spawnPlayer(client, "TommyCOATHAT.i3d", [-1981.51, -4.66, 29.37], 0.0);
+	spawnPlayer(client, "TommyCOATHAT.i3d", new Vec3(-1981.51, -4.66, 29.37), 0.0);
 });
 
 // ===========================================================================
@@ -34,7 +34,10 @@ addCommandHandler("veh", (command, params, client) => {
 		return false;
 	}
 
-	let vehicle = game.createVehicle(`${model}.i3d`, getPosInFrontOfPos(client.player.position, client.player.heading, 5), client.player.heading);
+	//let position = client.player.position;
+	//position.x += 5;
+	let vehicle = game.createVehicle(`${model}.i3d`, getPosInFrontOfPos(client.player.position, client.player.heading, 5), degToRad(client.player.heading));
+
     message(`${client.name} spawned a ${vehicleNames[vehicleModels.indexOf(model)]}`, COLOUR_YELLOW);
 });
 
@@ -811,6 +814,8 @@ let skinModels = [
 	"invisible"
 ];
 
+// ===========================================================================
+
 let weaponNames = {
 	2: "Knuckle Duster",
 	3: "Knife",
@@ -838,6 +843,8 @@ let weaponNames = {
 // ===========================================================================
 
 function getPosToRightOfPos(pos, angle, distance) {
+	angle = degToRad(angle);
+
 	let x = (pos.x+((Math.cos((-angle+1.57)+(Math.PI/2)))*distance));
 	let z = (pos.z+((Math.sin((-angle+1.57)+(Math.PI/2)))*distance));
 
@@ -849,6 +856,8 @@ function getPosToRightOfPos(pos, angle, distance) {
 // ===========================================================================
 
 function getPosToLeftOfPos(pos, angle, distance) {
+	angle = degToRad(angle);
+
 	let x = (pos.x+((Math.cos((angle+1.57)+(Math.PI/2)))*distance));
 	let z = (pos.y+((Math.sin((angle+1.57)+(Math.PI/2)))*distance));
 
@@ -860,9 +869,11 @@ function getPosToLeftOfPos(pos, angle, distance) {
 // ===========================================================================
 
 function getPosInFrontOfPos(pos, angle, distance) {
-	let x = (pos.x+((Math.cos(angle+(Math.PI/2)))*distance));
-	let y = pos.y;
-	let z = (pos.z+((Math.sin(angle+(Math.PI/2)))*distance));
+	angle = degToRad(angle);
+
+	let x = (pos.x+((Math.cos(angle-(Math.PI/2)))*distance));
+	let y = (pos.y+((Math.sin(angle-(Math.PI/2)))*distance));
+	let z = pos.z
 
 	return new Vec3(x, y, z);
 }
@@ -870,9 +881,25 @@ function getPosInFrontOfPos(pos, angle, distance) {
 // ===========================================================================
 
 function getPosBehindPos(pos, angle, distance) {
-	let x = (pos.x+((Math.cos(angle-(Math.PI/2)))*distance));
-	let y = pos.y;
-	let z = (pos.z+((Math.sin(angle-(Math.PI/2)))*distance));
+	angle = degToRad(angle);
+
+	let x = (pos.x+((Math.cos(angle+(Math.PI/2)))*distance));
+	let y = (pos.y+((Math.sin(angle+(Math.PI/2)))*distance));
+	let z = pos.z
 
 	return new Vec3(x,y,z);
 }
+
+// ===========================================================================
+
+function degToRad(deg) {
+	return deg * Math.PI / 180;
+}
+
+// ===========================================================================
+
+function radToDeg(rad) {
+	return rad * 180 / Math.PI;
+}
+
+// ===========================================================================
