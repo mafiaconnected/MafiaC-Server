@@ -41,9 +41,9 @@ public:
 	{
 		CVector3D dir;
 
-		dir.x = (float)(sin(2 * M_PI * angle));
+		dir.x = (float)(sin(2.0f * M_PI * angle));
 		dir.y = 0;
-		dir.z = (float)(cos(2 * M_PI * angle));
+		dir.z = (float)(cos(2.0f * M_PI * angle));
 
 		return dir;
 	}
@@ -74,9 +74,9 @@ public:
 	{
 		CVector3D dir;
 
-		dir.x = (float)(sin(2 * M_PI * (angle / 360)));
+		dir.x = (float)(sin(2.0f * M_PI * (angle / 360)));
 		dir.y = 0;
-		dir.z = (float)(cos(2 * M_PI * (angle / 360)));
+		dir.z = (float)(cos(2.0f * M_PI * (angle / 360)));
 
 		return dir;
 	}
