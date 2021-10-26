@@ -636,6 +636,8 @@ static bool FunctionCreateVehicle(IScriptState* pState, int argc, void* pUser)
 	pServerVehicle->m_SpeedLimit = 1000.0f;
 	pServerVehicle->m_Clutch = 1.0f;
 	pServerVehicle->m_WheelAngle = 0;
+	pServerVehicle->m_Velocity = CVector3D(0, 0, 0);
+	pServerVehicle->m_RotVelocity = CVector3D(0, 0, 0);
 
 	pServerVehicle->m_pResource = pState->GetResource();
 	pServerManager->RegisterObject(pServerVehicle);
