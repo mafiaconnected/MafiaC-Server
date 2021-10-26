@@ -2,10 +2,16 @@
 #include "pch.h"
 #include "Server.h"
 #include "MafiaServerManager.h"
+#include <Utils/VectorTools.h>
 
 CServerVehicle::CServerVehicle(CMafiaServerManager* pServerManager) : CServerEntity(pServerManager)
 {
 	m_Type = ELEMENT_VEHICLE;
+
+	CMatrix3x3 mat3(CVector3D(0, 0, 0));
+	m_RotationFront = mat3.GetXAxis();
+	m_RotationUp = mat3.GetYAxis();
+	m_RotationRight = mat3.GetZAxis();
 }
 
 ReflectedClass* CServerVehicle::GetReflectedClass(void)
