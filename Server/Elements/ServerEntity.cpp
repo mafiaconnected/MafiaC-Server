@@ -117,12 +117,6 @@ bool CServerEntity::ReadCreatePacket(Stream* pStream)
 	m_Rotation = Packet.rotation;
 	m_RelRotation = Packet.rotationRel;
 
-	SetPosition(m_Position);
-	SetRotation(m_Rotation);
-
-	//m_RelPosition = m_Position;
-	//m_RelRotation = m_Rotation;
-
 	return true;
 }
 
@@ -140,9 +134,6 @@ bool CServerEntity::ReadSyncPacket(Stream* pStream)
 	m_RelPosition = Packet.positionRel;
 	m_Rotation = Packet.rotation;
 	m_RelRotation = Packet.rotationRel;
-
-	SetPosition(m_Position);
-	SetRotation(m_Rotation);
 
 	return true;
 }

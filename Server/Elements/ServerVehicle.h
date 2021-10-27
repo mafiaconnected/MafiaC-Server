@@ -50,6 +50,7 @@ public:
 	virtual bool WriteSyncPacket(Stream* pStream) override;
 
 	virtual void SetModel(const GChar* sModelName);
+	virtual bool SetRotation(const CVector3D& vecRotation) override;
 
 	virtual void Remove(void) override;
 

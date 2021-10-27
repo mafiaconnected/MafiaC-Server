@@ -612,13 +612,19 @@ static bool FunctionCreateVehicle(IScriptState* pState, int argc, void* pUser)
 	if (argc > 2 && !pState->CheckNumber(2, angle))
 		return false;
 
+	double twoPi = M_PI * 2.0;
+	while (angle < -twoPi)
+		angle += twoPi;
+	while (angle > twoPi)
+		angle -= twoPi;
+
 	Strong<CServerVehicle> pServerVehicle;
 
 	pServerVehicle = Strong<CServerVehicle>::New(pServerManager->Create(ELEMENT_VEHICLE));
 
 	pServerVehicle->SetModel(sModel);
 	pServerVehicle->SetPosition(vecPos);
-	pServerVehicle->SetHeading(angle);
+	pServerVehicle->SetRotation(CVector3D(0, 0, angle));
 
 	pServerVehicle->m_Health = 100.0f;
 	pServerVehicle->m_EngineHealth = 100.0f;
