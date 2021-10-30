@@ -82,9 +82,9 @@ bool CServerVehicle::ReadCreatePacket(Stream* pStream)
 	m_Velocity = Packet.speed;
 	m_RotVelocity = Packet.rotSpeed;
 
-	auto machine = m_pServerManager->m_pNetMachines->GetMachine(GetSyncer());
-	GChar szHost[256];
-	machine->m_IPAddress.ToString(szHost, ARRAY_SIZE(szHost));
+	//auto machine = m_pServerManager->m_pNetMachines->GetMachine(GetSyncer());
+	//GChar szHost[256];
+	//machine->m_IPAddress.ToString(szHost, ARRAY_SIZE(szHost));
 	//_glogprintf(_gstr("Got create packet for vehicle #%d (%s - ip %s):\n\tPosition: [%f, %f, %f]\n\tPos. difference: [%f, %f, %f]\n\tRotation: [%f, %f, %f]\n\tRot. difference: [%f, %f, %f]\n\tHealth: %f\n"), GetId(), machine->GetName(), szHost, m_Position.x, m_Position.y, m_Position.z, m_RelPosition.x, m_RelPosition.y, m_RelPosition.z, m_Rotation.x, m_Rotation.y, m_Rotation.z, m_RelRotation.x, m_RelRotation.y, m_RelRotation.z);
 
 	return true;
@@ -122,9 +122,10 @@ bool CServerVehicle::ReadSyncPacket(Stream* pStream)
 	m_Velocity = Packet.speed;
 	m_RotVelocity = Packet.rotSpeed;
 
-	auto machine = m_pServerManager->m_pNetMachines->GetMachine(GetSyncer());
-	GChar szHost[256];
-	machine->m_IPAddress.ToString(szHost, ARRAY_SIZE(szHost));
+	// Note: Commented out because GetSyncer() currently can be -1 here, which caused a server crash.
+	//auto machine = m_pServerManager->m_pNetMachines->GetMachine(GetSyncer());
+	//GChar szHost[256];
+	//machine->m_IPAddress.ToString(szHost, ARRAY_SIZE(szHost));
 	//_glogprintf(_gstr("Got sync packet for vehicle #%d (%s - ip %s):\n\tPosition: [%f, %f, %f]\n\tPos. difference: [%f, %f, %f]\n\tRotation: [%f, %f, %f]\n\tRot. difference: [%f, %f, %f]\n\tHealth: %f\n"), GetId(), machine->GetName(), szHost, m_Position.x, m_Position.y, m_Position.z, m_RelPosition.x, m_RelPosition.y, m_RelPosition.z, m_Rotation.x, m_Rotation.y, m_Rotation.z, m_RelRotation.x, m_RelRotation.y, m_RelRotation.z);
 
 	return true;
