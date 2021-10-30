@@ -1600,20 +1600,27 @@ void CServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, Stream
 
 			CNetObject* pPed = m_pManager->FromId(nPedId);
 			CNetObject* pVehicle = m_pManager->FromId(nVehicleId);
-			if (pPed != nullptr && pPed->GetSyncer() == pClient->m_nIndex)
+
+			if (pPed == nullptr
+			|| pVehicle == nullptr
+			|| pClient->m_nIndex != pPed->GetSyncer()
+			|| nSeat < 0
+			|| nSeat > 20)
 			{
-				{
-					Packet Packet(MAFIAPACKET_HUMAN_ENTERINGVEHICLE);
-					Packet.Write<int32_t>(pPed->GetId());
-					Packet.Write<int32_t>(pVehicle->GetId());
-					Packet.Write<int8_t>(nSeat);
-					Packet.Write<int32_t>(nAction);
-					Packet.Write<int32_t>(nUnknown);
-					m_pManager->SendPacketExcluding(&Packet, pClient);
-				}
+				break;
 			}
 
-			if (nSeat == 0 && pVehicle != nullptr && pVehicle->CanBeSyncer(pClient))
+			{
+				Packet Packet(MAFIAPACKET_HUMAN_ENTERINGVEHICLE);
+				Packet.Write<int32_t>(pPed->GetId());
+				Packet.Write<int32_t>(pVehicle->GetId());
+				Packet.Write<int8_t>(nSeat);
+				Packet.Write<int32_t>(nAction);
+				Packet.Write<int32_t>(nUnknown);
+				m_pManager->SendPacketExcluding(&Packet, pClient);
+			}
+
+			if (nSeat == 0 && pVehicle->CanBeSyncer(pClient))
 			{
 				_glogprintf(_gstr("Setting vehicle %d syncer to %d"), pVehicle->GetId(), pClient->m_nIndex);
 				pVehicle->SetSyncer(pClient->m_nIndex, true);
@@ -1640,17 +1647,24 @@ void CServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, Stream
 
 			CNetObject* pPed = m_pManager->FromId(nPedId);
 			CNetObject* pVehicle = m_pManager->FromId(nVehicleId);
-			if (pPed != nullptr && pPed->GetSyncer() == pClient->m_nIndex)
+
+			if (pPed == nullptr
+				|| pVehicle == nullptr
+				|| pClient->m_nIndex != pPed->GetSyncer()
+				|| nSeat < 0
+				|| nSeat > 20)
 			{
-				{
-					Packet Packet(MAFIAPACKET_HUMAN_EXITINGVEHICLE);
-					Packet.Write<int32_t>(pPed->GetId());
-					Packet.Write<int32_t>(pVehicle->GetId());
-					Packet.Write<int8_t>(nSeat);
-					Packet.Write<int32_t>(nAction);
-					Packet.Write<int32_t>(nUnknown);
-					m_pManager->SendPacketExcluding(&Packet, pClient);
-				}
+				break;
+			}
+
+			{
+				Packet Packet(MAFIAPACKET_HUMAN_EXITINGVEHICLE);
+				Packet.Write<int32_t>(pPed->GetId());
+				Packet.Write<int32_t>(pVehicle->GetId());
+				Packet.Write<int8_t>(nSeat);
+				Packet.Write<int32_t>(nAction);
+				Packet.Write<int32_t>(nUnknown);
+				m_pManager->SendPacketExcluding(&Packet, pClient);
 			}
 		}
 		break;
@@ -1674,17 +1688,24 @@ void CServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, Stream
 
 			CNetObject* pPed = m_pManager->FromId(nPedId);
 			CNetObject* pVehicle = m_pManager->FromId(nVehicleId);
-			if (pPed != nullptr && pPed->GetSyncer() == pClient->m_nIndex)
+
+			if (pPed == nullptr
+				|| pVehicle == nullptr
+				|| pClient->m_nIndex != pPed->GetSyncer()
+				|| nSeat < 0
+				|| nSeat > 20)
 			{
-				{
-					Packet Packet(MAFIAPACKET_HUMAN_EXITEDVEHICLE);
-					Packet.Write<int32_t>(pPed->GetId());
-					Packet.Write<int32_t>(pVehicle->GetId());
-					Packet.Write<int8_t>(nSeat);
-					Packet.Write<int32_t>(nAction);
-					Packet.Write<int32_t>(nUnknown);
-					m_pManager->SendPacketExcluding(&Packet, pClient);
-				}
+				break;
+			}
+
+			{
+				Packet Packet(MAFIAPACKET_HUMAN_EXITEDVEHICLE);
+				Packet.Write<int32_t>(pPed->GetId());
+				Packet.Write<int32_t>(pVehicle->GetId());
+				Packet.Write<int8_t>(nSeat);
+				Packet.Write<int32_t>(nAction);
+				Packet.Write<int32_t>(nUnknown);
+				m_pManager->SendPacketExcluding(&Packet, pClient);
 			}
 		}
 		break;
@@ -1708,20 +1729,27 @@ void CServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, Stream
 
 			CNetObject* pPed = m_pManager->FromId(nPedId);
 			CNetObject* pVehicle = m_pManager->FromId(nVehicleId);
-			if (pPed != nullptr && pPed->GetSyncer() == pClient->m_nIndex)
+
+			if (pPed == nullptr
+				|| pVehicle == nullptr
+				|| pClient->m_nIndex != pPed->GetSyncer()
+				|| nSeat < 0
+				|| nSeat > 20)
 			{
-				{
-					Packet Packet(MAFIAPACKET_HUMAN_ENTEREDVEHICLE);
-					Packet.Write<int32_t>(pPed->GetId());
-					Packet.Write<int32_t>(pVehicle->GetId());
-					Packet.Write<int8_t>(nSeat);
-					Packet.Write<int32_t>(nAction);
-					Packet.Write<int32_t>(nUnknown);
-					m_pManager->SendPacketExcluding(&Packet, pClient);
-				}
+				break;
+			}
+
+			{
+				Packet Packet(MAFIAPACKET_HUMAN_ENTEREDVEHICLE);
+				Packet.Write<int32_t>(pPed->GetId());
+				Packet.Write<int32_t>(pVehicle->GetId());
+				Packet.Write<int8_t>(nSeat);
+				Packet.Write<int32_t>(nAction);
+				Packet.Write<int32_t>(nUnknown);
+				m_pManager->SendPacketExcluding(&Packet, pClient);
 			}
 			
-			if (nSeat == 0 && pVehicle != nullptr && pVehicle->CanBeSyncer(pClient))
+			if (nSeat == 0 && pVehicle->CanBeSyncer(pClient))
 			{
 				_glogprintf(_gstr("Setting vehicle %d syncer to %d"), pVehicle->GetId(), pClient->m_nIndex);
 				pVehicle->SetSyncer(pClient->m_nIndex, true);
@@ -1742,18 +1770,26 @@ void CServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, Stream
 
 			CNetObject* pPed = m_pManager->FromId(nPedId);
 			CNetObject* pVehicle = m_pManager->FromId(nVehicleId);
-			if (pPed != nullptr && pPed->GetSyncer() == pClient->m_nIndex)
+
+			if (pPed == nullptr
+				|| pVehicle == nullptr
+				|| pClient->m_nIndex != pPed->GetSyncer()
+				|| nSeat < 0
+				|| nSeat > 20)
 			{
-				{
-					Packet Packet(MAFIAPACKET_HUMAN_JACKVEHICLE);
-					Packet.Write<int32_t>(pPed->GetId());
-					Packet.Write<int32_t>(pVehicle->GetId());
-					Packet.Write<int8_t>(nSeat);
-					m_pManager->SendPacketExcluding(&Packet, pClient);
-				}
+				break;
 			}
 
-			if (nSeat == 0) {
+			{
+				Packet Packet(MAFIAPACKET_HUMAN_JACKVEHICLE);
+				Packet.Write<int32_t>(pPed->GetId());
+				Packet.Write<int32_t>(pVehicle->GetId());
+				Packet.Write<int8_t>(nSeat);
+				m_pManager->SendPacketExcluding(&Packet, pClient);
+			}
+
+			if (nSeat == 0)
+			{
 				pVehicle->SetSyncer(pClient->m_nIndex);
 			}
 		}
