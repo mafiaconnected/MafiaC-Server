@@ -94,7 +94,10 @@ bool CServerHuman::ReadCreatePacket(Stream* pStream)
 	m_ucSeat = Packet.seat;
 	m_IsCrouching = Packet.isCrouching;
 	m_IsAiming = Packet.isAiming;
+	m_AnimationStateLocal = Packet.animStateLocal;
+	m_IsInAnimWithCarLocal = Packet.isInAnimWithCarLocal;
 	m_AnimationState = Packet.animationState;
+	m_IsInAnimWithCar = Packet.isInAnimWithCar;
 
 	m_RelPosition = { 0,0,0 };
 	m_RelRotation = { 0,0,0 };
@@ -116,7 +119,10 @@ bool CServerHuman::ReadSyncPacket(Stream* pStream)
 	m_nVehicleNetworkIndex = Packet.vehicleNetworkIndex;
 	m_IsCrouching = Packet.isCrouching;
 	m_IsAiming = Packet.isAiming;
+	m_AnimationStateLocal = Packet.animStateLocal;
+	m_IsInAnimWithCarLocal = Packet.isInAnimWithCarLocal;
 	m_AnimationState = Packet.animationState;
+	m_IsInAnimWithCar = Packet.isInAnimWithCar;
 
 	auto machine = m_pServerManager->m_pNetMachines->GetMachine(GetSyncer());
 	GChar szHost[256];
@@ -138,7 +144,10 @@ bool CServerHuman::WriteCreatePacket(Stream* pStream)
 	Packet.seat = m_ucSeat;
 	Packet.isCrouching = m_IsCrouching;
 	Packet.isAiming = m_IsAiming;
+	Packet.animStateLocal = m_AnimationStateLocal;
+	Packet.isInAnimWithCarLocal = m_IsInAnimWithCarLocal;
 	Packet.animationState = m_AnimationState;
+	Packet.isInAnimWithCar = m_IsInAnimWithCar;
 
 	if (pStream->Write(&Packet, sizeof(Packet)) != sizeof(Packet))
 		return false;
@@ -158,7 +167,10 @@ bool CServerHuman::WriteSyncPacket(Stream* pStream)
 	Packet.seat = m_ucSeat;
 	Packet.isCrouching = m_IsCrouching;
 	Packet.isAiming = m_IsAiming;
+	Packet.animStateLocal = m_AnimationStateLocal;
+	Packet.isInAnimWithCarLocal = m_IsInAnimWithCarLocal;
 	Packet.animationState = m_AnimationState;
+	Packet.isInAnimWithCar = m_IsInAnimWithCar;
 
 	if (pStream->Write(&Packet, sizeof(Packet)) != sizeof(Packet))
 		return false;

@@ -19,7 +19,10 @@ public:
 
 	InventoryItem items[8];
 
+	uint8_t m_AnimationStateLocal = 0;
+	bool m_IsInAnimWithCarLocal = false;
 	uint8_t m_AnimationState = 0;
+	bool m_IsInAnimWithCar = false;
 	bool m_IsCrouching = false;
 	bool m_IsAiming = false;
 

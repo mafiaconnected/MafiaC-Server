@@ -93,7 +93,10 @@ struct tHumanCreatePacket
 	uint32_t seat;
 	bool isCrouching;
 	bool isAiming;
+	uint32_t animStateLocal;
+	bool isInAnimWithCarLocal;
 	uint32_t animationState;
+	bool isInAnimWithCar;
 	float inCarRotation;
 };
 
@@ -104,7 +107,10 @@ struct tHumanSyncPacket
 	uint32_t seat;
 	bool isCrouching;
 	bool isAiming;
+	uint32_t animStateLocal;
+	bool isInAnimWithCarLocal;
 	uint32_t animationState;
+	bool isInAnimWithCar;
 	float inCarRotation;
 };
 
