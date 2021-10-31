@@ -116,8 +116,12 @@ bool CServerHuman::ReadSyncPacket(Stream* pStream)
 	if (pStream->Read(&Packet, sizeof(Packet)) != sizeof(Packet))
 		return false;
 
+	int32_t nOldVehicleNetworkIndex = m_nVehicleNetworkIndex;
+	int8_t nOldSeat = m_ucSeat;
+
 	m_fHealth = Packet.health;
 	m_nVehicleNetworkIndex = Packet.vehicleNetworkIndex;
+	m_ucSeat = Packet.seat;
 	m_IsCrouching = Packet.isCrouching;
 	m_IsAiming = Packet.isAiming;
 	m_AnimationStateLocal = Packet.animStateLocal;
@@ -126,6 +130,48 @@ bool CServerHuman::ReadSyncPacket(Stream* pStream)
 	m_IsInAnimWithCar = Packet.isInAnimWithCar;
 	m_fInCarRotation = Packet.inCarRotation;
 	m_iAnimStopTime = Packet.animStopTime;
+
+	if (m_nVehicleNetworkIndex == INVALID_NETWORK_ID)
+	{
+		auto pOldVehicle = static_cast<CServerVehicle*>(m_pNetObjectMgr->FromId(nOldVehicleNetworkIndex, ELEMENT_VEHICLE));
+		if (pOldVehicle != nullptr)
+		{
+			if (nOldSeat > 0 && nOldSeat < ARRAY_COUNT(CServerVehicle::m_pProbableOccupants))
+			{
+				pOldVehicle->m_pProbableOccupants[nOldSeat] = nullptr;
+			}
+		}
+	}
+	else
+	{
+		auto pOldVehicle = static_cast<CServerVehicle*>(m_pNetObjectMgr->FromId(nOldVehicleNetworkIndex, ELEMENT_VEHICLE));
+		auto pNewVehicle = static_cast<CServerVehicle*>(m_pNetObjectMgr->FromId(m_nVehicleNetworkIndex, ELEMENT_VEHICLE));
+		if (pOldVehicle == nullptr)
+		{
+			if (pNewVehicle != nullptr)
+			{
+				if (m_ucSeat > 0 && m_ucSeat < ARRAY_COUNT(CServerVehicle::m_pProbableOccupants))
+				{
+					pNewVehicle->m_pProbableOccupants[m_ucSeat] = this;
+				}
+			}
+		}
+		else if (pOldVehicle != pNewVehicle)
+		{
+			if (pNewVehicle != nullptr)
+			{
+				if (nOldSeat > 0 && nOldSeat < ARRAY_COUNT(CServerVehicle::m_pProbableOccupants))
+				{
+					pOldVehicle->m_pProbableOccupants[nOldSeat] = nullptr;
+				}
+
+				if (m_ucSeat > 0 && m_ucSeat < ARRAY_COUNT(CServerVehicle::m_pProbableOccupants))
+				{
+					pNewVehicle->m_pProbableOccupants[m_ucSeat] = this;
+				}
+			}
+		}
+	}
 
 	auto machine = m_pServerManager->m_pNetMachines->GetMachine(GetSyncer());
 	GChar szHost[256];
