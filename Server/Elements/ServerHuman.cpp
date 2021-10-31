@@ -146,19 +146,17 @@ bool CServerHuman::ReadSyncPacket(Stream* pStream)
 	{
 		auto pOldVehicle = static_cast<CServerVehicle*>(m_pNetObjectMgr->FromId(nOldVehicleNetworkIndex, ELEMENT_VEHICLE));
 		auto pNewVehicle = static_cast<CServerVehicle*>(m_pNetObjectMgr->FromId(m_nVehicleNetworkIndex, ELEMENT_VEHICLE));
-		if (pOldVehicle == nullptr)
+
+		if (pNewVehicle != nullptr)
 		{
-			if (pNewVehicle != nullptr)
+			if (pOldVehicle == nullptr)
 			{
 				if (m_ucSeat > 0 && m_ucSeat < ARRAY_COUNT(CServerVehicle::m_pProbableOccupants))
 				{
 					pNewVehicle->m_pProbableOccupants[m_ucSeat] = this;
 				}
 			}
-		}
-		else if (pOldVehicle != pNewVehicle)
-		{
-			if (pNewVehicle != nullptr)
+			else if (pOldVehicle != pNewVehicle)
 			{
 				if (nOldSeat > 0 && nOldSeat < ARRAY_COUNT(CServerVehicle::m_pProbableOccupants))
 				{
@@ -169,6 +167,12 @@ bool CServerHuman::ReadSyncPacket(Stream* pStream)
 				{
 					pNewVehicle->m_pProbableOccupants[m_ucSeat] = this;
 				}
+			}
+
+			CVector3D vecNewVehiclePos;
+			if (pNewVehicle->GetPosition(vecNewVehiclePos))
+			{
+				SetPosition(vecNewVehiclePos);
 			}
 		}
 	}
