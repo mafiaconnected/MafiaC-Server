@@ -34,9 +34,13 @@ addCommandHandler("veh", (command, params, client) => {
 		return false;
 	}
 
-	//let position = client.player.position;
-	//position.x += 5;
 	let vehicle = game.createVehicle(`${model}.i3d`, getPosInFrontOfPos(client.player.position, client.player.heading, 5), degToRad(client.player.heading));
+
+	if(game.mapName == "FREERIDENOC") {
+		vehicle.lights = true;
+	} else {
+		vehicle.lights = false;
+	}
 
     message(`${client.name} spawned a ${vehicleNames[vehicleModels.indexOf(model)]}`, COLOUR_YELLOW);
 });
