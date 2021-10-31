@@ -98,6 +98,7 @@ bool CServerHuman::ReadCreatePacket(Stream* pStream)
 	m_IsInAnimWithCarLocal = Packet.isInAnimWithCarLocal;
 	m_AnimationState = Packet.animationState;
 	m_IsInAnimWithCar = Packet.isInAnimWithCar;
+	m_iAnimStopTime = Packet.animStopTime;
 
 	m_RelPosition = { 0,0,0 };
 	m_RelRotation = { 0,0,0 };
@@ -123,6 +124,8 @@ bool CServerHuman::ReadSyncPacket(Stream* pStream)
 	m_IsInAnimWithCarLocal = Packet.isInAnimWithCarLocal;
 	m_AnimationState = Packet.animationState;
 	m_IsInAnimWithCar = Packet.isInAnimWithCar;
+	m_fInCarRotation = Packet.inCarRotation;
+	m_iAnimStopTime = Packet.animStopTime;
 
 	auto machine = m_pServerManager->m_pNetMachines->GetMachine(GetSyncer());
 	GChar szHost[256];
@@ -148,6 +151,7 @@ bool CServerHuman::WriteCreatePacket(Stream* pStream)
 	Packet.isInAnimWithCarLocal = m_IsInAnimWithCarLocal;
 	Packet.animationState = m_AnimationState;
 	Packet.isInAnimWithCar = m_IsInAnimWithCar;
+	Packet.animStopTime = m_iAnimStopTime;
 
 	if (pStream->Write(&Packet, sizeof(Packet)) != sizeof(Packet))
 		return false;
@@ -171,6 +175,8 @@ bool CServerHuman::WriteSyncPacket(Stream* pStream)
 	Packet.isInAnimWithCarLocal = m_IsInAnimWithCarLocal;
 	Packet.animationState = m_AnimationState;
 	Packet.isInAnimWithCar = m_IsInAnimWithCar;
+	Packet.inCarRotation = m_fInCarRotation;
+	Packet.animStopTime = m_iAnimStopTime;
 
 	if (pStream->Write(&Packet, sizeof(Packet)) != sizeof(Packet))
 		return false;

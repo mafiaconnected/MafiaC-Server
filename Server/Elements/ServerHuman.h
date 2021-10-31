@@ -23,8 +23,10 @@ public:
 	bool m_IsInAnimWithCarLocal = false;
 	uint8_t m_AnimationState = 0;
 	bool m_IsInAnimWithCar = false;
+	float m_fInCarRotation = 0.0f;
 	bool m_IsCrouching = false;
 	bool m_IsAiming = false;
+	int32_t m_iAnimStopTime = 0;
 
 	float m_fCurrentRotation;
 	float m_fHealth = 200;
