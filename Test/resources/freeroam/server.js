@@ -842,52 +842,19 @@ let weaponNames = {
 
 // ===========================================================================
 
-function getPosToRightOfPos(pos, angle, distance) {
-	angle = degToRad(angle);
-
-	let x = (pos.x+((Math.cos((-angle+1.57)+(Math.PI/2)))*distance));
-	let z = (pos.z+((Math.sin((-angle+1.57)+(Math.PI/2)))*distance));
-
-	let rightPos = new Vec3(x, pos.y, z);
-
-	return rightPos;
-}
-
-// ===========================================================================
-
-function getPosToLeftOfPos(pos, angle, distance) {
-	angle = degToRad(angle);
-
-	let x = (pos.x+((Math.cos((angle+1.57)+(Math.PI/2)))*distance));
-	let z = (pos.y+((Math.sin((angle+1.57)+(Math.PI/2)))*distance));
-
-	let leftPos = new Vec3(x, pos.y, z);
-
-	return leftPos;
-}
-
-// ===========================================================================
-
 function getPosInFrontOfPos(pos, angle, distance) {
-	angle = degToRad(angle);
+    while(angle < 0.0)
+        angle += 360.0;
+    while(angle > 360.0)
+        angle -= 360.0;
 
-	let x = (pos.x+((Math.cos(angle-(Math.PI/2)))*distance));
-	let y = (pos.y+((Math.sin(angle-(Math.PI/2)))*distance));
-	let z = pos.z
+    angle = degToRad(angle);
 
-	return new Vec3(x, y, z);
-}
+    let x = (pos.x+((Math.cos(angle-(Math.PI/2)))*distance));
+    let y = pos.y;
+    let z = (pos.z+((Math.sin(angle+(Math.PI/2)))*distance))
 
-// ===========================================================================
-
-function getPosBehindPos(pos, angle, distance) {
-	angle = degToRad(angle);
-
-	let x = (pos.x+((Math.cos(angle+(Math.PI/2)))*distance));
-	let y = (pos.y+((Math.sin(angle+(Math.PI/2)))*distance));
-	let z = pos.z
-
-	return new Vec3(x,y,z);
+    return new Vec3(x, y, z);
 }
 
 // ===========================================================================
