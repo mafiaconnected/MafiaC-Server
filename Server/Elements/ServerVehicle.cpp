@@ -318,6 +318,71 @@ void CServerVehicle::SetRoof(bool bRoof)
 	}
 }
 
+void CServerVehicle::SetFuel(float fFuel)
+{
+	if (m_Fuel != fFuel)
+	{
+		m_Fuel = fFuel;
+
+		Packet Packet(MAFIAPACKET_VEHICLE_SETFUEL);
+		Packet.Write<int32_t>(GetId());
+		Packet.Write<float>(fFuel);
+		m_pNetObjectMgr->SendObjectRelatedPacket(&Packet, this);
+	}
+}
+
+void CServerVehicle::SetWheelAngle(float fWheelAngle)
+{
+	if (m_WheelAngle != fWheelAngle)
+	{
+		m_WheelAngle = fWheelAngle;
+
+		Packet Packet(MAFIAPACKET_VEHICLE_SETWHEELANGLE);
+		Packet.Write<int32_t>(GetId());
+		Packet.Write<float>(fWheelAngle);
+		m_pNetObjectMgr->SendObjectRelatedPacket(&Packet, this);
+	}
+}
+
+void CServerVehicle::SetEngineRPM(float fEngineRPM)
+{
+	if (m_EngineRPM != fEngineRPM)
+	{
+		m_EngineRPM = fEngineRPM;
+
+		Packet Packet(MAFIAPACKET_VEHICLE_SETENGINERPM);
+		Packet.Write<int32_t>(GetId());
+		Packet.Write<float>(fEngineRPM);
+		m_pNetObjectMgr->SendObjectRelatedPacket(&Packet, this);
+	}
+}
+
+void CServerVehicle::SetSpeedLimit(float fSpeedLimit)
+{
+	if (m_SpeedLimit != fSpeedLimit)
+	{
+		m_SpeedLimit = fSpeedLimit;
+
+		Packet Packet(MAFIAPACKET_VEHICLE_SETSPEEDLIMIT);
+		Packet.Write<int32_t>(GetId());
+		Packet.Write<float>(fSpeedLimit);
+		m_pNetObjectMgr->SendObjectRelatedPacket(&Packet, this);
+	}
+}
+
+void CServerVehicle::SetEngineHealth(float fEngineHealth)
+{
+	if (m_EngineHealth != fEngineHealth)
+	{
+		m_EngineHealth = fEngineHealth;
+
+		Packet Packet(MAFIAPACKET_VEHICLE_SETENGINEHEALTH);
+		Packet.Write<int32_t>(GetId());
+		Packet.Write<float>(fEngineHealth);
+		m_pNetObjectMgr->SendObjectRelatedPacket(&Packet, this);
+	}
+}
+
 CServerHuman* CServerVehicle::GetOccupant(size_t Index)
 {
 	if (Index >= ARRAY_COUNT(m_pProbableOccupants))

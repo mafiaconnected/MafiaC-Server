@@ -356,6 +356,146 @@ static bool FunctionVehicleSetSiren(IScriptState* pState, int argc, void* pUser)
 	return true;
 }
 
+static bool FunctionVehicleGetFuel(IScriptState* pState, int argc, void* pUser)
+{
+	CMafiaServerManager* pServerManager = (CMafiaServerManager*)pUser;
+	CServerVehicle* pServerVehicle;
+	if (!pState->GetThis(pServerManager->m_pServerVehicleClass, &pServerVehicle))
+		return false;
+	pState->ReturnNumber(pServerVehicle->GetFuel());
+	return true;
+}
+
+static bool FunctionVehicleSetFuel(IScriptState* pState, int argc, void* pUser)
+{
+	CMafiaServerManager* pServerManager = (CMafiaServerManager*)pUser;
+	CServerVehicle* pServerVehicle;
+	if (!pState->GetThis(pServerManager->m_pServerVehicleClass, &pServerVehicle))
+		return false;
+	float fFuel;
+	if (!pState->CheckNumber(0, fFuel))
+		return false;
+	pServerVehicle->SetFuel(fFuel);
+	return true;
+}
+
+static bool FunctionVehicleGetWheelAngle(IScriptState* pState, int argc, void* pUser)
+{
+	CMafiaServerManager* pServerManager = (CMafiaServerManager*)pUser;
+	CServerVehicle* pServerVehicle;
+	if (!pState->GetThis(pServerManager->m_pServerVehicleClass, &pServerVehicle))
+		return false;
+	pState->ReturnNumber(pServerVehicle->GetWheelAngle());
+	return true;
+}
+
+static bool FunctionVehicleSetWheelAngle(IScriptState* pState, int argc, void* pUser)
+{
+	CMafiaServerManager* pServerManager = (CMafiaServerManager*)pUser;
+	CServerVehicle* pServerVehicle;
+	if (!pState->GetThis(pServerManager->m_pServerVehicleClass, &pServerVehicle))
+		return false;
+	float fWheelAngle;
+	if (!pState->CheckNumber(0, fWheelAngle))
+		return false;
+	pServerVehicle->SetWheelAngle(fWheelAngle);
+	return true;
+}
+
+static bool FunctionVehicleGetEngineRPM(IScriptState* pState, int argc, void* pUser)
+{
+	CMafiaServerManager* pServerManager = (CMafiaServerManager*)pUser;
+	CServerVehicle* pServerVehicle;
+	if (!pState->GetThis(pServerManager->m_pServerVehicleClass, &pServerVehicle))
+		return false;
+	pState->ReturnNumber(pServerVehicle->GetEngineRPM());
+	return true;
+}
+
+static bool FunctionVehicleSetEngineRPM(IScriptState* pState, int argc, void* pUser)
+{
+	CMafiaServerManager* pServerManager = (CMafiaServerManager*)pUser;
+	CServerVehicle* pServerVehicle;
+	if (!pState->GetThis(pServerManager->m_pServerVehicleClass, &pServerVehicle))
+		return false;
+	float fEngineRPM;
+	if (!pState->CheckNumber(0, fEngineRPM))
+		return false;
+	pServerVehicle->SetEngineRPM(fEngineRPM);
+	return true;
+}
+
+static bool FunctionVehicleGetEngineHealth(IScriptState* pState, int argc, void* pUser)
+{
+	CMafiaServerManager* pServerManager = (CMafiaServerManager*)pUser;
+	CServerVehicle* pServerVehicle;
+	if (!pState->GetThis(pServerManager->m_pServerVehicleClass, &pServerVehicle))
+		return false;
+	pState->ReturnNumber(pServerVehicle->GetEngineHealth());
+	return true;
+}
+
+static bool FunctionVehicleSetEngineHealth(IScriptState* pState, int argc, void* pUser)
+{
+	CMafiaServerManager* pServerManager = (CMafiaServerManager*)pUser;
+	CServerVehicle* pServerVehicle;
+	if (!pState->GetThis(pServerManager->m_pServerVehicleClass, &pServerVehicle))
+		return false;
+	float fEngineHealth;
+	if (!pState->CheckNumber(0, fEngineHealth))
+		return false;
+	pServerVehicle->SetEngineHealth(fEngineHealth);
+	return true;
+}
+
+/*
+static bool FunctionVehicleGetSpeed(IScriptState* pState, int argc, void* pUser)
+{
+	CMafiaServerManager* pServerManager = (CMafiaServerManager*)pUser;
+	CServerVehicle* pServerVehicle;
+	if (!pState->GetThis(pServerManager->m_pServerVehicleClass, &pServerVehicle))
+		return false;
+	pState->ReturnNumber(pServerVehicle->GetSpeed());
+	return true;
+}
+
+static bool FunctionVehicleSetSpeed(IScriptState* pState, int argc, void* pUser)
+{
+	CMafiaServerManager* pServerManager = (CMafiaServerManager*)pUser;
+	CServerVehicle* pServerVehicle;
+	if (!pState->GetThis(pServerManager->m_pServerVehicleClass, &pServerVehicle))
+		return false;
+	float fSpeed;
+	if (!pState->CheckNumber(0, fSpeed))
+		return false;
+	pServerVehicle->SetSpeed(fSpeed);
+	return true;
+}
+*/
+
+static bool FunctionVehicleGetSpeedLimit(IScriptState* pState, int argc, void* pUser)
+{
+	CMafiaServerManager* pServerManager = (CMafiaServerManager*)pUser;
+	CServerVehicle* pServerVehicle;
+	if (!pState->GetThis(pServerManager->m_pServerVehicleClass, &pServerVehicle))
+		return false;
+	pState->ReturnNumber(pServerVehicle->GetSpeedLimit());
+	return true;
+}
+
+static bool FunctionVehicleSetSpeedLimit(IScriptState* pState, int argc, void* pUser)
+{
+	CMafiaServerManager* pServerManager = (CMafiaServerManager*)pUser;
+	CServerVehicle* pServerVehicle;
+	if (!pState->GetThis(pServerManager->m_pServerVehicleClass, &pServerVehicle))
+		return false;
+	float fSpeedLimit;
+	if (!pState->CheckNumber(0, fSpeedLimit))
+		return false;
+	pServerVehicle->SetSpeedLimit(fSpeedLimit);
+	return true;
+}
+
 static bool FunctionVehicleFix(IScriptState* pState, int argc, void* pUser)
 {
 	CMafiaServerManager* pServerManager = (CMafiaServerManager*)pUser;
@@ -885,6 +1025,16 @@ static bool FunctionPedGetOccupiedVehicle(IScriptState* pState, int argc, void* 
     return true;
 }
 
+static bool FunctionPedIsEnteringExitingVehicle(IScriptState* pState, int argc, void* pUser)
+{
+	CMafiaServerManager* pServerManager = (CMafiaServerManager*)pUser;
+	CServerHuman* pServerPed;
+	if (!pState->GetThis(pServerManager->m_pServerHumanClass, &pServerPed))
+		return false;
+	pState->ReturnBoolean(pServerPed->m_EnteringExitingVehicle);
+	return true;
+}
+
 void CMafiaServerManager::RegisterFunctions(CScripting* pScripting)
 {
 	auto pGameNamespace = pScripting->m_Global.AddNamespace(_gstr("mafia"));
@@ -904,11 +1054,19 @@ void CMafiaServerManager::RegisterFunctions(CScripting* pScripting)
 		m_pServerVehicleClass->AddProperty(this, _gstr("model"), ARGUMENT_STRING, FunctionEntityGetModel, FunctionEntitySetModel);
 		m_pServerVehicleClass->AddProperty(this, _gstr("heading"), ARGUMENT_FLOAT, FunctionEntityGetHeading, FunctionEntitySetHeading);
 
-		m_pServerVehicleClass->AddProperty(this, _gstr("locked"), ARGUMENT_BOOLEAN, FunctionVehicleGetLocked, FunctionVehicleSetLocked);
+		//m_pServerVehicleClass->AddProperty(this, _gstr("locked"), ARGUMENT_BOOLEAN, FunctionVehicleGetLocked, FunctionVehicleSetLocked);
 		m_pServerVehicleClass->AddProperty(this, _gstr("siren"), ARGUMENT_BOOLEAN, FunctionVehicleGetSiren, FunctionVehicleSetSiren);
 		m_pServerVehicleClass->AddProperty(this, _gstr("engine"), ARGUMENT_BOOLEAN, FunctionVehicleGetEngine, FunctionVehicleSetEngine);
-		m_pServerVehicleClass->AddProperty(this, _gstr("roof"), ARGUMENT_BOOLEAN, FunctionVehicleGetRoof, FunctionVehicleSetRoof);
+		//m_pServerVehicleClass->AddProperty(this, _gstr("roof"), ARGUMENT_BOOLEAN, FunctionVehicleGetRoof, FunctionVehicleSetRoof);
 		m_pServerVehicleClass->AddProperty(this, _gstr("lights"), ARGUMENT_BOOLEAN, FunctionVehicleGetLights, FunctionVehicleSetLights);
+		m_pServerVehicleClass->AddProperty(this, _gstr("fuel"), ARGUMENT_FLOAT, FunctionVehicleGetFuel, FunctionVehicleSetFuel);
+		m_pServerVehicleClass->AddProperty(this, _gstr("wheelAngle"), ARGUMENT_FLOAT, FunctionVehicleGetWheelAngle, FunctionVehicleSetWheelAngle);
+		m_pServerVehicleClass->AddProperty(this, _gstr("speedLimit"), ARGUMENT_FLOAT, FunctionVehicleGetSpeedLimit, FunctionVehicleSetSpeedLimit);
+		m_pServerVehicleClass->AddProperty(this, _gstr("engineRPM"), ARGUMENT_FLOAT, FunctionVehicleGetEngineRPM, FunctionVehicleSetEngineRPM);
+		//m_pServerVehicleClass->AddProperty(this, _gstr("speed"), ARGUMENT_FLOAT, FunctionVehicleGetSpeed, FunctionVehicleSetSpeed);
+		//m_pServerVehicleClass->AddProperty(this, _gstr("turnVelocity"), ARGUMENT_VECTOR3D, FunctionVehicleGetRotationVelocity, FunctionVehicleSetRotationVelocity);
+		//m_pServerVehicleClass->AddProperty(this, _gstr("velocity"), ARGUMENT_VECTOR3D, FunctionVehicleGetVelocity, FunctionVehicleSetVelocity);
+		m_pServerVehicleClass->AddProperty(this, _gstr("engineHealth"), ARGUMENT_FLOAT, FunctionVehicleGetEngineHealth, FunctionVehicleSetEngineHealth);
 
 		m_pServerVehicleClass->RegisterFunction(_gstr("fix"), _gstr("t"), FunctionVehicleFix, this);
 		m_pServerVehicleClass->RegisterFunction(_gstr("getOccupant"), _gstr("ti"), FunctionVehicleGetOccupant, this);
@@ -926,8 +1084,8 @@ void CMafiaServerManager::RegisterFunctions(CScripting* pScripting)
 		//m_pServerPedClass->AddProperty(this, _gstr("weaponAmmunition"), ARGUMENT_INTEGER, FunctionPedGetWeaponAmmunition);
 		//m_pServerPedClass->AddProperty(this, _gstr("weaponClipAmmunition"), ARGUMENT_INTEGER, FunctionPedGetWeaponClipAmmunition);
 		//m_pServerPedClass->AddProperty(this, _gstr("weaponState"), ARGUMENT_INTEGER, FunctionPedGetWeaponState);
-		//m_pServerPedClass->AddProperty(this, _gstr("isEnteringVehicle"), ARGUMENT_BOOLEAN, FunctionPedIsEnteringVehicle);
-		//m_pServerPedClass->AddProperty(this, _gstr("isExitingVehicle"), ARGUMENT_BOOLEAN, FunctionPedIsExitingVehicle);
+		m_pServerHumanClass->AddProperty(this, _gstr("isEnteringVehicle"), ARGUMENT_BOOLEAN, FunctionPedIsEnteringExitingVehicle);
+		m_pServerHumanClass->AddProperty(this, _gstr("isExitingVehicle"), ARGUMENT_BOOLEAN, FunctionPedIsEnteringExitingVehicle);
 
 		m_pServerHumanClass->RegisterFunction(_gstr("giveWeapon"), _gstr("ti|ii"), FunctionHumanGiveWeapon, this);
 	}

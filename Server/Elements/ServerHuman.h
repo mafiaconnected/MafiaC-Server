@@ -34,6 +34,8 @@ public:
 	size_t m_ucSeat = 0;
 	uint32_t m_Behavior = 4;
 
+	bool m_EnteringExitingVehicle = false;
+
 	Galactic3D::Weak<CServerVehicle> m_pCurrentVehicle;
 
 	virtual void SetModel(const GChar* sModel) override;

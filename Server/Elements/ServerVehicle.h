@@ -71,5 +71,29 @@ public:
 	bool GetRoof(void) { return m_Roof; }
 	void SetRoof(bool bRoof);
 
+	float GetFuel(void) { return m_Fuel; }
+	void SetFuel(float fFuel);
+
+	float GetEngineRPM(void) { return m_EngineRPM; }
+	void SetEngineRPM(float fEngineRPM);
+
+	float GetWheelAngle(void) { return m_WheelAngle; }
+	void SetWheelAngle(float fWheelAngle);
+
+	float GetSpeedLimit(void) { return m_SpeedLimit; }
+	void SetSpeedLimit(float fSpeedLimit);
+
+	float GetEngineHealth(void) { return m_EngineHealth; }
+	void SetEngineHealth(float fEngineHealth);
+
+	//float GetSpeed(void) { return m_Speed; }
+	//void SetSpeed(float fSpeed);
+
+	//void GetVelocity(CVector3D& vecVelocity);
+	//void SetVelocity(const CVector3D& vecVelocity);
+
+	//void GetRotationVelocity(CVector3D& vecRotationVelocity);
+	//void SetRotationVelocity(const CVector3D& vecRotationVelocity);
+
 	CServerHuman* GetOccupant(size_t Index);
 };
