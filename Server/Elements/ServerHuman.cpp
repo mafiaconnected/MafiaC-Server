@@ -94,6 +94,7 @@ bool CServerHuman::ReadCreatePacket(Stream* pStream)
 	m_ucSeat = Packet.seat;
 	m_IsCrouching = Packet.isCrouching;
 	m_IsAiming = Packet.isAiming;
+	m_IsShooting = Packet.isShooting;
 	m_AnimationStateLocal = Packet.animStateLocal;
 	m_IsInAnimWithCarLocal = Packet.isInAnimWithCarLocal;
 	m_AnimationState = Packet.animationState;
@@ -124,6 +125,7 @@ bool CServerHuman::ReadSyncPacket(Stream* pStream)
 	m_ucSeat = Packet.seat;
 	m_IsCrouching = Packet.isCrouching;
 	m_IsAiming = Packet.isAiming;
+	m_IsShooting = Packet.isShooting;
 	m_AnimationStateLocal = Packet.animStateLocal;
 	m_IsInAnimWithCarLocal = Packet.isInAnimWithCarLocal;
 	m_AnimationState = Packet.animationState;
@@ -197,6 +199,7 @@ bool CServerHuman::WriteCreatePacket(Stream* pStream)
 	Packet.seat = m_ucSeat;
 	Packet.isCrouching = m_IsCrouching;
 	Packet.isAiming = m_IsAiming;
+	Packet.isShooting = m_IsShooting;
 	Packet.animStateLocal = m_AnimationStateLocal;
 	Packet.isInAnimWithCarLocal = m_IsInAnimWithCarLocal;
 	Packet.animationState = m_AnimationState;
@@ -221,6 +224,7 @@ bool CServerHuman::WriteSyncPacket(Stream* pStream)
 	Packet.seat = m_ucSeat;
 	Packet.isCrouching = m_IsCrouching;
 	Packet.isAiming = m_IsAiming;
+	Packet.isShooting = m_IsShooting;
 	Packet.animStateLocal = m_AnimationStateLocal;
 	Packet.isInAnimWithCarLocal = m_IsInAnimWithCarLocal;
 	Packet.animationState = m_AnimationState;

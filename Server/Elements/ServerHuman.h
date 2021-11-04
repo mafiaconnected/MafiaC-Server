@@ -26,6 +26,7 @@ public:
 	float m_fInCarRotation = 0.0f;
 	bool m_IsCrouching = false;
 	bool m_IsAiming = false;
+	bool m_IsShooting = false;
 	int32_t m_iAnimStopTime = 0;
 
 	float m_fCurrentRotation;
