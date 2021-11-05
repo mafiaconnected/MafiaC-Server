@@ -100,6 +100,7 @@ bool CServerHuman::ReadCreatePacket(Stream* pStream)
 	m_AnimationState = Packet.animationState;
 	m_IsInAnimWithCar = Packet.isInAnimWithCar;
 	m_iAnimStopTime = Packet.animStopTime;
+	m_WeaponId = Packet.weaponId;
 
 	m_RelPosition = { 0,0,0 };
 	m_RelRotation = { 0,0,0 };
@@ -132,6 +133,7 @@ bool CServerHuman::ReadSyncPacket(Stream* pStream)
 	m_IsInAnimWithCar = Packet.isInAnimWithCar;
 	m_fInCarRotation = Packet.inCarRotation;
 	m_iAnimStopTime = Packet.animStopTime;
+	m_WeaponId = Packet.weaponId;
 
 	if (m_nVehicleNetworkIndex == INVALID_NETWORK_ID)
 	{
@@ -205,6 +207,7 @@ bool CServerHuman::WriteCreatePacket(Stream* pStream)
 	Packet.animationState = m_AnimationState;
 	Packet.isInAnimWithCar = m_IsInAnimWithCar;
 	Packet.animStopTime = m_iAnimStopTime;
+	Packet.weaponId = m_WeaponId;
 
 	if (pStream->Write(&Packet, sizeof(Packet)) != sizeof(Packet))
 		return false;
@@ -231,6 +234,7 @@ bool CServerHuman::WriteSyncPacket(Stream* pStream)
 	Packet.isInAnimWithCar = m_IsInAnimWithCar;
 	Packet.inCarRotation = m_fInCarRotation;
 	Packet.animStopTime = m_iAnimStopTime;
+	Packet.weaponId = m_WeaponId;
 
 	if (pStream->Write(&Packet, sizeof(Packet)) != sizeof(Packet))
 		return false;

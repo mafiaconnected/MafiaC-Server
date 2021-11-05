@@ -105,6 +105,7 @@ struct tHumanCreatePacket
 	bool isInAnimWithCar;
 	float inCarRotation;
 	int32_t animStopTime;
+	int16_t weaponId;
 };
 
 struct tHumanSyncPacket
@@ -121,6 +122,7 @@ struct tHumanSyncPacket
 	bool isInAnimWithCar;
 	float inCarRotation;
 	int32_t animStopTime;
+	int16_t weaponId;
 };
 
 struct tVehicleCreatePacket

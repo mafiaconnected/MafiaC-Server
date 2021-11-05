@@ -1544,6 +1544,10 @@ void CServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, Stream
 				CNetObject* pPed = m_pManager->FromId(nId);
 				if (pPed != nullptr && pPed->GetSyncer() == pClient->m_nIndex)
 				{
+					CServerHuman *pServerHuman = (CServerHuman*)pPed;
+
+					pServerHuman->m_WeaponId = nWeapon;
+
 					{
 						Packet Packet(MAFIAPACKET_HUMAN_CHANGEWEAP);
 						Packet.Write<int32_t>(pPed->GetId());
