@@ -6,6 +6,7 @@
 CServerHuman::CServerHuman(CMafiaServerManager* pServerManager) : CServerEntity(pServerManager)
 {
 	m_Type = ELEMENT_PED;
+	m_Camera = CVector3D(0.0f, 0.0f, 0.0f);
 }
 
 void CServerHuman::SetModel(const GChar* sModel)
@@ -134,6 +135,7 @@ bool CServerHuman::ReadSyncPacket(Stream* pStream)
 	m_fInCarRotation = Packet.inCarRotation;
 	m_iAnimStopTime = Packet.animStopTime;
 	m_WeaponId = Packet.weaponId;
+	m_Camera = Packet.camera;
 
 	if (m_nVehicleNetworkIndex == INVALID_NETWORK_ID)
 	{
@@ -235,6 +237,7 @@ bool CServerHuman::WriteSyncPacket(Stream* pStream)
 	Packet.inCarRotation = m_fInCarRotation;
 	Packet.animStopTime = m_iAnimStopTime;
 	Packet.weaponId = m_WeaponId;
+	Packet.camera = m_Camera;
 
 	if (pStream->Write(&Packet, sizeof(Packet)) != sizeof(Packet))
 		return false;

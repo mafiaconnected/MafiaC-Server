@@ -29,6 +29,7 @@ public:
 	bool m_IsShooting = false;
 	int32_t m_iAnimStopTime = 0;
 	int16_t m_WeaponId = 0;
+	CVector3D m_Camera;
 
 	float m_fCurrentRotation;
 	float m_fHealth = 200;
