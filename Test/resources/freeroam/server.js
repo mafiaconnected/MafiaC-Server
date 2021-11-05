@@ -34,15 +34,28 @@ addCommandHandler("veh", (command, params, client) => {
 		return false;
 	}
 
+	//let position = client.player.position;
+	//position.x += 5;
 	let vehicle = game.createVehicle(`${model}.i3d`, getPosInFrontOfPos(client.player.position, client.player.heading, 5), degToRad(client.player.heading));
 
-	if(game.mapName == "FREERIDENOC") {
-		vehicle.lights = true;
-	} else {
-		vehicle.lights = false;
+    message(`${client.name} spawned a ${vehicleNames[vehicleModels.indexOf(model)]} vehicle`, COLOUR_YELLOW);
+});
+
+// ===========================================================================
+
+addCommandHandler("ped", (command, params, client) => {
+	let model = getSkinModelFromParams(params);
+
+	if(!model) {
+		message("That ped model is invalid!");
+		return false;
 	}
 
-    message(`${client.name} spawned a ${vehicleNames[vehicleModels.indexOf(model)]}`, COLOUR_YELLOW);
+	//let position = client.player.position;
+	//position.x += 5;
+	let vehicle = game.createPed(`${model}.i3d`, getPosInFrontOfPos(client.player.position, client.player.heading, 5), degToRad(client.player.heading));
+
+    message(`${client.name} created a ${skinModels[skinModels.indexOf(model)]} ped`, COLOUR_YELLOW);
 });
 
 // ===========================================================================
@@ -51,6 +64,7 @@ addCommandHandler("gun", (command, params, client) => {
 	let weaponId = Number(params) || 10;
 
 	client.player.giveWeapon(weaponId, 999, 999);
+	message(`${client.name} gave themself ${weaponNames[weaponId]}`);
 });
 
 // ===========================================================================
@@ -62,6 +76,7 @@ addCommandHandler("siren", (command, params, client) => {
 	}
 
 	client.player.vehicle.siren = !client.player.vehicle.siren;
+	message(`${client.name} turned their vehicle siren ${(client.player.vehicle.siren) ? "on" : "off"}`);
 });
 
 
@@ -74,6 +89,7 @@ addCommandHandler("lights", (command, params, client) => {
 	}
 
 	client.player.vehicle.lights = !client.player.vehicle.lights;
+	message(`${client.name} turned their vehicle lights ${(client.player.vehicle.lights) ? "on" : "off"}`);
 });
 
 // ===========================================================================
@@ -85,6 +101,7 @@ addCommandHandler("engine", (command, params, client) => {
 	}
 
 	client.player.vehicle.engine = !client.player.vehicle.engine;
+	message(`${client.name} turned their vehicle engine ${(client.player.vehicle.engine) ? "on" : "off"}`);
 });
 
 // ===========================================================================
@@ -96,17 +113,7 @@ addCommandHandler("lock", (command, params, client) => {
 	}
 
 	client.player.vehicle.locked = !client.player.vehicle.locked;
-});
-
-// ===========================================================================
-
-addCommandHandler("lights", (command, params, client) => {
-	if(!client.player.vehicle) {
-		messageClient("You need to be in a vehicle!", client, COLOUR_RED);
-		return false;
-	}
-
-	client.player.vehicle.lights = !client.player.vehicle.lights;
+	message(`${client.name} ${(client.player.vehicle.engine) ? "locked" : "unlocked"} their vehicle`);
 });
 
 // ===========================================================================
@@ -119,7 +126,7 @@ addCommandHandler("skin", (command, params, client) => {
 		return false;
 	}
 
-	client.player.skin = `${model}.i3d`;
+	client.player.model = `${model}.i3d`;
 });
 
 // ===========================================================================
