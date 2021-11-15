@@ -30,7 +30,19 @@ let nametagColour = [
 addEventHandler("OnResourceReady", function(event, resource) {
 	if (resource == thisResource) {
 		nametagFont = lucasFont.createDefaultFont(12.0, "Roboto", "Light");
-		afkStatusFont = lucasFont.createDefaultFont(18.0, "Roboto", "Light");
+
+		// For custom font (ttf)
+		// Remember to add the font file to the resource folder!
+		// And add to meta.xml using this: <file src="aurora-bold-condensed.ttf" type="client" />
+		// Replace font file path with whatever custom font you want (TTF format only)
+		// ---------------------------------------------------
+		//let fontStream = openFile("aurora-bold-condensed.ttf");
+		//if(fontStream != null) {
+		//	nametagFont = lucasFont.createFont(fontStream, 22.0);
+		//	fontStream.close();
+		//}
+
+
 	}
 });
 
