@@ -49,8 +49,6 @@ addEventHandler("OnResourceReady", function(event, resource) {
 // ----------------------------------------------------------------------------
 
 function drawNametag(x, y, health, text, alpha) {
-	//console.warn(`DRAWING NAMETAG FOR ${text} (${x}, ${y})`);
-
 	if(nametagFont == null) {
 		return false;
 	}
@@ -89,7 +87,7 @@ function updateNametag(element) {
 
 		let screenPos = getScreenFromWorldPosition(element.position);
 		let distance = localPlayer.position.distance(element.position);
-		console.log(`${screenPos.x} ${screenPos.y}`);
+		//console.log(`${screenPos.x} ${screenPos.y}`);
 
 		if(distance < nametagDistance) {
 			let colour = COLOUR_WHITE;
