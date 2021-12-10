@@ -12,6 +12,7 @@ public:
 	CVector3D m_RotationFront;
 	CVector3D m_RotationUp;
 	CVector3D m_RotationRight;
+	CQuaternion m_quatRot;
 	float m_Health;
 	float m_EngineHealth;
 	float m_Fuel;

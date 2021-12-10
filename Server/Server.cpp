@@ -1546,7 +1546,7 @@ void CServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, Stream
 				{
 					CServerHuman *pServerHuman = (CServerHuman*)pPed;
 
-					pServerHuman->m_WeaponId = nWeapon;
+					pServerHuman->m_WeaponId = (int16_t)nWeapon;
 
 					{
 						Packet Packet(MAFIAPACKET_HUMAN_CHANGEWEAP);
@@ -1795,6 +1795,74 @@ void CServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, Stream
 			if (nSeat == 0)
 			{
 				pVehicle->SetSyncer(pClient->m_nIndex);
+			}
+		}
+		break;
+
+		case MAFIAPACKET_VEHICLE_CREATE:
+		{
+			uint64_t nLocalVehicleId = 0;
+			Reader.ReadUInt64(&nLocalVehicleId, 1);
+
+			//CNetObject* pServerElement = m_pManager->FromId(nLocalVehicleId);
+			//if (pServerElement == nullptr)
+
+			Strong<CServerVehicle> pServerVehicle;
+
+			{
+				pServerVehicle = Strong<CServerVehicle>::New(m_pManager->Create(ELEMENT_VEHICLE));
+				
+				if (pServerVehicle == nullptr)
+					return;
+
+				pServerVehicle->m_pResource = nullptr;
+				pServerVehicle->ReadCreatePacket(pStream);
+
+				if(!m_pManager->RegisterObject(pServerVehicle))
+					return;
+
+				pServerVehicle->SetCreatedFor(pClient, true);
+				pServerVehicle->SetSyncer(pClient->m_nIndex, true);
+			}
+
+			{
+				Packet Packet(MAFIAPACKET_ELEMENT_UPDATE_ID);
+				Packet.Write<uint64_t>(nLocalVehicleId);
+				Packet.Write<int32_t>(pServerVehicle->GetId());
+				pClient->SendPacket(&Packet);
+			}
+		}
+		break;
+
+		case MAFIAPACKET_ELEMENT_REMOVE:
+		{
+			bool bRemoveByElementId;
+			Reader.ReadBoolean(bRemoveByElementId);
+
+			if (bRemoveByElementId)
+			{
+				uint32_t nServerVehicleId = 0;
+				Reader.ReadUInt32(&nServerVehicleId, 1);
+
+				CServerVehicle* pServerVehicle = (CServerVehicle*)m_pManager->FromId(nServerVehicleId);
+
+				if (pServerVehicle != nullptr)
+				{
+					printf("Destroyed vehicle ID %i\n", pServerVehicle->GetId());
+					
+					{
+						Packet Packet(MAFIAPACKET_ELEMENT_REMOVE);
+						Packet.Write<int32_t>(pServerVehicle->GetId());
+						m_pManager->SendPacketExcluding(&Packet, pClient);
+					}
+
+					m_pManager->Remove(pServerVehicle);
+				}
+			}
+			else
+			{
+				uint64_t nServerVehicleGuid = 0;
+				Reader.ReadUInt64(&nServerVehicleGuid, 1);
 			}
 		}
 		break;
