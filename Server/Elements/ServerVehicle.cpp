@@ -12,6 +12,11 @@ CServerVehicle::CServerVehicle(CMafiaServerManager* pServerManager) : CServerEnt
 	m_RotationFront = mat3.GetXAxis();
 	m_RotationUp = mat3.GetYAxis();
 	m_RotationRight = mat3.GetZAxis();
+
+	m_quatRot.x = 0.0f;
+	m_quatRot.y = 0.0f;
+	m_quatRot.z = 0.0f;
+	m_quatRot.w = 0.0f;
 }
 
 ReflectedClass* CServerVehicle::GetReflectedClass(void)
@@ -103,6 +108,7 @@ bool CServerVehicle::ReadSyncPacket(Stream* pStream)
 	m_RotationFront = Packet.rotationFront;
 	m_RotationUp = Packet.rotationUp;
 	m_RotationRight = Packet.rotationRight;
+	m_quatRot = Packet.quatRot;
 	m_Health = Packet.health;
 	m_EngineHealth = Packet.engineHealth;
 	m_Fuel = Packet.fuel;
@@ -178,6 +184,7 @@ bool CServerVehicle::WriteSyncPacket(Stream* pStream)
 	Packet.rotationFront = m_RotationFront;
 	Packet.rotationUp = m_RotationUp;
 	Packet.rotationRight = m_RotationRight;
+	Packet.quatRot = m_quatRot;
 	Packet.health = m_Health;
 	Packet.engineHealth = m_EngineHealth;
 	Packet.fuel = m_Fuel;

@@ -67,6 +67,7 @@ public:
 	Galactic3D::Weak<CServerPlayer> m_rgpPlayers[128];
 
 	virtual CNetObject* Create(int32_t nType) override;
+	void Remove(CServerVehicle* pServerVehicle);
 
 	bool IsAnythingBlocking(CVector3D vecPos);
 
