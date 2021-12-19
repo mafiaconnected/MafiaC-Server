@@ -64,6 +64,34 @@ bool CServerEntity::GetRotation(CVector3D& vecRotation)
 	return true;
 }
 
+bool CServerEntity::SetVelocity(const CVector3D& vecVelocity)
+{
+	m_RelPosition = vecVelocity;
+
+	return true;
+}
+
+bool CServerEntity::GetVelocity(CVector3D& vecVelocity)
+{
+	vecVelocity = m_RelPosition;
+
+	return true;
+}
+
+bool CServerEntity::SetRotationVelocity(const CVector3D& vecRotationVelocity)
+{
+	m_RelRotation = vecRotationVelocity;
+
+	return true;
+}
+
+bool CServerEntity::GetRotationVelocity(CVector3D& vecRotationVelocity)
+{
+	vecRotationVelocity = m_RelRotation;
+
+	return true;
+}
+
 bool CServerEntity::ShouldExistForMachine(CNetMachine* pClient)
 {
 	auto pPlayer = pClient->GetPlayer();

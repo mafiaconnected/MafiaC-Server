@@ -182,6 +182,7 @@ public:
 	float m_fPickupStreamInDistance;
 	float m_fPickupStreamOutDistance;
 
+	bool m_bSyncLocalEntities;
 	bool m_bPlanes;
 	bool m_bTrains;
 	bool m_bStuntJumps;

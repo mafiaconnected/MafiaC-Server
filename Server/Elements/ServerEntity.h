@@ -39,6 +39,12 @@ public:
 	virtual bool SetRotation(const CVector3D& vecRotation) override;
 	virtual bool GetRotation(CVector3D& vecRotation) override;
 
+	virtual bool SetVelocity(const CVector3D& vecVelocity);
+	virtual bool GetVelocity(CVector3D& vecVelocity);
+
+	virtual bool SetRotationVelocity(const CVector3D& vecRotationVelocity);
+	virtual bool GetRotationVelocity(CVector3D& vecRotationVelocity);
+
 	virtual bool ShouldExistForMachine(CNetMachine* pClient) override;
 	virtual bool ShouldDeleteForMachine(CNetMachine* pClient) override;
 

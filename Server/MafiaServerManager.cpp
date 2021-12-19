@@ -158,6 +158,64 @@ bool CMafiaServerManager::IsAnythingBlocking(CVector3D vecPos)
 	return false;
 }
 
+static bool FunctionEntityGetVelocity(IScriptState* pState, int argc, void* pUser)
+{
+	CMafiaServerManager* pServerManager = (CMafiaServerManager*)pUser;
+	CServerEntity* pServerEntity;
+	if (!pState->GetThis(pServerManager->m_pServerEntityClass, &pServerEntity))
+		return false;
+
+	CVector3D vecVelocity;
+	pServerEntity->GetRotationVelocity(vecVelocity);
+
+	pState->ReturnVector3D(vecVelocity);
+	return true;
+}
+
+static bool FunctionEntitySetVelocity(IScriptState* pState, int argc, void* pUser)
+{
+	CMafiaServerManager* pServerManager = (CMafiaServerManager*)pUser;
+	CServerEntity* pServerEntity;
+	if (!pState->GetThis(pServerManager->m_pServerEntityClass, &pServerEntity))
+		return false;
+
+	CVector3D vecVelocity;
+	if (!pState->CheckVector3D(0, vecVelocity))
+		return false;
+
+	pServerEntity->SetVelocity(vecVelocity);
+	return true;
+}
+
+static bool FunctionEntityGetRotationVelocity(IScriptState* pState, int argc, void* pUser)
+{
+	CMafiaServerManager* pServerManager = (CMafiaServerManager*)pUser;
+	CServerEntity* pServerEntity;
+	if (!pState->GetThis(pServerManager->m_pServerEntityClass, &pServerEntity))
+		return false;
+	
+	CVector3D vecRotationVelocity;
+	pServerEntity->GetRotationVelocity(vecRotationVelocity);
+
+	pState->ReturnVector3D(vecRotationVelocity);
+	return true;
+}
+
+static bool FunctionEntitySetRotationVelocity(IScriptState* pState, int argc, void* pUser)
+{
+	CMafiaServerManager* pServerManager = (CMafiaServerManager*)pUser;
+	CServerEntity* pServerEntity;
+	if (!pState->GetThis(pServerManager->m_pServerEntityClass, &pServerEntity))
+		return false;
+
+	CVector3D vecRotationVelocity;
+	if (!pState->CheckVector3D(0, vecRotationVelocity))
+		return false;
+
+	pServerEntity->SetRotationVelocity(vecRotationVelocity);
+	return true;
+}
+
 static bool FunctionEntityGetModel(IScriptState* pState, int argc, void* pUser)
 {
 	CMafiaServerManager* pServerManager = (CMafiaServerManager*)pUser;
@@ -962,6 +1020,13 @@ static bool FunctionGetServerLogPath(IScriptState* pState, int argc, void* pUser
 	return true;
 }
 
+static bool FunctionGetServerSyncLocalEntities(IScriptState* pState, int argc, void* pUser)
+{
+	CMafiaServerManager* pServerManager = (CMafiaServerManager*)pUser;
+	pState->ReturnBoolean(pServerManager->m_pServer->m_bSyncLocalEntities);
+	return true;
+}
+
 static bool FunctionGetServerCVar(IScriptState* pState, int argc, void* pUser)
 {
 	CMafiaServerManager* pServerManager = (CMafiaServerManager*)pUser;
@@ -975,6 +1040,21 @@ static bool FunctionGetServerCVar(IScriptState* pState, int argc, void* pUser)
 		return true;
 	}
 	pState->ReturnString(pVar->m_pszValue);
+	return true;
+}
+
+static bool FunctionSetServerPassword(IScriptState* pState, int argc, void* pUser)
+{
+	CMafiaServerManager* pServerManager = (CMafiaServerManager*)pUser;
+	const GChar* pszPassword = pState->CheckString(0);
+	if (!pszPassword)
+		return false;
+	if (pServerManager->m_pServer->m_Password.SetPassword(pszPassword))
+	{
+		pState->ReturnBoolean(true);
+		return false;
+	}
+	pState->ReturnBoolean(false);
 	return true;
 }
 
@@ -1052,20 +1132,17 @@ void CMafiaServerManager::RegisterFunctions(CScripting* pScripting)
 	auto pGameNamespace = pScripting->m_Global.AddNamespace(_gstr("mafia"));
 	pGameNamespace->SetAlias(_gstr("game"));
 
-	//{
-	//	m_pNetObjectTransformableClass->AddProperty(this, _gstr("streamInDistance"), ARGUMENT_FLOAT, FunctionEntityGetStreamInDistance, FunctionEntitySetStreamInDistance);
-	//	m_pNetObjectTransformableClass->AddProperty(this, _gstr("streamOutDistance"), ARGUMENT_FLOAT, FunctionEntityGetStreamOutDistance, FunctionEntitySetStreamOutDistance);
-	//}
-
-	//{
-	//	m_pServerEntityClass->AddProperty(this, _gstr("velocity"), ARGUMENT_VECTOR3D, FunctionEntityGetVelocity, FunctionEntitySetVelocity);
-	//	m_pServerEntityClass->AddProperty(this, _gstr("turnVelocity"), ARGUMENT_VECTOR3D, FunctionEntityGetTurnVelocity, FunctionEntitySetTurnVelocity);
-	//}
+	{
+		m_pServerEntityClass->AddProperty(this, _gstr("model"), ARGUMENT_STRING, FunctionEntityGetModel, FunctionEntitySetModel);
+		m_pServerEntityClass->AddProperty(this, _gstr("modelIndex"), ARGUMENT_STRING, FunctionEntityGetModel, FunctionEntitySetModel); // For GTAC compatibility
+		m_pServerEntityClass->AddProperty(this, _gstr("velocity"), ARGUMENT_VECTOR3D, FunctionEntityGetVelocity, FunctionEntitySetVelocity);
+		m_pServerEntityClass->AddProperty(this, _gstr("turnVelocity"), ARGUMENT_VECTOR3D, FunctionEntityGetRotationVelocity, FunctionEntityGetRotationVelocity); // For GTAC compatibility
+		m_pServerEntityClass->AddProperty(this, _gstr("rotationVelocity"), ARGUMENT_VECTOR3D, FunctionEntityGetRotationVelocity, FunctionEntityGetRotationVelocity);
+		m_pServerEntityClass->AddProperty(this, _gstr("streamInDistance"), ARGUMENT_FLOAT, FunctionEntityGetStreamInDistance, FunctionEntitySetStreamInDistance);
+		m_pServerEntityClass->AddProperty(this, _gstr("streamOutDistance"), ARGUMENT_FLOAT, FunctionEntityGetStreamOutDistance, FunctionEntitySetStreamOutDistance);
+	}
 
 	{
-		m_pServerVehicleClass->AddProperty(this, _gstr("model"), ARGUMENT_STRING, FunctionEntityGetModel, FunctionEntitySetModel);
-		m_pServerVehicleClass->AddProperty(this, _gstr("heading"), ARGUMENT_FLOAT, FunctionEntityGetHeading, FunctionEntitySetHeading);
-
 		//m_pServerVehicleClass->AddProperty(this, _gstr("locked"), ARGUMENT_BOOLEAN, FunctionVehicleGetLocked, FunctionVehicleSetLocked);
 		m_pServerVehicleClass->AddProperty(this, _gstr("siren"), ARGUMENT_BOOLEAN, FunctionVehicleGetSiren, FunctionVehicleSetSiren);
 		m_pServerVehicleClass->AddProperty(this, _gstr("engine"), ARGUMENT_BOOLEAN, FunctionVehicleGetEngine, FunctionVehicleSetEngine);
@@ -1079,16 +1156,12 @@ void CMafiaServerManager::RegisterFunctions(CScripting* pScripting)
 		//m_pServerVehicleClass->AddProperty(this, _gstr("turnVelocity"), ARGUMENT_VECTOR3D, FunctionVehicleGetRotationVelocity, FunctionVehicleSetRotationVelocity);
 		//m_pServerVehicleClass->AddProperty(this, _gstr("velocity"), ARGUMENT_VECTOR3D, FunctionVehicleGetVelocity, FunctionVehicleSetVelocity);
 		m_pServerVehicleClass->AddProperty(this, _gstr("engineHealth"), ARGUMENT_FLOAT, FunctionVehicleGetEngineHealth, FunctionVehicleSetEngineHealth);
-
 		m_pServerVehicleClass->RegisterFunction(_gstr("fix"), _gstr("t"), FunctionVehicleFix, this);
 		m_pServerVehicleClass->RegisterFunction(_gstr("getOccupant"), _gstr("ti"), FunctionVehicleGetOccupant, this);
 		m_pServerVehicleClass->RegisterFunction(_gstr("getOccupants"), _gstr("t"), FunctionVehicleGetOccupants, this);
 	}
 
 	{
-		m_pServerHumanClass->AddProperty(this, _gstr("model"), ARGUMENT_STRING, FunctionEntityGetModel, FunctionEntitySetModel);
-		m_pServerHumanClass->AddProperty(this, _gstr("heading"), ARGUMENT_FLOAT, FunctionEntityGetHeading, FunctionEntitySetHeading);
-
 		m_pServerHumanClass->AddProperty(this, _gstr("vehicle"), ARGUMENT_OBJECT, FunctionPedGetOccupiedVehicle);
 		m_pServerHumanClass->AddProperty(this, _gstr("seat"), ARGUMENT_INTEGER, FunctionPedGetSeat);
 		m_pServerHumanClass->AddProperty(this, _gstr("health"), ARGUMENT_FLOAT, FunctionPedGetHealth);
@@ -1104,10 +1177,10 @@ void CMafiaServerManager::RegisterFunctions(CScripting* pScripting)
 
 	{
 		auto pHUDNamespace = pGameNamespace->AddNamespace(_gstr("hud"));
-		m_pServerPlayerClass->RegisterFunction(_gstr("message"), _gstr("xsi"), FunctionPlayerHudMsg, this);
-		m_pServerPlayerClass->RegisterFunction(_gstr("enableMap"), _gstr("xb"), FunctionPlayerEnableMap, this);
-		m_pServerPlayerClass->RegisterFunction(_gstr("announce"), _gstr("xsf"), FunctionPlayerAnnounce, this);
-		m_pServerPlayerClass->RegisterFunction(_gstr("showCountdown"), _gstr("xi"), FunctionPlayerCountdown, this);
+		pHUDNamespace->RegisterFunction(_gstr("message"), _gstr("xsi"), FunctionPlayerHudMsg, this);
+		pHUDNamespace->RegisterFunction(_gstr("enableMap"), _gstr("xb"), FunctionPlayerEnableMap, this);
+		pHUDNamespace->RegisterFunction(_gstr("announce"), _gstr("xsf"), FunctionPlayerAnnounce, this);
+		pHUDNamespace->RegisterFunction(_gstr("showCountdown"), _gstr("xi"), FunctionPlayerCountdown, this);
 	}
 
 	pScripting->m_Global.RegisterFunction(_gstr("spawnPlayer"), _gstr("xsv|f"), FunctionSpawnPlayer, this);
@@ -1138,8 +1211,9 @@ void CMafiaServerManager::RegisterFunctions(CScripting* pScripting)
 		pServerNamespace->AddProperty(this, _gstr("pickupStreamInDistance"), ARGUMENT_FLOAT, FunctionGetServerPickupStreamInDistance);
 		pServerNamespace->AddProperty(this, _gstr("pickupStreamOutDistance"), ARGUMENT_FLOAT, FunctionGetServerPickupStreamOutDistance);
 		pServerNamespace->AddProperty(this, _gstr("logPath"), ARGUMENT_STRING, FunctionGetServerLogPath);
+		pServerNamespace->AddProperty(this, _gstr("syncLocalEntities"), ARGUMENT_BOOLEAN, FunctionGetServerSyncLocalEntities);
 
 		pServerNamespace->RegisterFunction(_gstr("getCVar"), _gstr("s"), FunctionGetServerCVar, this);
-		//pServerNS->RegisterFunction("setCVar", "s*", FunctionSetServerCVar, this);
+		pServerNamespace->RegisterFunction(_gstr("setPassword"), _gstr("s"), FunctionSetServerPassword, this);
 	}
 }
