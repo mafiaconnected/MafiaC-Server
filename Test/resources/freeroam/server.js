@@ -34,11 +34,14 @@ addCommandHandler("veh", (command, params, client) => {
 		return false;
 	}
 
-	//let position = client.player.position;
-	//position.x += 5;
-	let vehicle = game.createVehicle(`${model}.i3d`, getPosInFrontOfPos(client.player.position, client.player.heading, 5), degToRad(client.player.heading));
+	let frontOfPlayer = getPosInFrontOfPos(client.player.position, client.player.heading, 5);
+	let vehicle = game.createVehicle(`${model}.i3d`, frontOfPlayer, client.player.heading);
 
-    message(`${client.name} spawned a ${vehicleNames[vehicleModels.indexOf(model)]} vehicle`, COLOUR_YELLOW);
+	if(vehicle) {
+		message(`${client.name} spawned a ${vehicleNames[vehicleModels.indexOf(model)]} vehicle`, COLOUR_YELLOW);
+	} else {
+		messageClient(`Vehicle failed to create!`, COLOUR_ORANGE);
+	}
 });
 
 // ===========================================================================
@@ -47,24 +50,27 @@ addCommandHandler("ped", (command, params, client) => {
 	let model = getSkinModelFromParams(params);
 
 	if(!model) {
-		message("That ped model is invalid!");
+		message("That ped skin is invalid!");
 		return false;
 	}
 
-	//let position = client.player.position;
-	//position.x += 5;
-	let vehicle = game.createPed(`${model}.i3d`, getPosInFrontOfPos(client.player.position, client.player.heading, 5), degToRad(client.player.heading));
+	let frontOfPlayer = getPosInFrontOfPos(client.player.position, client.player.heading, 5);
+	let ped = game.createPed(`${model}.i3d`, frontOfPlayer, client.player.heading);
 
-    message(`${client.name} created a ${skinModels[skinModels.indexOf(model)]} ped`, COLOUR_YELLOW);
+	if(ped) {
+    	message(`${client.name} created a ${skinModels[skinModels.indexOf(model)]} ped`, COLOUR_YELLOW);
+	} else {
+		messageClient(`Ped failed to create!`, COLOUR_ORANGE);
+	}
 });
 
 // ===========================================================================
 
 addCommandHandler("gun", (command, params, client) => {
-	let weaponId = Number(params) || 10;
+	let weaponId = Number(params) || 8;
 
-	client.player.giveWeapon(weaponId, 999, 999);
-	message(`${client.name} gave themself ${weaponNames[weaponId]}`);
+	client.player.giveWeapon(weaponId, 0, 999);
+	message(`${client.name} gave themself a ${weaponNames[weaponId]}`);
 });
 
 // ===========================================================================
@@ -122,7 +128,7 @@ addCommandHandler("skin", (command, params, client) => {
 	let model = getSkinModelFromParams(params);
 
 	if(!model) {
-		message("That vehicle model is invalid!");
+		message("That skin is invalid!");
 		return false;
 	}
 
@@ -858,8 +864,6 @@ function getPosInFrontOfPos(pos, angle, distance) {
         angle += 360.0;
     while(angle > 360.0)
         angle -= 360.0;
-
-    angle = degToRad(angle);
 
     let x = (pos.x+((Math.cos(angle-(Math.PI/2)))*distance));
     let y = pos.y;

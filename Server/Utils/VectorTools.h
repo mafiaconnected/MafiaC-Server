@@ -107,4 +107,7 @@ public:
 	static CVector3D Lerp(const CVector3D& a, const CVector3D& b, float t);
 	static CVector3D Slerp(const CVector3D& a, const CVector3D& b, float t);
 	static CVector3D Nlerp(const CVector3D& a, const CVector3D& b, float t);
+
+	static float RadToDeg(float rad);
+	static float DegToRad(float deg);
 };

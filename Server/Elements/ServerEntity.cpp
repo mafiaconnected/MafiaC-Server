@@ -19,12 +19,12 @@ CServerEntity::CServerEntity(CMafiaServerManager* pServerManager) : CNetObject(p
 
 void CServerEntity::SetHeading(float fHeading)
 {
-	m_Rotation = CVecTools::ComputeDirEuler(fHeading);
+	m_Rotation = CVecTools::ComputeDirEuler(CVecTools::RadToDeg(fHeading));
 }
 
 float CServerEntity::GetHeading(void)
 {
-	return CVecTools::DirToRotation360(CVecTools::EulerToDir(m_Rotation));
+	return CVecTools::DegToRad(CVecTools::DirToRotation360(CVecTools::EulerToDir(m_Rotation)));
 }
 
 ReflectedClass* CServerEntity::GetReflectedClass(void)

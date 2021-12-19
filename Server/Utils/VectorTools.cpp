@@ -120,3 +120,13 @@ CVector3D CVecTools::Nlerp(const CVector3D& a, const CVector3D& b, float t)
 
 	return vec;
 }
+
+float CVecTools::DegToRad(float deg)
+{
+	return deg * PI / 180;
+}
+
+float CVecTools::RadToDeg(float rad)
+{
+	return rad * 180 / PI;
+}

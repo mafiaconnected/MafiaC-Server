@@ -1134,6 +1134,7 @@ void CMafiaServerManager::RegisterFunctions(CScripting* pScripting)
 
 	{
 		m_pServerEntityClass->AddProperty(this, _gstr("model"), ARGUMENT_STRING, FunctionEntityGetModel, FunctionEntitySetModel);
+		m_pServerEntityClass->AddProperty(this, _gstr("heading"), ARGUMENT_STRING, FunctionEntityGetHeading, FunctionEntitySetHeading);
 		m_pServerEntityClass->AddProperty(this, _gstr("modelIndex"), ARGUMENT_STRING, FunctionEntityGetModel, FunctionEntitySetModel); // For GTAC compatibility
 		m_pServerEntityClass->AddProperty(this, _gstr("velocity"), ARGUMENT_VECTOR3D, FunctionEntityGetVelocity, FunctionEntitySetVelocity);
 		m_pServerEntityClass->AddProperty(this, _gstr("turnVelocity"), ARGUMENT_VECTOR3D, FunctionEntityGetRotationVelocity, FunctionEntityGetRotationVelocity); // For GTAC compatibility
