@@ -24,34 +24,6 @@ ReflectedClass* CServerVehicle::GetReflectedClass(void)
 	return static_cast<CMafiaServerManager*>(m_pNetObjectMgr)->m_pServerVehicleClass;
 }
 
-bool CServerVehicle::ShouldExistForMachine(CNetMachine* pClient)
-{
-	auto pPlayer = pClient->GetPlayer();
-	if (pPlayer != NULL && pPlayer->IsType(ELEMENT_PED))
-	{
-		CServerHuman* pHuman = static_cast<CServerHuman*>(pPlayer);
-		if (pHuman->m_nVehicleNetworkIndex == GetId()) // if client is in this vehicle
-		{
-			return true;
-		}
-	}
-	return CServerEntity::ShouldExistForMachine(pClient);
-}
-
-bool CServerVehicle::ShouldDeleteForMachine(CNetMachine* pClient)
-{
-	auto pPlayer = pClient->GetPlayer();
-	if (pPlayer != NULL && pPlayer->IsType(ELEMENT_PED))
-	{
-		CServerHuman* pHuman = static_cast<CServerHuman*>(pPlayer);
-		if (pHuman->m_nVehicleNetworkIndex == GetId()) // if client is in this vehicle
-		{
-			return false;
-		}
-	}
-	return CServerEntity::ShouldDeleteForMachine(pClient);
-}
-
 bool CServerVehicle::ReadCreatePacket(Stream* pStream)
 {
 	if (!CServerEntity::ReadCreatePacket(pStream))

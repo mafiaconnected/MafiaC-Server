@@ -62,8 +62,7 @@ public:
 
 	virtual void WarpIntoVehicle(CServerVehicle* pVehicle, unsigned char ucSeat);
 
-	virtual bool ShouldExistForMachine(CNetMachine* pClient) override;
-	virtual bool ShouldDeleteForMachine(CNetMachine* pClient) override;
+	virtual bool CanExistForMachine(CNetMachine* pClient) override;
 
 	virtual bool ReadCreatePacket(Stream* pStream) override;
 	virtual bool ReadSyncPacket(Stream* pStream) override;

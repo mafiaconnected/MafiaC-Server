@@ -7,13 +7,19 @@
 CServerEntity::CServerEntity(CMafiaServerManager* pServerManager) : CNetObject(pServerManager)
 {
 	m_Type = ELEMENT_ENTITY;
+
+	m_Flags.m_bFindSyncer = true;
+	m_Flags.m_bSendSync = true;
+	m_Flags.m_bDistanceStreaming = true;
+
+	m_fStreamInDistance = pServerManager->m_pServer->m_fStreamInDistance;
+	m_fStreamOutDistance = pServerManager->m_pServer->m_fStreamOutDistance;
+
 	m_Position = { 0, 0, 0 };
 	m_Rotation = { 0, 0, 0 };
 	//m_szModel = L"";
 	m_nRelativeElement = INVALID_NETWORK_ID;
 	m_nRef = -1;
-	m_fStreamInDistance = pServerManager->m_pServer->m_fStreamInDistance;
-	m_fStreamOutDistance = pServerManager->m_pServer->m_fStreamOutDistance;
 	m_pServerManager = pServerManager;
 }
 
@@ -90,42 +96,6 @@ bool CServerEntity::GetRotationVelocity(CVector3D& vecRotationVelocity)
 	vecRotationVelocity = m_RelRotation;
 
 	return true;
-}
-
-bool CServerEntity::ShouldExistForMachine(CNetMachine* pClient)
-{
-	auto pPlayer = pClient->GetPlayer();
-	if (this == pPlayer)
-		return true;
-	if (m_nRef != -1 && GetSyncer() == pClient->m_nIndex)
-		return true;
-	if (pPlayer != NULL && pPlayer->IsType(ELEMENT_ENTITY))
-	{
-		auto pServer = static_cast<CServerManager*>(m_pNetObjectMgr)->m_pServer;
-		CServerEntity* pPlayerEntity = static_cast<CServerEntity*>(pPlayer);
-		float fDistance = (m_Position - pPlayerEntity->m_Position).GetLength();
-		if (fDistance < m_fStreamInDistance)
-			return true;
-	}
-	return false;
-}
-
-bool CServerEntity::ShouldDeleteForMachine(CNetMachine* pClient)
-{
-	auto pPlayer = pClient->GetPlayer();
-	if (this == pPlayer)
-		return false;
-	if (m_nRef != -1 && GetSyncer() == pClient->m_nIndex)
-		return false;
-	if (pPlayer != NULL && pPlayer->IsType(ELEMENT_ENTITY))
-	{
-		auto pServer = static_cast<CServerManager*>(m_pNetObjectMgr)->m_pServer;
-		CServerEntity* pPlayerEntity = static_cast<CServerEntity*>(pPlayer);
-		float fDistance = (m_Position - pPlayerEntity->m_Position).GetLength();
-		if (fDistance > m_fStreamOutDistance)
-			return true;
-	}
-	return false;
 }
 
 bool CServerEntity::ReadCreatePacket(Stream* pStream)

@@ -272,7 +272,7 @@ static bool FunctionEntityGetStreamInDistance(IScriptState* pState, int argc, vo
 	CServerEntity* pServerEntity;
 	if (!pState->GetThis(pServerManager->m_pServerEntityClass, &pServerEntity))
 		return false;
-	pState->ReturnNumber(pServerEntity->GetStreamInDistance());
+	pState->ReturnNumber(pServerEntity->m_fStreamInDistance);
 	return true;
 }
 
@@ -285,7 +285,7 @@ static bool FunctionEntitySetStreamInDistance(IScriptState* pState, int argc, vo
 	float fStreamInDistance;
 	if (!pState->CheckNumber(0, fStreamInDistance))
 		return false;
-	pServerEntity->SetStreamInDistance(fStreamInDistance);
+	pServerEntity->m_fStreamInDistance = fStreamInDistance;
 	return true;
 }
 
@@ -295,7 +295,7 @@ static bool FunctionEntityGetStreamOutDistance(IScriptState* pState, int argc, v
 	CServerEntity* pServerEntity;
 	if (!pState->GetThis(pServerManager->m_pServerEntityClass, &pServerEntity))
 		return false;
-	pState->ReturnNumber(pServerEntity->GetStreamOutDistance());
+	pState->ReturnNumber(pServerEntity->m_fStreamOutDistance);
 	return true;
 }
 
@@ -308,7 +308,7 @@ static bool FunctionEntitySetStreamOutDistance(IScriptState* pState, int argc, v
 	float fStreamOutDistance;
 	if (!pState->CheckNumber(0, fStreamOutDistance))
 		return false;
-	pServerEntity->SetStreamOutDistance(fStreamOutDistance);
+	pServerEntity->m_fStreamOutDistance = fStreamOutDistance;
 	return true;
 }
 

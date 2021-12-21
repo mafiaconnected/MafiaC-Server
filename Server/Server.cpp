@@ -1926,9 +1926,9 @@ void CServer::SendAllSync(void)
 		if (m_pManager->m_Objects.IsUsedAt(i))
 		{
 			CNetObject* pServerElement = m_pManager->m_Objects.GetAt(i);
-			if (pServerElement != nullptr && pServerElement->m_bFindSyncer)
+			if (pServerElement != nullptr && pServerElement->m_Flags.m_bFindSyncer)
 			{
-				if (pServerElement->GetSyncer() == INVALID_MACHINE_ID && !pServerElement->m_bForcedSyncer)
+				if (pServerElement->GetSyncer() == INVALID_MACHINE_ID && !pServerElement->m_Flags.m_bForcedSyncer)
 				{
 					for (size_t x = 0; x < MAX_MACHINES; x++)
 					{

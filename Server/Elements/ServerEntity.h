@@ -18,18 +18,10 @@ public:
 	int32_t m_nRelativeElement;
 	CVector3D m_vecRelativePos;
 	int32_t m_nRef;
-	float m_fStreamInDistance;
-	float m_fStreamOutDistance;
 	CMafiaServerManager* m_pServerManager;
 
 	virtual void SetHeading(float fHeading);
 	virtual float GetHeading(void);
-
-	inline void SetStreamInDistance(float fStreamInDistance) { m_fStreamInDistance = fStreamInDistance; }
-	inline float GetStreamInDistance() { return m_fStreamInDistance; }
-
-	inline void SetStreamOutDistance(float fStreamOutDistance) { m_fStreamOutDistance = fStreamOutDistance; }
-	inline float GetStreamOutDistance() { return m_fStreamOutDistance; }
 
 	virtual ReflectedClass* GetReflectedClass(void) override;
 
@@ -44,9 +36,6 @@ public:
 
 	virtual bool SetRotationVelocity(const CVector3D& vecRotationVelocity);
 	virtual bool GetRotationVelocity(CVector3D& vecRotationVelocity);
-
-	virtual bool ShouldExistForMachine(CNetMachine* pClient) override;
-	virtual bool ShouldDeleteForMachine(CNetMachine* pClient) override;
 
 	virtual bool ReadCreatePacket(Stream* pStream) override;
 	virtual bool ReadSyncPacket(Stream* pStream) override;

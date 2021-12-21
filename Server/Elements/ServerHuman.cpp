@@ -6,6 +6,7 @@
 CServerHuman::CServerHuman(CMafiaServerManager* pServerManager) : CServerEntity(pServerManager)
 {
 	m_Type = ELEMENT_PED;
+
 	m_Camera = CVector3D(0.0f, 0.0f, 0.0f);
 }
 
@@ -40,44 +41,16 @@ void CServerHuman::OnSpawned()
 	static_cast<CMafiaServerManager*>(m_pNetObjectMgr)->m_pOnPedSpawnEventType->Trigger(Arguments);
 }
 
-bool CServerHuman::ShouldExistForMachine(CNetMachine* pClient)
+bool CServerHuman::CanExistForMachine(CNetMachine* pClient)
 {
-	if (this == pClient->GetPlayer())
-		return true;
-	if (m_nRef != -1 && GetSyncer() == pClient->m_nIndex)
-		return true;
 	if (m_nVehicleNetworkIndex != INVALID_NETWORK_ID && m_pNetObjectMgr->DoesIdExist(m_nVehicleNetworkIndex))
 	{
 		auto pVehicle = m_pNetObjectMgr->FromId(m_nVehicleNetworkIndex);
-		if (pVehicle->GetRootDimension() != GetRootDimension())
-			return false;
-		if (!pVehicle->ShouldExistForMachine(pClient))
-			return false;
 		if (pVehicle->IsCreatedFor(pClient))
 			return true;
 		return false;
 	}
-	return CServerEntity::ShouldExistForMachine(pClient);
-}
-
-bool CServerHuman::ShouldDeleteForMachine(CNetMachine* pClient)
-{
-	if (this == pClient->GetPlayer())
-		return false;
-	if (m_nRef != -1 && GetSyncer() == pClient->m_nIndex)
-		return false;
-	if (m_nVehicleNetworkIndex != INVALID_NETWORK_ID && m_pNetObjectMgr->DoesIdExist(m_nVehicleNetworkIndex))
-	{
-		auto pVehicle = m_pNetObjectMgr->FromId(m_nVehicleNetworkIndex);
-		if (pVehicle->GetRootDimension() != GetRootDimension())
-			return true;
-		if (pVehicle->ShouldDeleteForMachine(pClient))
-			return true;
-		if (pVehicle->IsCreatedFor(pClient))
-			return false;
-		return true;
-	}
-	return CServerEntity::ShouldDeleteForMachine(pClient);
+	return CServerEntity::CanExistForMachine(pClient);
 }
 
 bool CServerHuman::ReadCreatePacket(Stream* pStream)

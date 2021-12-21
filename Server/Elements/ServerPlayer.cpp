@@ -6,6 +6,8 @@
 CServerPlayer::CServerPlayer(CMafiaServerManager* pServerManager) : CServerHuman(pServerManager)
 {
 	m_Type = ELEMENT_PLAYER;
+
+	m_Flags.m_bAlwaysExistForSyncer = true;
 }
 
 ReflectedClass* CServerPlayer::GetReflectedClass(void)
