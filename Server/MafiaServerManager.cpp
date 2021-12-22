@@ -266,52 +266,6 @@ static bool FunctionEntitySetHeading(IScriptState* pState, int argc, void* pUser
 	return true;
 }
 
-static bool FunctionEntityGetStreamInDistance(IScriptState* pState, int argc, void* pUser)
-{
-	CMafiaServerManager* pServerManager = (CMafiaServerManager*)pUser;
-	CServerEntity* pServerEntity;
-	if (!pState->GetThis(pServerManager->m_pServerEntityClass, &pServerEntity))
-		return false;
-	pState->ReturnNumber(pServerEntity->m_fStreamInDistance);
-	return true;
-}
-
-static bool FunctionEntitySetStreamInDistance(IScriptState* pState, int argc, void* pUser)
-{
-	CMafiaServerManager* pServerManager = (CMafiaServerManager*)pUser;
-	CServerEntity* pServerEntity;
-	if (!pState->GetThis(pServerManager->m_pServerEntityClass, &pServerEntity))
-		return false;
-	float fStreamInDistance;
-	if (!pState->CheckNumber(0, fStreamInDistance))
-		return false;
-	pServerEntity->m_fStreamInDistance = fStreamInDistance;
-	return true;
-}
-
-static bool FunctionEntityGetStreamOutDistance(IScriptState* pState, int argc, void* pUser)
-{
-	CMafiaServerManager* pServerManager = (CMafiaServerManager*)pUser;
-	CServerEntity* pServerEntity;
-	if (!pState->GetThis(pServerManager->m_pServerEntityClass, &pServerEntity))
-		return false;
-	pState->ReturnNumber(pServerEntity->m_fStreamOutDistance);
-	return true;
-}
-
-static bool FunctionEntitySetStreamOutDistance(IScriptState* pState, int argc, void* pUser)
-{
-	CMafiaServerManager* pServerManager = (CMafiaServerManager*)pUser;
-	CServerEntity* pServerEntity;
-	if (!pState->GetThis(pServerManager->m_pServerEntityClass, &pServerEntity))
-		return false;
-	float fStreamOutDistance;
-	if (!pState->CheckNumber(0, fStreamOutDistance))
-		return false;
-	pServerEntity->m_fStreamOutDistance = fStreamOutDistance;
-	return true;
-}
-
 static bool FunctionVehicleGetLocked(IScriptState* pState, int argc, void* pUser)
 {
 	CMafiaServerManager* pServerManager = (CMafiaServerManager*)pUser;
@@ -1139,8 +1093,6 @@ void CMafiaServerManager::RegisterFunctions(CScripting* pScripting)
 		m_pServerEntityClass->AddProperty(this, _gstr("velocity"), ARGUMENT_VECTOR3D, FunctionEntityGetVelocity, FunctionEntitySetVelocity);
 		m_pServerEntityClass->AddProperty(this, _gstr("turnVelocity"), ARGUMENT_VECTOR3D, FunctionEntityGetRotationVelocity, FunctionEntityGetRotationVelocity); // For GTAC compatibility
 		m_pServerEntityClass->AddProperty(this, _gstr("rotationVelocity"), ARGUMENT_VECTOR3D, FunctionEntityGetRotationVelocity, FunctionEntityGetRotationVelocity);
-		m_pServerEntityClass->AddProperty(this, _gstr("streamInDistance"), ARGUMENT_FLOAT, FunctionEntityGetStreamInDistance, FunctionEntitySetStreamInDistance);
-		m_pServerEntityClass->AddProperty(this, _gstr("streamOutDistance"), ARGUMENT_FLOAT, FunctionEntityGetStreamOutDistance, FunctionEntitySetStreamOutDistance);
 	}
 
 	{
