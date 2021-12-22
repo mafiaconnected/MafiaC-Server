@@ -936,7 +936,8 @@ void CServer::OnPlayerDisconnect(const Peer_t Peer, unsigned int uiReason)
 					}
 
 					pElement->SetCreatedFor(pPlayerInfo, false);
-					pElement->SetExistsFor(pPlayerInfo, true);
+					pElement->RemoveMachine(pPlayerInfo);
+					m_pManager->PossiblyDeleteObject(pElement);
 				}
 			}
 		}
