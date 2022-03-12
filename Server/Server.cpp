@@ -373,6 +373,7 @@ enum eMasterlistJoinFlags
 	MASTERLISTJOINFLAGS_SERVER = 1,
 	MASTERLISTJOINFLAGS_LOCKED = 2,
 	MASTERLISTJOINFLAGS_CONSOLE = 4,
+	MASTERLISTJOINFLAGS_NETVERSION = 8,
 };
 
 void CMasterlistAnnouncer::OnPlayerConnect(mg_connection* nc)
@@ -381,7 +382,7 @@ void CMasterlistAnnouncer::OnPlayerConnect(mg_connection* nc)
 	CBinaryWriter Writer(&Packet);
 
 	Writer.Write7BitEncodedInt(0); // JOIN
-	int32_t Flags = MASTERLISTJOINFLAGS_SERVER;
+	int32_t Flags = MASTERLISTJOINFLAGS_SERVER | MASTERLISTJOINFLAGS_NETVERSION;;
 	if (m_pServer->m_pConsole != nullptr)
 		Flags |= MASTERLISTJOINFLAGS_CONSOLE;
 	if (m_pServer->m_Password.HasPassword())
@@ -390,6 +391,15 @@ void CMasterlistAnnouncer::OnPlayerConnect(mg_connection* nc)
 
 	Writer.Write7BitEncodedInt((Sint32)1); // Count
 	Writer.WriteString(m_pServer->m_Game.c_str(), m_pServer->m_Game.length());
+
+	#ifdef _DEBUG
+		if (m_pServer->m_uiFakeNetVersion != 0)
+			Writer.Write7BitEncodedInt((int32_t)m_pServer->m_uiFakeNetVersion);
+		else
+			Writer.Write7BitEncodedInt((int32_t)m_pServer->m_uiNetVersion);
+	#else
+		Writer.Write7BitEncodedInt((int32_t)m_pServer->m_uiNetVersion);
+	#endif	
 
 	Writer.Write7BitEncodedInt((Sint32)m_pServer->m_usPort);
 	Writer.Write7BitEncodedInt((Sint32)m_pServer->m_MaxClients);
@@ -572,6 +582,10 @@ CServer::CServer(Galactic3D::Context* pContext) :
 
 	m_uiVersionMin = NETGAME_MINIMUM_VERSION;
 	m_uiVersionMax = NETGAME_CURRENT_VERSION;
+
+#ifdef _DEBUG
+	m_uiFakeNetVersion = 0;
+#endif
 
 	RegisterLuaVM(m_ResourceMgr.m_pScripting);
 	RegisterJSVM(m_ResourceMgr.m_pScripting);
@@ -2019,7 +2033,14 @@ bool CServer::ParseConfig(const CServerConfiguration& Config)
 	_gstrlcpy(m_szServerName, Config.GetStringValue(_gstr("servername"), _gstr("")), ARRAY_COUNT(m_szServerName));
 	_gstrlcpy(m_szLevel, Config.GetStringValue(_gstr("mapname"), _gstr("")), ARRAY_COUNT(m_szLevel));
 	_gstrlcpy(m_szGameMode, Config.GetStringValue(_gstr("gamemode"), _gstr("")), ARRAY_COUNT(m_szGameMode));
-	_gstrlcpy(m_szMasterlist, Config.GetStringValue(_gstr("serverlistingurl"), _gstr("")), ARRAY_COUNT(m_szMasterlist));
+	
+	_gstrlcpy(m_szServerListing, Config.GetStringValue(_gstr("serverlistingurl"), _gstr("")), ARRAY_COUNT(m_szServerListing));
+	if (m_szServerListing[0] == '\0')
+		_gstrcpy_s(m_szServerListing, ARRAY_COUNT(m_szServerListing), _gstr("serverlisting.gtaconnected.com"));
+
+#ifdef _DEBUG
+	m_uiFakeNetVersion = Config.GetInt32Value(_gstr("fakenetversion"), 0);
+#endif
 
 	m_bServerBrowser = Config.GetBoolValue(_gstr("serverbrowser"), false);
 
@@ -2411,17 +2432,17 @@ void CServer::StartInputThread()
 
 bool CServer::StartMasterlist(void)
 {
-	_glogprintf(_gstr("Connecting to the masterlist..."));
+	_glogprintf(_gstr("Connecting to the server listing..."));
 	const GChar* pszMasterlist = _gstr("masterlist.gtaconnected.com");
 	if (m_szMasterlist[0] != '\0')
 		pszMasterlist = m_szMasterlist;
 	GChar szURL[256];
-	_gsnprintf(szURL, ARRAY_COUNT(szURL), _gstr("ws://%s/"), pszMasterlist);
+	_gsnprintf(szURL, ARRAY_COUNT(szURL), _gstr("ws://%s/"), m_szServerListing);
 	GChar szExtraHeaders[256];
 	_gsnprintf(szExtraHeaders, ARRAY_COUNT(szExtraHeaders), _gstr("User-Agent: %s\r\n"), m_pContext->GetUserAgent());
-	if (!m_Announcer.Connect(szURL, _gstr("ws_masterlist3"), szExtraHeaders))
+	if (!m_Announcer.Connect(szURL, _gstr("ws_serverlisting3"), szExtraHeaders))
 	{
-		_glogerrorprintf(_gstr("Failed connecting to the masterlist!"));
+		_glogerrorprintf(_gstr("Failed connecting to the server listing!"));
 		return false;
 	}
 	return true;

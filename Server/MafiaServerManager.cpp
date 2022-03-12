@@ -565,6 +565,33 @@ static bool FunctionVehicleGetOccupants(IScriptState* pState, int argc, void* pU
 	return true;
 }
 
+static bool FunctionPedGetSkin(IScriptState* pState, int argc, void* pUser)
+{
+	CMafiaServerManager* pServerManager = (CMafiaServerManager*)pUser;
+	CServerHuman* pServerHuman;
+	if (!pState->GetThis(pServerManager->m_pServerHumanClass,&pServerHuman))
+		return false;
+
+	UTF16String model(true, pServerHuman->m_szModel);
+
+	pState->ReturnString(model.CString());
+	return true;
+}
+
+static bool FunctionPedSetSkin(IScriptState* pState, int argc, void* pUser)
+{
+	CMafiaServerManager* pServerManager = (CMafiaServerManager*)pUser;
+	CServerHuman* pServerHuman;
+	if (!pState->GetThis(pServerManager->m_pServerHumanClass,&pServerHuman))
+		return false;
+	const GChar* sModel = pState->CheckString(0);
+	if (!sModel)
+		return false;
+
+	pServerHuman->SetModel(sModel);
+	return true;
+}
+
 static bool FunctionHumanGiveWeapon(IScriptState* pState, int argc, void* pUser)
 {
 	CMafiaServerManager* pServerManager = (CMafiaServerManager*)pUser;
@@ -1115,6 +1142,7 @@ void CMafiaServerManager::RegisterFunctions(CScripting* pScripting)
 	}
 
 	{
+		m_pServerHumanClass->AddProperty(this, _gstr("skin"), ARGUMENT_STRING, FunctionPedGetSkin, FunctionPedSetSkin);
 		m_pServerHumanClass->AddProperty(this, _gstr("vehicle"), ARGUMENT_OBJECT, FunctionPedGetOccupiedVehicle);
 		m_pServerHumanClass->AddProperty(this, _gstr("seat"), ARGUMENT_INTEGER, FunctionPedGetSeat);
 		m_pServerHumanClass->AddProperty(this, _gstr("health"), ARGUMENT_FLOAT, FunctionPedGetHealth);

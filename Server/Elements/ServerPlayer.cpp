@@ -30,3 +30,20 @@ bool CServerPlayer::WriteSyncPacket(Stream* pStream)
 
 	return true;
 }
+
+bool CServerPlayer::SetPosition(const CVector3D& vecPos)
+{
+	if (!CServerHuman::SetPosition(vecPos))
+		return false;
+
+	Packet Packet(MAFIAPACKET_PLAYER_SETPOSITION);
+	{
+		CBinaryWriter Writer(&Packet);
+		Writer.WriteInt32(GetId());
+		Writer.WriteVector3D(vecPos);
+	}
+
+	m_pNetObjectMgr->SendObjectRelatedPacket(&Packet, this);
+
+	return true;
+}

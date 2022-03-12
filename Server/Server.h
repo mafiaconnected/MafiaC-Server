@@ -112,6 +112,9 @@ public:
 	Galactic3D::Signalable m_ExitSignal;
 	uint32_t m_uiVersionMin;
 	uint32_t m_uiVersionMax;
+#ifdef _DEBUG
+	uint32_t m_uiFakeNetVersion;
+#endif
 	FILE* m_pLog;
 	CServerResourceMgr m_ResourceMgr;
 	EventHandlers::CEventType* m_pOnPlayerConnectEventType;
@@ -144,7 +147,7 @@ public:
 	GChar m_szServerName[64];
 	GChar m_szGameMode[64];
 	GChar m_szLevel[64];
-	GChar m_szMasterlist[64];
+	GChar m_szServerListing[64];
 	CSecurePassword m_Password;
 	bool m_bAllowModdedExecutables;
 	size_t m_CurrentClients;
