@@ -18,13 +18,13 @@ void CMafiaClient::SpawnPlayer(const CVector3D& vecPos, float fRotation, const G
 	//_glogprintf(_gstr("SpawnPlayer - Player model: %s"), modelName);
 
 	_gstrcpy_s(pPlayer->m_szModel, ARRAY_COUNT(pPlayer->m_szModel), modelName);
-	pPlayer->SetSyncer(m_nIndex,true);
+	pPlayer->SetSyncer(this, true);
 	pPlayer->SetHeading(fRotation);
 	pPlayer->SetPosition(vecPos);
 	pPlayer->SetRotation(CVecTools::ComputeDirEuler(fRotation));
 
-	if (!m_pNetObjectMgr->RegisterObject(pPlayer))
-		return;
+	//if (!m_pNetObjectMgr->RegisterObject(pPlayer))
+	//	return;
 
 	SetPlayer(pPlayer);
 	pPlayer->OnSpawned();
@@ -838,7 +838,7 @@ static bool FunctionCreateVehicle(IScriptState* pState, int argc, void* pUser)
 	pServerVehicle->m_RotVelocity = CVector3D(0, 0, 0);
 
 	pServerVehicle->m_pResource = pState->GetResource();
-	pServerManager->RegisterObject(pServerVehicle);
+	//pServerManager->RegisterObject(pServerVehicle);
 	pState->ReturnObject(pServerVehicle);
 	return true;
 }
@@ -866,7 +866,7 @@ static bool FunctionCreateHuman(IScriptState* pState, int argc, void* pUser)
 	pPed->SetModel(sModel);
 	pPed->SetPosition(vecPos);
 	pPed->m_pResource = pState->GetResource();
-	pServerManager->RegisterObject(pPed);
+	//pServerManager->RegisterObject(pPed);
 	pPed->OnSpawned();
 	pState->ReturnObject(pPed);
 	return true;
@@ -895,7 +895,7 @@ static bool FunctionCreatePlayer(IScriptState* pState, int argc, void* pUser)
 	pServerPlayer->SetModel(sModel);
 	pServerPlayer->SetHeading(angle);
 	pServerPlayer->m_pResource = pState->GetResource();
-	pServerManager->RegisterObject(pServerPlayer);
+	//pServerManager->RegisterObject(pServerPlayer);
 	pServerPlayer->OnSpawned();
 	pState->ReturnObject(pServerPlayer);
 	return true;

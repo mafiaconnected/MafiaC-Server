@@ -33,8 +33,8 @@ bool CServerPlayer::WriteSyncPacket(Stream* pStream)
 
 bool CServerPlayer::SetPosition(const CVector3D& vecPos)
 {
-	if (!CServerHuman::SetPosition(vecPos))
-		return false;
+	//if (!CServerHuman::SetPosition(vecPos))
+	//	return false;
 
 	Packet Packet(MAFIAPACKET_PLAYER_SETPOSITION);
 	{

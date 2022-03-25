@@ -156,9 +156,8 @@ bool CServerHuman::ReadSyncPacket(Stream* pStream)
 		}
 	}
 
-	auto machine = m_pServerManager->m_pNetMachines->GetMachine(GetSyncer());
-	GChar szHost[256];
-	machine->m_IPAddress.ToString(szHost, ARRAY_SIZE(szHost));
+	//GChar szHost[256];
+	//GetSyncer()->m_IPAddress.ToString(szHost, ARRAY_SIZE(szHost));
 	//_glogprintf(L"Got sync packet for human #%d (%s - ip %s):\n\tPosition: [%f, %f, %f]\n\tPos. difference: [%f, %f, %f]\n\tRotation: [%f, %f, %f]\n\tRot. difference: [%f, %f, %f]\n\tHealth: %f\n\tVehicle index: %d\n\tDucking: %s\n\tAiming: %s\n\tAnim state: %d", GetId(), machine->GetName(), szHost, m_Position.x, m_Position.y, m_Position.z, m_RelPosition.x, m_RelPosition.y, m_RelPosition.z, m_Rotation.x, m_Rotation.y, m_Rotation.z, m_RelRotation.x, m_RelRotation.y, m_RelRotation.z, m_fHealth, m_nVehicleNetworkIndex, m_IsCrouching ? L"Yes" : L"No", m_IsAiming ? L"Yes" : L"No", m_AnimationState);
 
 	return true;
@@ -215,9 +214,9 @@ bool CServerHuman::WriteSyncPacket(Stream* pStream)
 	if (pStream->Write(&Packet, sizeof(Packet)) != sizeof(Packet))
 		return false;
 
-	auto machine = m_pServerManager->m_pNetMachines->GetMachine(GetSyncer());
-	GChar szHost[256];
-	machine->m_IPAddress.ToString(szHost, ARRAY_SIZE(szHost));
+	//auto machine = GetSyncer();
+	//GChar szHost[256];
+	//machine->m_IPAddress.ToString(szHost, ARRAY_SIZE(szHost));
 	//_glogprintf(L"Sent sync packet for element #%d (%s - ip %s):\n\tPosition: [%f, %f, %f]\n\tPos. difference: [%f, %f, %f]\n\tRotation: [%f, %f, %f]\n\tRot. difference: [%f, %f, %f]\n\tHealth: %f\n\tVehicle index: %d\n\tDucking: %s\n\tAiming: %s\n\tAnim state: %d", GetId(), machine->GetName(), szHost, m_Position.x, m_Position.y, m_Position.z, m_RelPosition.x, m_RelPosition.y, m_RelPosition.z, m_Rotation.x, m_Rotation.y, m_Rotation.z, m_RelRotation.x, m_RelRotation.y, m_RelRotation.z, m_fHealth, m_nVehicleNetworkIndex, m_IsCrouching ? L"Yes" : L"No", m_IsAiming ? L"Yes" : L"No", m_AnimationState);
 
 	return true;
@@ -401,7 +400,7 @@ bool CServerHuman::CanExitVehicle(void)
 	if (m_nVehicleNetworkIndex != INVALID_NETWORK_ID)
 	{
 		//auto pVehicle = static_cast<CServerVehicle*>(m_pNetObjectMgr->FromId(m_nVehicleNetworkIndex));
-		// 
+		//
 		//{
 		//	CArguments Arguments(2);
 		//	Arguments.AddObject(this);
@@ -422,4 +421,3 @@ void CServerHuman::WarpIntoVehicle(CServerVehicle* pVehicle, unsigned char ucSea
 {
 
 }
-

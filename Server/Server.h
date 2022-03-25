@@ -112,6 +112,7 @@ public:
 	Galactic3D::Signalable m_ExitSignal;
 	uint32_t m_uiVersionMin;
 	uint32_t m_uiVersionMax;
+	uint32_t m_uiNetVersion;
 #ifdef _DEBUG
 	uint32_t m_uiFakeNetVersion;
 #endif

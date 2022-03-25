@@ -392,14 +392,14 @@ void CMasterlistAnnouncer::OnPlayerConnect(mg_connection* nc)
 	Writer.Write7BitEncodedInt((Sint32)1); // Count
 	Writer.WriteString(m_pServer->m_Game.c_str(), m_pServer->m_Game.length());
 
-	#ifdef _DEBUG
-		if (m_pServer->m_uiFakeNetVersion != 0)
-			Writer.Write7BitEncodedInt((int32_t)m_pServer->m_uiFakeNetVersion);
-		else
-			Writer.Write7BitEncodedInt((int32_t)m_pServer->m_uiNetVersion);
-	#else
+#ifdef _DEBUG
+	if (m_pServer->m_uiFakeNetVersion != 0)
+		Writer.Write7BitEncodedInt((int32_t)m_pServer->m_uiFakeNetVersion);
+	else
 		Writer.Write7BitEncodedInt((int32_t)m_pServer->m_uiNetVersion);
-	#endif	
+#else
+	Writer.Write7BitEncodedInt((int32_t)m_pServer->m_uiNetVersion);
+#endif
 
 	Writer.Write7BitEncodedInt((Sint32)m_pServer->m_usPort);
 	Writer.Write7BitEncodedInt((Sint32)m_pServer->m_MaxClients);
@@ -944,13 +944,13 @@ void CServer::OnPlayerDisconnect(const Peer_t Peer, unsigned int uiReason)
 
 				if (pElement != nullptr)
 				{
-					if (pElement->GetSyncer() == pPlayerInfo->m_nIndex)
+					if (pElement->GetSyncer() == m_NetMachines.GetMachine(pPlayerInfo->m_nIndex))
 					{
-						pElement->SetSyncer(-1, false);
+						pElement->SetSyncer(nullptr, false);
 					}
 
 					pElement->SetCreatedFor(pPlayerInfo, false);
-					pElement->RemoveMachine(pPlayerInfo);
+					//pElement->RemoveMachine(pPlayerInfo);
 					m_pManager->PossiblyDeleteObject(pElement);
 				}
 			}
@@ -1149,7 +1149,7 @@ void CServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, Stream
 						const GChar* pszGame = m_pManager->m_Games.GetGameName(ucGame);
 						pNetMachine->m_Game.assign(pszGame);
 						pNetMachine->m_GameId = ucGame;
-						pNetMachine->m_uiVersion = uiVersion;
+						//pNetMachine->m_uiVersion = uiVersion;
 						pNetMachine->m_ucGameVersion = ucGameVersion;
 						pNetMachine->m_nIndex = (uint32_t)i;
 						pNetMachine->m_GlobalIdentifier = Peer.m_GlobalPeer;
@@ -1504,7 +1504,7 @@ void CServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, Stream
 				CNetObject* pElement = m_pManager->FromId(nId);
 				if (pElement != nullptr && pElement->CanBeSyncer(pClient))
 				{
-					pElement->SetSyncer(pClient->m_nIndex);
+					pElement->SetSyncer(pClient);
 				}
 			}
 			break;
@@ -1518,7 +1518,7 @@ void CServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, Stream
 				Reader.ReadSingle((float*)&vecShotPosition, 3);
 
 				CNetObject* pPed = m_pManager->FromId(nId);
-				if (pPed != nullptr && pPed->GetSyncer() == pClient->m_nIndex)
+				if (pPed != nullptr && pPed->GetSyncer() == pClient)
 				{
 					{
 						Packet Packet(MAFIAPACKET_HUMAN_SHOOT);
@@ -1536,7 +1536,7 @@ void CServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, Stream
 					return;
 
 				CNetObject* pPed = m_pManager->FromId(nId);
-				if (pPed != nullptr && pPed->GetSyncer() == pClient->m_nIndex)
+				if (pPed != nullptr && pPed->GetSyncer() == pClient)
 				{
 					{
 						Packet Packet(MAFIAPACKET_HUMAN_DROPWEAP);
@@ -1557,7 +1557,7 @@ void CServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, Stream
 					return;
 
 				CNetObject* pPed = m_pManager->FromId(nId);
-				if (pPed != nullptr && pPed->GetSyncer() == pClient->m_nIndex)
+				if (pPed != nullptr && pPed->GetSyncer() == pClient)
 				{
 					CServerHuman *pServerHuman = (CServerHuman*)pPed;
 
@@ -1584,7 +1584,7 @@ void CServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, Stream
 
 				CNetObject* pTargetPed = m_pManager->FromId(nTargetId);
 				CNetObject* pAttackerPed = m_pManager->FromId(nAttackerId);
-				if (pTargetPed != nullptr && pTargetPed->GetSyncer() == pClient->m_nIndex)
+				if (pTargetPed != nullptr && pTargetPed->GetSyncer() == pClient)
 				{
 					{
 						Packet Packet(MAFIAPACKET_HUMAN_DIE);
@@ -1622,7 +1622,7 @@ void CServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, Stream
 
 			if (pPed == nullptr
 			|| pVehicle == nullptr
-			|| pClient->m_nIndex != pPed->GetSyncer()
+			|| pClient != pPed->GetSyncer()
 			|| nSeat < 0
 			|| nSeat > 20)
 			{
@@ -1642,7 +1642,7 @@ void CServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, Stream
 			if (nSeat == 0 && pVehicle->CanBeSyncer(pClient))
 			{
 				_glogprintf(_gstr("Setting vehicle %d syncer to %d"), pVehicle->GetId(), pClient->m_nIndex);
-				pVehicle->SetSyncer(pClient->m_nIndex, true);
+				pVehicle->SetSyncer(pClient, true);
 			}
 		}
 		break;
@@ -1669,7 +1669,7 @@ void CServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, Stream
 
 			if (pPed == nullptr
 				|| pVehicle == nullptr
-				|| pClient->m_nIndex != pPed->GetSyncer()
+				|| pClient != pPed->GetSyncer()
 				|| nSeat < 0
 				|| nSeat > 20)
 			{
@@ -1710,7 +1710,7 @@ void CServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, Stream
 
 			if (pPed == nullptr
 				|| pVehicle == nullptr
-				|| pClient->m_nIndex != pPed->GetSyncer()
+				|| pClient != pPed->GetSyncer()
 				|| nSeat < 0
 				|| nSeat > 20)
 			{
@@ -1751,7 +1751,7 @@ void CServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, Stream
 
 			if (pPed == nullptr
 				|| pVehicle == nullptr
-				|| pClient->m_nIndex != pPed->GetSyncer()
+				|| pClient != pPed->GetSyncer()
 				|| nSeat < 0
 				|| nSeat > 20)
 			{
@@ -1771,7 +1771,7 @@ void CServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, Stream
 			if (nSeat == 0 && pVehicle->CanBeSyncer(pClient))
 			{
 				_glogprintf(_gstr("Setting vehicle %d syncer to %d"), pVehicle->GetId(), pClient->m_nIndex);
-				pVehicle->SetSyncer(pClient->m_nIndex, true);
+				pVehicle->SetSyncer(pClient, true);
 			}
 		}
 		break;
@@ -1792,7 +1792,7 @@ void CServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, Stream
 
 			if (pPed == nullptr
 				|| pVehicle == nullptr
-				|| pClient->m_nIndex != pPed->GetSyncer()
+				|| pClient != pPed->GetSyncer()
 				|| nSeat < 0
 				|| nSeat > 20)
 			{
@@ -1809,7 +1809,7 @@ void CServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, Stream
 
 			if (nSeat == 0)
 			{
-				pVehicle->SetSyncer(pClient->m_nIndex);
+				pVehicle->SetSyncer(pClient);
 			}
 		}
 		break;
@@ -1833,11 +1833,11 @@ void CServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, Stream
 				pServerVehicle->m_pResource = nullptr;
 				pServerVehicle->ReadCreatePacket(pStream);
 
-				if(!m_pManager->RegisterObject(pServerVehicle))
-					return;
+				//if(!m_pManager->RegisterObject(pServerVehicle))
+				//	return;
 
 				pServerVehicle->SetCreatedFor(pClient, true);
-				pServerVehicle->SetSyncer(pClient->m_nIndex, true);
+				pServerVehicle->SetSyncer(pClient, true);
 			}
 
 			{
@@ -1943,15 +1943,16 @@ void CServer::SendAllSync(void)
 			CNetObject* pServerElement = m_pManager->m_Objects.GetAt(i);
 			if (pServerElement != nullptr && pServerElement->m_Flags.m_bFindSyncer)
 			{
-				if (pServerElement->GetSyncer() == INVALID_MACHINE_ID && !pServerElement->m_Flags.m_bForcedSyncer)
+				if (pServerElement->GetSyncer() == nullptr && !pServerElement->m_Flags.m_bForcedSyncer)
 				{
 					for (size_t x = 0; x < MAX_MACHINES; x++)
 					{
-						if (m_NetMachines.m_rgpMachines[x] != nullptr)
+						auto pNetMachine = m_NetMachines.GetMachine(x);
+						if (pNetMachine != nullptr)
 						{
-							if (pServerElement->IsCreatedFor(m_NetMachines.m_rgpMachines[x]))
+							if (pServerElement->IsCreatedFor(pNetMachine))
 							{
-								pServerElement->SetSyncer((int)x);
+								pServerElement->SetSyncer(pNetMachine);
 								break;
 							}
 						}
@@ -2386,7 +2387,7 @@ bool CServer::StartServer(void)
 		m_pConsole = Strong<CNetMachine>::New(new CMafiaClient(m_pManager));
 		m_pConsole->m_Game = m_Game;
 		m_pConsole->m_GameId = m_GameId;
-		m_pConsole->m_uiVersion = m_uiVersionMax;
+		//m_pConsole->m_uiVersion = m_uiVersionMax;
 		m_pConsole->m_ucGameVersion = 0;
 		m_pConsole->m_nIndex = 255;
 		m_pConsole->m_bAdministrator = true;
@@ -2433,9 +2434,6 @@ void CServer::StartInputThread()
 bool CServer::StartMasterlist(void)
 {
 	_glogprintf(_gstr("Connecting to the server listing..."));
-	const GChar* pszMasterlist = _gstr("masterlist.gtaconnected.com");
-	if (m_szMasterlist[0] != '\0')
-		pszMasterlist = m_szMasterlist;
 	GChar szURL[256];
 	_gsnprintf(szURL, ARRAY_COUNT(szURL), _gstr("ws://%s/"), m_szServerListing);
 	GChar szExtraHeaders[256];
