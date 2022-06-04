@@ -32,7 +32,7 @@ public:
 
 	CMafiaServerManager* m_pManager;
 
-	uint32_t m_LastTicks;
+	uint32_t m_LastTicks; 
 	uint64_t m_ulTimer;
 
 	double m_fResyncTimer;

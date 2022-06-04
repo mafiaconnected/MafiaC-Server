@@ -1344,7 +1344,7 @@ void CServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, Stream
 					}
 					else
 					{
-						_glogwarnprintf(_gstr("Failed to read network arguments"));
+						_glogwarnprintf(_gstr("Failed to read network arguments for network event %s."), pszName);
 					}
 					GFree(pszName);
 				}
