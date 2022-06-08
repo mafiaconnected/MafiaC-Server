@@ -1767,7 +1767,7 @@ void CServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, Stream
 				Packet.Write<int32_t>(nUnknown);
 				m_pManager->SendPacketExcluding(&Packet, pClient);
 			}
-			
+
 			if (nSeat == 0 && pVehicle->CanBeSyncer(pClient))
 			{
 				_glogprintf(_gstr("Setting vehicle %d syncer to %d"), pVehicle->GetId(), pClient->m_nIndex);
@@ -1826,7 +1826,7 @@ void CServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, Stream
 
 			{
 				pServerVehicle = Strong<CServerVehicle>::New(m_pManager->Create(ELEMENT_VEHICLE));
-				
+
 				if (pServerVehicle == nullptr)
 					return;
 
@@ -1864,7 +1864,7 @@ void CServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, Stream
 				if (pServerVehicle != nullptr)
 				{
 					printf("Destroyed vehicle ID %i\n", pServerVehicle->GetId());
-					
+
 					{
 						Packet Packet(MAFIAPACKET_ELEMENT_REMOVE);
 						Packet.Write<int32_t>(pServerVehicle->GetId());
@@ -2034,7 +2034,7 @@ bool CServer::ParseConfig(const CServerConfiguration& Config)
 	_gstrlcpy(m_szServerName, Config.GetStringValue(_gstr("servername"), _gstr("")), ARRAY_COUNT(m_szServerName));
 	_gstrlcpy(m_szLevel, Config.GetStringValue(_gstr("mapname"), _gstr("")), ARRAY_COUNT(m_szLevel));
 	_gstrlcpy(m_szGameMode, Config.GetStringValue(_gstr("gamemode"), _gstr("")), ARRAY_COUNT(m_szGameMode));
-	
+
 	_gstrlcpy(m_szServerListing, Config.GetStringValue(_gstr("serverlistingurl"), _gstr("")), ARRAY_COUNT(m_szServerListing));
 	if (m_szServerListing[0] == '\0')
 		_gstrcpy_s(m_szServerListing, ARRAY_COUNT(m_szServerListing), _gstr("serverlisting.gtaconnected.com"));
