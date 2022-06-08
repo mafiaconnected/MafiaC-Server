@@ -57,6 +57,8 @@ public:
 	Galactic3D::EventHandlers::CEventType* m_pOnPedSpawnEventType;
 	Galactic3D::EventHandlers::CEventType* m_pOnPedFallEventType;
 
+	Galactic3D::EventHandlers::CEventType* m_pOnReceivePacketEventType;
+
 	Galactic3D::ReflectedClass* m_pServerEntityClass;
 	Galactic3D::ReflectedClass* m_pServerHumanClass;
 	Galactic3D::ReflectedClass* m_pServerPlayerClass;

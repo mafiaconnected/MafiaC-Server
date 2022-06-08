@@ -206,6 +206,7 @@ public:
 	virtual bool OnPlayerConnect(const Peer_t Peer) override;
 	virtual void OnPlayerDisconnect(const Peer_t Peer, unsigned int uiReason) override;
 	virtual void ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, Galactic3D::Stream* pStream) override;
+	virtual bool ReceiveDatagram(CNetSocket* pNetSocket) override;
 
 	void SetGame(const GChar* pszName);
 	void AddGame(const GChar* pszName);

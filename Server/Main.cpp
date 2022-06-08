@@ -144,6 +144,7 @@ int main(int argc, char* argv[])
 		bool bDumpDoc = false;
 		bool bExpectConfig = false;
 		bool bExpectNumber = false;
+		bool bExpectBindIP = false;
 		bool* pbFlag;
 		int32_t* piNumber;
 		bool bNoInput = false;
@@ -152,6 +153,7 @@ int main(int argc, char* argv[])
 		Optional<int32_t> iHttpPort;
 		Optional<int32_t> iRconPort;
 		Optional<int32_t> iMaxPlayers;
+		Optional<GString> BindIP;
 
 		for (int i = 0; i < argc; i++)
 		{
@@ -166,6 +168,12 @@ int main(int argc, char* argv[])
 				*piNumber = _gatoi(Arg);
 				*pbFlag = true;
 				bExpectNumber = false;
+			}
+			else if (bExpectBindIP)
+			{
+				BindIP.m_Data.assign(Arg.CString(), Arg.GetLength());
+				BindIP.m_bData = true;
+				bExpectBindIP = false;
 			}
 			else if (_gstrcasecmp(Arg, _gstr("-dumpdoc")) == 0)
 				bDumpDoc = true;
@@ -197,6 +205,10 @@ int main(int argc, char* argv[])
 				piNumber = &iMaxPlayers.m_Data;
 				bExpectNumber = true;
 			}
+			else if (_gstrcasecmp(Arg, _gstr("-bindip")) == 0)
+			{
+				bExpectBindIP = true;
+			}
 		}
 
 		bool bSuccess = false;
@@ -217,9 +229,15 @@ int main(int argc, char* argv[])
 			{
 				Server.m_usRConPort = (uint16_t)iRconPort;
 			}
+
 			if (iMaxPlayers.m_bData)
 			{
 				Server.m_MaxClients = (size_t)iMaxPlayers;
+			}
+
+			if (BindIP.m_bData)
+			{
+				_gstrcpy_s(Server.m_szBindIP, ARRAY_COUNT(Server.m_szBindIP), BindIP.m_Data.c_str());
 			}
 
 			if (bSuccess = Server.StartServer())

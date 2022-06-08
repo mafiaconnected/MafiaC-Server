@@ -580,8 +580,7 @@ CServer::CServer(Galactic3D::Context* pContext) :
 	m_szGameMode[0] = '\0';
 	m_szLevel[0] = '\0';
 
-	m_uiVersionMin = NETGAME_MINIMUM_VERSION;
-	m_uiVersionMax = NETGAME_CURRENT_VERSION;
+	m_uiNetVersion = NETGAME_CURRENT_VERSION;
 
 #ifdef _DEBUG
 	m_uiFakeNetVersion = 0;
@@ -944,13 +943,13 @@ void CServer::OnPlayerDisconnect(const Peer_t Peer, unsigned int uiReason)
 
 				if (pElement != nullptr)
 				{
-					if (pElement->GetSyncer() == m_NetMachines.GetMachine(pPlayerInfo->m_nIndex))
+					if (pElement->GetSyncer() == pPlayerInfo)
 					{
 						pElement->SetSyncer(nullptr, false);
 					}
 
 					pElement->SetCreatedFor(pPlayerInfo, false);
-					//pElement->RemoveMachine(pPlayerInfo);
+					pElement->ResetMachine(pPlayerInfo);
 					m_pManager->PossiblyDeleteObject(pElement);
 				}
 			}
@@ -1012,9 +1011,20 @@ void CServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, Stream
 
 	CMafiaClient* pClient = static_cast<CMafiaClient*>(m_NetMachines.GetMachineFromPeer(Peer.m_Peer));
 
+	{
+		CArguments Args(2);
+		Args.AddNumber(PacketID);
+		Args.AddObject(pClient);
+
+		bool bPreventDefault = false;
+		m_pManager->m_pOnReceivePacketEventType->Trigger(Args, bPreventDefault);
+		if (bPreventDefault)
+			return;
+	}
+
 	if (PacketID == PACKET_INITIAL)
 	{
-		// Prevent first packet unless first packet not received!
+		// Prevent first packet unless first packet if first packet already received.
 		if (pClient != nullptr)
 		{
 			// TODO: Disconnect. Because it is likely that trailing data was sent with the PACKET_INITIAL opcode.
@@ -1023,7 +1033,7 @@ void CServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, Stream
 	}
 	else
 	{
-		// Prevent packets unless player actually joined!
+		// Prevent packets unless player actually passed the first packet checks.
 		if (pClient == nullptr)
 		{
 			return;
@@ -1051,11 +1061,11 @@ void CServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, Stream
 					DisconnectPeer(Peer.m_Peer, DISCONNECT_BANNED);
 					return;
 				}
-				uint32_t uiVersion = 0;
-				Reader.ReadUInt32(&uiVersion, 1);
-				if (uiVersion < m_uiVersionMin || uiVersion > m_uiVersionMax)
+				uint32_t uiNetVersion = 0;
+				Reader.ReadUInt32(&uiNetVersion, 1);
+				if (uiNetVersion != m_uiNetVersion)
 				{
-					_glogwarnprintf(_gstr("CONNECT: %s revoked connection [UNSUPPORTED CLIENT]"), szHost);
+					_glogwarnprintf(_gstr("CONNECT: %s (%d) revoked connection [UNSUPPORTED CLIENT]"), szHost, uiNetVersion);
 					DisconnectPeer(Peer.m_Peer, DISCONNECT_UNSUPPORTEDCLIENT);
 					return;
 				}
@@ -1909,9 +1919,14 @@ void CServer::SendSync(CNetMachine* pClient)
 	m_pManager->SendSync(pClient, m_SyncPacketPriority, m_SyncPacketFlags, true);
 }
 
+bool CServer::ReceiveDatagram(CNetSocket* pNetSocket)
+{
+	return m_UGP.ReceiveDatagram(pNetSocket);
+}
+
 void CServer::ManageElements(CNetMachine* pClient)
 {
-	if (!pClient->m_bJoined || pClient->m_bConsole)
+	if (!pClient->m_bJoined)
 		return;
 
 	m_pManager->CreateObjectsAsNeeded(pClient, ELEMENT_VEHICLE); // create vehicles first
@@ -1928,7 +1943,7 @@ void CServer::SendAllSync(void)
 	{
 		for (size_t i = 0; i < MAX_MACHINES; i++)
 		{
-			if (m_NetMachines.m_rgpMachines[i] != nullptr && m_NetMachines.m_rgpMachines[i]->m_bJoined && !m_NetMachines.m_rgpMachines[i]->m_bConsole)
+			if (m_NetMachines.m_rgpMachines[i] != nullptr && m_NetMachines.m_rgpMachines[i]->m_bJoined)
 			{
 				SendSync(m_NetMachines.m_rgpMachines[i]);
 			}
@@ -2466,7 +2481,7 @@ bool CServer::OnFrame(void)
 	{
 		for (size_t i=0; i<MAX_MACHINES; i++)
 		{
-			if (m_NetMachines.m_rgpMachines[i] != nullptr && m_NetMachines.m_rgpMachines[i]->m_bJoined && !m_NetMachines.m_rgpMachines[i]->m_bConsole)
+			if (m_NetMachines.m_rgpMachines[i] != nullptr && m_NetMachines.m_rgpMachines[i]->m_bJoined)
 			{
 				ManageElements(m_NetMachines.m_rgpMachines[i]);
 			}

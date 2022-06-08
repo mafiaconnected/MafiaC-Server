@@ -5,7 +5,7 @@
 
 class CServer;
 
-class CUnleashedGameProtocolHandler : public CNetDatagramHandler
+class CUnleashedGameProtocolHandler
 {
 public:
 	CUnleashedGameProtocolHandler(CServer* pServer);
@@ -16,5 +16,5 @@ public:
 	CUGPResponse* m_pResponse;
 
 	void UpdateResponse();
-	virtual bool ReceiveDatagram(CNetSocket* pNetSocket) override;
+	bool ReceiveDatagram(CNetSocket* pNetSocket);
 };

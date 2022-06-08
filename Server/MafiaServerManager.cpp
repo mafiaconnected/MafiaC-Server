@@ -26,7 +26,7 @@ void CMafiaClient::SpawnPlayer(const CVector3D& vecPos, float fRotation, const G
 	if (!m_pNetObjectMgr->RegisterNetObject(pPlayer))
 		return;
 
-	//m_pNetObjectMgr->SendCreatePacket(this, pPlayer, false); // this call is useless
+	m_pNetObjectMgr->SendCreatePacket(this, pPlayer, false); // this call is useless
 
 	SetPlayer(pPlayer);
 	pPlayer->OnSpawned();
@@ -47,6 +47,9 @@ CMafiaServerManager::CMafiaServerManager(Context* pContext, CServer* pServer) :
 	m_pOnPedDeathEventType = m_pServer->m_ResourceMgr.m_pEventHandlers->CreateEventType(_gstr("OnPedDeath"), _gstr("Called when a ped dies."), 4);
 	m_pOnPedSpawnEventType = m_pServer->m_ResourceMgr.m_pEventHandlers->CreateEventType(_gstr("OnPedSpawn"), _gstr("Called when a ped is spawned."), 1);
 	m_pOnPedFallEventType = m_pServer->m_ResourceMgr.m_pEventHandlers->CreateEventType(_gstr("OnPedFall"), _gstr("Called when a ped falls."), 1);
+
+	m_pOnReceivePacketEventType = m_pServer->m_ResourceMgr.m_pEventHandlers->CreateEventType(_gstr("OnReceivePacket"), _gstr("Called when a packet is received"), 2);
+	m_pOnReceivePacketEventType->m_bCanPreventDefault = true;
 
 	auto pMafia = m_pServer->m_ResourceMgr.m_pScripting->m_Global.AddNamespace(_gstr("mafia"));
 	pMafia->SetAlias(_gstr("game"));
@@ -195,7 +198,7 @@ static bool FunctionEntityGetRotationVelocity(IScriptState* pState, int argc, vo
 	CServerEntity* pServerEntity;
 	if (!pState->GetThis(pServerManager->m_pServerEntityClass, &pServerEntity))
 		return false;
-	
+
 	CVector3D vecRotationVelocity;
 	pServerEntity->GetRotationVelocity(vecRotationVelocity);
 
@@ -801,7 +804,7 @@ static bool FunctionCreateVehicle(IScriptState* pState, int argc, void* pUser)
 	if (!pState->CheckVector3D(1, vecPos))
 		return false;
 
-	float angle = 0;
+	float angle = 0.0;
 
 	if (argc > 2 && !pState->CheckNumber(2, angle))
 		return false;
@@ -812,13 +815,15 @@ static bool FunctionCreateVehicle(IScriptState* pState, int argc, void* pUser)
 	while (angle > twoPi)
 		angle -= twoPi;
 
+	CVector3D vecRot(0.0f, 0.0f, angle);
+
 	Strong<CServerVehicle> pServerVehicle;
 
 	pServerVehicle = Strong<CServerVehicle>::New(pServerManager->Create(ELEMENT_VEHICLE));
 
 	pServerVehicle->SetModel(sModel);
 	pServerVehicle->SetPosition(vecPos);
-	pServerVehicle->SetRotation(CVector3D(0, 0, angle));
+	pServerVehicle->SetRotation(vecRot);
 
 	pServerVehicle->m_Health = 100.0f;
 	pServerVehicle->m_EngineHealth = 100.0f;
@@ -1035,10 +1040,9 @@ static bool FunctionSetServerPassword(IScriptState* pState, int argc, void* pUse
 	if (pServerManager->m_pServer->m_Password.SetPassword(pszPassword))
 	{
 		pState->ReturnBoolean(true);
-		return false;
+		return true;
 	}
-	pState->ReturnBoolean(false);
-	return true;
+	return pState->Error(_gstr("Failed to change the server password."));
 }
 
 static bool FunctionPedGetHealth(IScriptState* pState, int argc, void* pUser)
@@ -1110,10 +1114,83 @@ static bool FunctionPedIsEnteringExitingVehicle(IScriptState* pState, int argc, 
 	return true;
 }
 
+static bool FunctionGetServerBindIP(IScriptState* pState, int argc, void* pUser)
+{
+	CMafiaServerManager* pServerManager = (CMafiaServerManager*)pUser;
+	pState->ReturnString(pServerManager->m_pServer->m_szBindIP);
+	return true;
+}
+
+template <int type>
+static bool FunctionGetElements(IScriptState* pState, int argc, void* pUser)
+{
+	CMafiaServerManager* pServerManager = (CMafiaServerManager*)pUser;
+	size_t uiCount = 0;
+	for (size_t i = 0; i < pServerManager->m_Objects.GetSize(); i++)
+	{
+		if (pServerManager->m_Objects.IsUsedAt(i))
+		{
+			auto pObject = pServerManager->m_Objects.GetAt(i);
+			if (pObject != nullptr && pObject->IsType(type))
+			{
+				uiCount++;
+			}
+		}
+	}
+	CArgumentArray* pEntries = new CArgumentArray(uiCount);
+	for (size_t i = 0; i < pServerManager->m_Objects.GetSize(); i++)
+	{
+		if (pServerManager->m_Objects.IsUsedAt(i))
+		{
+			auto pObject = pServerManager->m_Objects.GetAt(i);
+			if (pObject != nullptr && pObject->IsType(type))
+			{
+				pEntries->AddObject(pObject);
+			}
+		}
+	}
+	pState->ReturnAndOwn(pEntries);
+	return true;
+}
+
+template <int type>
+static bool FunctionGetElementCount(IScriptState* pState, int argc, void* pUser)
+{
+	CMafiaServerManager* pServerManager = (CMafiaServerManager*)pUser;
+	size_t uiCount = 0;
+	for (size_t i = 0; i < pServerManager->m_Objects.GetSize(); i++)
+	{
+		if (pServerManager->m_Objects.IsUsedAt(i))
+		{
+			auto pObject = pServerManager->m_Objects.GetAt(i);
+			if (pObject != nullptr && pObject->IsType(type))
+			{
+				uiCount++;
+			}
+		}
+	}
+	pState->ReturnNumber(uiCount);
+	return true;
+}
+
 void CMafiaServerManager::RegisterFunctions(CScripting* pScripting)
 {
 	auto pGameNamespace = pScripting->m_Global.AddNamespace(_gstr("mafia"));
 	pGameNamespace->SetAlias(_gstr("game"));
+
+	{
+		pScripting->m_Global.RegisterFunction(_gstr("getElements"), _gstr(""), FunctionGetElements<ELEMENT_ELEMENT>, this);
+		pScripting->m_Global.RegisterFunction(_gstr("getPeds"), _gstr(""), FunctionGetElements<ELEMENT_PED>, this);
+		pScripting->m_Global.RegisterFunction(_gstr("getPlayers"), _gstr(""), FunctionGetElements<ELEMENT_PLAYER>, this);
+		pScripting->m_Global.RegisterFunction(_gstr("getVehicles"), _gstr(""), FunctionGetElements<ELEMENT_VEHICLE>, this);
+	}
+
+	{
+		pScripting->m_Global.RegisterFunction(_gstr("getElementCount"), _gstr(""), FunctionGetElementCount<ELEMENT_ELEMENT>, this);
+		pScripting->m_Global.RegisterFunction(_gstr("getPedCount"), _gstr(""), FunctionGetElementCount<ELEMENT_PED>, this);
+		pScripting->m_Global.RegisterFunction(_gstr("getPlayerCount"), _gstr(""), FunctionGetElementCount<ELEMENT_PLAYER>, this);
+		pScripting->m_Global.RegisterFunction(_gstr("getVehicleCount"), _gstr(""), FunctionGetElementCount<ELEMENT_VEHICLE>, this);
+	}
 
 	{
 		m_pServerEntityClass->AddProperty(this, _gstr("model"), ARGUMENT_STRING, FunctionEntityGetModel, FunctionEntitySetModel);
@@ -1198,5 +1275,7 @@ void CMafiaServerManager::RegisterFunctions(CScripting* pScripting)
 
 		pServerNamespace->RegisterFunction(_gstr("getCVar"), _gstr("s"), FunctionGetServerCVar, this);
 		pServerNamespace->RegisterFunction(_gstr("setPassword"), _gstr("s"), FunctionSetServerPassword, this);
+
+		pServerNamespace->AddProperty(this, _gstr("bindIP"), ARGUMENT_STRING, FunctionGetServerBindIP);
 	}
 }
