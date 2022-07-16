@@ -27,7 +27,7 @@ void CUnleashedGameProtocolHandler::UpdateResponse()
 	_gstrcpy_s(m_pResponse->m_ServerInfo.m_szVersion, ARRAY_COUNT(m_pResponse->m_ServerInfo.m_szVersion), _gstr(""));
 	_gstrcpy_s(m_pResponse->m_ServerInfo.m_szName, ARRAY_COUNT(m_pResponse->m_ServerInfo.m_szName), m_pServer->GetServerName());
 	_gstrcpy_s(m_pResponse->m_ServerInfo.m_szGameMode, ARRAY_COUNT(m_pResponse->m_ServerInfo.m_szGameMode), m_pServer->GetGameMode());
-	_gstrcpy_s(m_pResponse->m_ServerInfo.m_szMap, ARRAY_COUNT(m_pResponse->m_ServerInfo.m_szMap), m_pServer->m_szMap);
+	_gstrcpy_s(m_pResponse->m_ServerInfo.m_szMap, ARRAY_COUNT(m_pResponse->m_ServerInfo.m_szMap), m_pServer->m_szLevel);
 	m_pResponse->m_ServerInfo.m_PlayerCount = (uint8_t)m_pServer->m_CurrentClients;
 	m_pResponse->m_ServerInfo.m_MaxPlayers = (uint8_t)m_pServer->m_MaxClients;
 
