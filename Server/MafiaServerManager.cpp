@@ -26,7 +26,7 @@ void CMafiaClient::SpawnPlayer(const CVector3D& vecPos, float fRotation, const G
 	if (!m_pNetObjectMgr->RegisterNetObject(pPlayer))
 		return;
 
-	m_pNetObjectMgr->SendCreatePacket(this, pPlayer, false); // this call is useless
+	//m_pNetObjectMgr->SendCreatePacket(this, pPlayer, false); // this call is useless
 
 	SetPlayer(pPlayer);
 	pPlayer->OnSpawned();
@@ -70,6 +70,13 @@ CMafiaServerManager::CMafiaServerManager(Context* pContext, CServer* pServer) :
 	pDefineHandlers->Define(_gstr("GAME_MAFIA_TWO"), GAME_MAFIA_TWO);
 	pDefineHandlers->Define(_gstr("GAME_MAFIA_THREE"), GAME_MAFIA_THREE);
 	pDefineHandlers->Define(_gstr("GAME_MAFIA_ONE_DE"), GAME_MAFIA_ONE_DE);
+
+	// Compatibility with GTA Connected
+	pDefineHandlers->Define(_gstr("GAME_GTA_III"), 1);
+	pDefineHandlers->Define(_gstr("GAME_GTA_VC"), 2);
+	pDefineHandlers->Define(_gstr("GAME_GTA_SA"), 3);
+	pDefineHandlers->Define(_gstr("GAME_GTA_IV"), 5);
+	pDefineHandlers->Define(_gstr("GAME_GTA_IV_EFLC"), 6);
 
 	pDefineHandlers->Define(_gstr("ELEMENT_ELEMENT"), ELEMENT_ELEMENT);
 	pDefineHandlers->Define(_gstr("ELEMENT_ENTITY"), ELEMENT_ENTITY);
@@ -647,15 +654,15 @@ static bool FunctionSpawnPlayer(IScriptState* pState, int argc, void* pUser)
 	if (!pState->CheckClass(pServerManager->m_pServer->m_pManager->m_pNetMachineClass, 0, false, &pClient))
 		return false;
 
-	const GChar* sModel = pState->CheckString(1);
-
 	CVector3D vecPos;
-	if (!pState->CheckVector3D(2, vecPos))
+	if (!pState->CheckVector3D(1, vecPos))
 		return false;
 
 	float fRotation = 0.0f;
-	if (argc > 2 && !pState->CheckNumber(3, fRotation))
+	if (argc > 2 && !pState->CheckNumber(2, fRotation))
 		return false;
+
+	const GChar* sModel = pState->CheckString(3);
 
 	pClient->SpawnPlayer(vecPos, fRotation, sModel);
 	return true;
@@ -1243,7 +1250,7 @@ void CMafiaServerManager::RegisterFunctions(CScripting* pScripting)
 		pHUDNamespace->RegisterFunction(_gstr("showCountdown"), _gstr("xi"), FunctionPlayerCountdown, this);
 	}
 
-	pScripting->m_Global.RegisterFunction(_gstr("spawnPlayer"), _gstr("xsv|f"), FunctionSpawnPlayer, this);
+	pScripting->m_Global.RegisterFunction(_gstr("spawnPlayer"), _gstr("xvfs"), FunctionSpawnPlayer, this);
 
 	pGameNamespace->AddProperty(this, _gstr("mapName"), ARGUMENT_STRING, FunctionGameGetLevel);
 	pGameNamespace->RegisterFunction(_gstr("changeMap"), _gstr("s"), FunctionGameSetLevel, this);
