@@ -110,10 +110,22 @@ bool CServerEntity::ReadCreatePacket(Stream* pStream)
 
 	_gstrcpy_s(m_szModel, ARRAY_COUNT(m_szModel), Packet.model);
 
-	m_Position = Packet.position;
-	m_RelPosition = Packet.positionRel;
-	m_Rotation = Packet.rotation;
-	m_RelRotation = Packet.rotationRel;
+	// Check for NaN. Mafia sometimes has them. Once synced, it streams the element out for players (even a driver's own vehicle disappears)
+	if (Packet.position.x != NAN && Packet.position.y != NAN && Packet.position.z != NAN) {
+		m_Position = Packet.position;
+	}
+	
+	if (Packet.positionRel.x != NAN && Packet.positionRel.y != NAN && Packet.positionRel.z != NAN) {
+		m_RelPosition = Packet.positionRel;
+	}
+
+	if (Packet.rotation.x != NAN && Packet.rotation.y != NAN && Packet.rotation.z != NAN) {
+		m_Rotation = Packet.rotation;
+	}
+	
+	if (Packet.rotationRel.x != NAN && Packet.rotationRel.y != NAN && Packet.rotationRel.z != NAN) {
+		m_RelRotation = Packet.rotationRel;
+	}
 
 	return true;
 }
@@ -128,10 +140,22 @@ bool CServerEntity::ReadSyncPacket(Stream* pStream)
 	if (pStream->Read(&Packet, sizeof(Packet)) != sizeof(Packet))
 		return false;
 
-	m_Position = Packet.position;
-	m_RelPosition = Packet.positionRel;
-	m_Rotation = Packet.rotation;
-	m_RelRotation = Packet.rotationRel;
+	// Check for NaN. Mafia sometimes has them. Once synced, it streams the element out for players (even a driver's own vehicle disappears)
+	if (Packet.position.x != NAN && Packet.position.y != NAN && Packet.position.z != NAN) {
+		m_Position = Packet.position;
+	}
+
+	if (Packet.positionRel.x != NAN && Packet.positionRel.y != NAN && Packet.positionRel.z != NAN) {
+		m_RelPosition = Packet.positionRel;
+	}
+
+	if (Packet.rotation.x != NAN && Packet.rotation.y != NAN && Packet.rotation.z != NAN) {
+		m_Rotation = Packet.rotation;
+	}
+
+	if (Packet.rotationRel.x != NAN && Packet.rotationRel.y != NAN && Packet.rotationRel.z != NAN) {
+		m_RelRotation = Packet.rotationRel;
+	}
 
 	return true;
 }
