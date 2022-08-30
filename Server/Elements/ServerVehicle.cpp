@@ -193,11 +193,11 @@ bool CServerVehicle::SetRotation(const CVector3D& vecRotation)
 {
 	CServerEntity::SetRotation(vecRotation);
 
-	CVector3D vec3 = CVecTools::ComputeDirEuler(vecRotation.z);
-	CMatrix3x3 mat3(vec3);
-	m_RotationFront = mat3.GetXAxis();
-	m_RotationUp = mat3.GetYAxis();
-	m_RotationRight = mat3.GetZAxis();
+	//CVector3D vec3 = CVecTools::ComputeDirEuler(CVecTools::RadToDeg(vecRotation.z));
+	CMatrix3x3 mat3(vecRotation);
+	m_RotationFront = mat3[0];
+	m_RotationUp = mat3[1];
+	m_RotationRight = mat3[2];
 
 	return true;
 }
