@@ -11,7 +11,7 @@ CMafiaClient::CMafiaClient(CNetObjectMgr* pServer) :
 
 void CMafiaClient::SpawnPlayer(const CVector3D& vecPos, float fRotation, const GChar* modelName)
 {
-	DespawnPlayer();
+	//DespawnPlayer();
 
 	auto pPlayer = Strong<CServerPlayer>::New(static_cast<CServerPlayer*>(m_pNetObjectMgr->Create(ELEMENT_PLAYER)));
 
@@ -20,9 +20,12 @@ void CMafiaClient::SpawnPlayer(const CVector3D& vecPos, float fRotation, const G
 	_gstrcpy_s(pPlayer->m_szModel, ARRAY_COUNT(pPlayer->m_szModel), modelName);
 	pPlayer->SetSyncer(this, true);
 	pPlayer->SetHeading(fRotation);
+	
+	// The special "set position" packet was fucking this up
+	// I removed the packet send for now. This will just update the net object's position data
 	pPlayer->SetPosition(vecPos);
 	pPlayer->SetRotation(CVecTools::ComputeDirEuler(fRotation));
-
+	
 	if (!m_pNetObjectMgr->RegisterNetObject(pPlayer))
 		return;
 
@@ -816,17 +819,19 @@ static bool FunctionCreateVehicle(IScriptState* pState, int argc, void* pUser)
 	if (argc > 2 && !pState->CheckNumber(2, angle))
 		return false;
 
+	/*
 	double twoPi = M_PI * 2.0;
 	while (angle < -twoPi)
 		angle += twoPi;
 	while (angle > twoPi)
 		angle -= twoPi;
-
-	CVector3D vecRot(0.0f, 0.0f, angle);
-
+	*/
+	
 	Strong<CServerVehicle> pServerVehicle;
 
 	pServerVehicle = Strong<CServerVehicle>::New(pServerManager->Create(ELEMENT_VEHICLE));
+
+	CVector3D vecRot = CVecTools::ComputeDirEuler(CVecTools::RadToDeg(angle));
 
 	pServerVehicle->SetModel(sModel);
 	pServerVehicle->SetPosition(vecPos);
