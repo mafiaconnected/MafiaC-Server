@@ -3,13 +3,16 @@
 // ===========================================================================
 
 bindEventHandler("OnResourceStart", thisResource, (event, resource) => {
+
 });
 
 // ===========================================================================
 
 addEventHandler("OnPlayerJoined", (event, client) => {
 	console.log(`${client.name} has joined!`);
-	spawnPlayer(client, "TommyCOATHAT.i3d", new Vec3(-1981.51, -4.66, 29.37), 0.0);
+
+	let position = [-1981.51, -4.66, 29.37];
+	spawnPlayer(client, position, 0.0, "TommyCOATHAT.i3d");
 });
 
 // ===========================================================================
@@ -29,7 +32,7 @@ addEventHandler("OnPlayerQuit", (event, client, reasonId) => {
 addCommandHandler("veh", (command, params, client) => {
 	let model = getVehicleModelFromParams(params);
 
-	if(!model) {
+	if (!model) {
 		message("That vehicle model is invalid!");
 		return false;
 	}
@@ -37,7 +40,7 @@ addCommandHandler("veh", (command, params, client) => {
 	let frontOfPlayer = getPosInFrontOfPos(client.player.position, client.player.heading, 5);
 	let vehicle = game.createVehicle(`${model}.i3d`, frontOfPlayer, client.player.heading);
 
-	if(vehicle) {
+	if (vehicle) {
 		message(`${client.name} spawned a ${vehicleNames[vehicleModels.indexOf(model)]} vehicle`, COLOUR_YELLOW);
 	} else {
 		messageClient(`Vehicle failed to create!`, COLOUR_ORANGE);
@@ -49,7 +52,7 @@ addCommandHandler("veh", (command, params, client) => {
 addCommandHandler("ped", (command, params, client) => {
 	let model = getSkinModelFromParams(params);
 
-	if(!model) {
+	if (!model) {
 		message("That ped skin is invalid!");
 		return false;
 	}
@@ -57,8 +60,8 @@ addCommandHandler("ped", (command, params, client) => {
 	let frontOfPlayer = getPosInFrontOfPos(client.player.position, client.player.heading, 5);
 	let ped = game.createPed(`${model}.i3d`, frontOfPlayer, client.player.heading);
 
-	if(ped) {
-    	message(`${client.name} created a ${skinModels[skinModels.indexOf(model)]} ped`, COLOUR_YELLOW);
+	if (ped) {
+		message(`${client.name} created a ${skinModels[skinModels.indexOf(model)]} ped`, COLOUR_YELLOW);
 	} else {
 		messageClient(`Ped failed to create!`, COLOUR_ORANGE);
 	}
@@ -76,7 +79,7 @@ addCommandHandler("gun", (command, params, client) => {
 // ===========================================================================
 
 addCommandHandler("siren", (command, params, client) => {
-	if(!client.player.vehicle) {
+	if (!client.player.vehicle) {
 		messageClient("You need to be in a vehicle!", client, COLOUR_RED);
 		return false;
 	}
@@ -89,7 +92,7 @@ addCommandHandler("siren", (command, params, client) => {
 // ===========================================================================
 
 addCommandHandler("lights", (command, params, client) => {
-	if(client.player.vehicle == null) {
+	if (client.player.vehicle == null) {
 		message("You need to be in a vehicle!");
 		return false;
 	}
@@ -101,7 +104,7 @@ addCommandHandler("lights", (command, params, client) => {
 // ===========================================================================
 
 addCommandHandler("engine", (command, params, client) => {
-	if(!client.player.vehicle) {
+	if (!client.player.vehicle) {
 		messageClient("You need to be in a vehicle!", client, COLOUR_RED);
 		return false;
 	}
@@ -113,7 +116,7 @@ addCommandHandler("engine", (command, params, client) => {
 // ===========================================================================
 
 addCommandHandler("lock", (command, params, client) => {
-	if(!client.player.vehicle) {
+	if (!client.player.vehicle) {
 		messageClient("You need to be in a vehicle!", client, COLOUR_RED);
 		return false;
 	}
@@ -127,7 +130,7 @@ addCommandHandler("lock", (command, params, client) => {
 addCommandHandler("skin", (command, params, client) => {
 	let model = getSkinModelFromParams(params);
 
-	if(!model) {
+	if (!model) {
 		message("That skin is invalid!");
 		return false;
 	}
@@ -138,14 +141,14 @@ addCommandHandler("skin", (command, params, client) => {
 // ===========================================================================
 
 function getVehicleModelFromParams(params) {
-	for(let i in vehicleNames) {
-		if(vehicleNames[i].toLowerCase().indexOf(params.toLowerCase()) != -1) {
+	for (let i in vehicleNames) {
+		if (vehicleNames[i].toLowerCase().indexOf(params.toLowerCase()) != -1) {
 			return vehicleModels[i];
 		}
 	}
 
-	for(let i in vehicleModels) {
-		if(vehicleModels[i].toLowerCase().indexOf(params.toLowerCase()) != -1) {
+	for (let i in vehicleModels) {
+		if (vehicleModels[i].toLowerCase().indexOf(params.toLowerCase()) != -1) {
 			return vehicleModels[i];
 		}
 	}
@@ -162,8 +165,8 @@ function getSkinModelFromParams(params) {
 	//	}
 	//}
 
-	for(let i in skinModels) {
-		if(skinModels[i].toLowerCase().indexOf(params.toLowerCase()) != -1) {
+	for (let i in skinModels) {
+		if (skinModels[i].toLowerCase().indexOf(params.toLowerCase()) != -1) {
 			return skinModels[i];
 		}
 	}
@@ -857,19 +860,12 @@ let weaponNames = {
 	32: "Dogs Head",
 };
 
-// ===========================================================================
-
 function getPosInFrontOfPos(pos, angle, distance) {
-    while(angle < 0.0)
-        angle += 360.0;
-    while(angle > 360.0)
-        angle -= 360.0;
+	let x = (pos.x + ((Math.cos(angle - (Math.PI / 2))) * distance));
+	let y = pos.y;
+	let z = (pos.z + ((Math.sin(angle + (Math.PI / 2))) * distance))
 
-    let x = (pos.x+((Math.cos(angle-(Math.PI/2)))*distance));
-    let y = pos.y;
-    let z = (pos.z+((Math.sin(angle+(Math.PI/2)))*distance))
-
-    return new Vec3(x, y, z);
+	return new Vec3(x, y, z);
 }
 
 // ===========================================================================
