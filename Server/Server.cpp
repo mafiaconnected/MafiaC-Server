@@ -1524,8 +1524,11 @@ void CServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, Stream
 				if (!Reader.ReadInt32(&nId, 1))
 					return;
 
+				bool state = false;
+				Reader.ReadBoolean(state);
+
 				CVector3D vecShotPosition;
-				Reader.ReadSingle((float*)&vecShotPosition, 3);
+				Reader.ReadVector3D(&vecShotPosition, 1);
 
 				CNetObject* pPed = m_pManager->FromId(nId);
 				if (pPed != nullptr && pPed->GetSyncer() == pClient)
@@ -1533,12 +1536,49 @@ void CServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, Stream
 					{
 						Packet Packet(MAFIAPACKET_HUMAN_SHOOT);
 						Packet.Write<int32_t>(pPed->GetId());
+						Packet.Write<bool>(state);
 						Packet.Write<CVector3D>(vecShotPosition);
 						m_pManager->SendPacketExcluding(&Packet, pClient);
+
+						// Scripting event
+						CArguments Args(3);
+						Args.AddObject(pPed);
+						Args.AddBoolean(state);
+						Args.AddVector3D(vecShotPosition);
+						bool bPreventDefault = false;
+						m_pManager->m_pOnPedShootEventType->Trigger(Args, bPreventDefault);
 					}
 				}
 			}
 			break;
+		case MAFIAPACKET_HUMAN_THROWGRENADE:
+		{
+			int32_t nId;
+			if (!Reader.ReadInt32(&nId, 1))
+				return;
+
+			CVector3D vecShotPosition;
+			Reader.ReadVector3D(&vecShotPosition, 1);
+
+			CNetObject* pPed = m_pManager->FromId(nId);
+			if (pPed != nullptr && pPed->GetSyncer() == pClient)
+			{
+				{
+					Packet Packet(MAFIAPACKET_HUMAN_THROWGRENADE);
+					Packet.Write<int32_t>(pPed->GetId());
+					Packet.Write<CVector3D>(vecShotPosition);
+					m_pManager->SendPacketExcluding(&Packet, pClient);
+
+					// Scripting event
+					CArguments Args(2);
+					Args.AddObject(pPed);
+					Args.AddVector3D(vecShotPosition);
+					bool bPreventDefault = false;
+					m_pManager->m_pOnPedThrowGrenadeEventType->Trigger(Args, bPreventDefault);
+				}
+			}
+		}
+		break;
 		case MAFIAPACKET_HUMAN_DROPWEAP:
 			{
 				int32_t nId;
@@ -1556,6 +1596,40 @@ void CServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, Stream
 				}
 			}
 			break;
+		case MAFIAPACKET_HUMAN_RELOAD:
+		{
+			int32_t nId;
+			if (!Reader.ReadInt32(&nId, 1))
+				return;
+
+			CNetObject* pPed = m_pManager->FromId(nId);
+			if (pPed != nullptr && pPed->GetSyncer() == pClient)
+			{
+				{
+					Packet Packet(MAFIAPACKET_HUMAN_RELOAD);
+					Packet.Write<int32_t>(pPed->GetId());
+					m_pManager->SendPacketExcluding(&Packet, pClient);
+				}
+			}
+		}
+		break;
+		case MAFIAPACKET_HUMAN_HOLSTER:
+		{
+			int32_t nId;
+			if (!Reader.ReadInt32(&nId, 1))
+				return;
+
+			CNetObject* pPed = m_pManager->FromId(nId);
+			if (pPed != nullptr && pPed->GetSyncer() == pClient)
+			{
+				{
+					Packet Packet(MAFIAPACKET_HUMAN_HOLSTER);
+					Packet.Write<int32_t>(pPed->GetId());
+					m_pManager->SendPacketExcluding(&Packet, pClient);
+				}
+			}
+		}
+		break;
 		case MAFIAPACKET_HUMAN_CHANGEWEAP:
 			{
 				int32_t nId;
@@ -1582,6 +1656,83 @@ void CServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, Stream
 				}
 			}
 			break;
+		case MAFIAPACKET_HUMAN_HIT:
+		{
+			int32_t nTargetId;
+			if (!Reader.ReadInt32(&nTargetId, 1))
+				return;
+
+			int32_t nAttackerId;
+			if (!Reader.ReadInt32(&nAttackerId, 1))
+				return;
+
+			CVector3D vecPosition1;
+			if (!Reader.ReadVector3D(&vecPosition1, 1))
+				return;
+
+			CVector3D vecPosition2;
+			if (!Reader.ReadVector3D(&vecPosition2, 1))
+				return;
+
+			CVector3D vecPosition3;
+			if (!Reader.ReadVector3D(&vecPosition3, 1))
+				return;
+
+			int32_t iHitType;
+			if (!Reader.ReadInt32(&iHitType, 1))
+				return;
+
+			float damage;
+			if (!Reader.ReadSingle(&damage, 1))
+				return;
+
+			int32_t iBodyPart;
+			if (!Reader.ReadInt32(&iBodyPart, 1))
+				return;
+
+			CNetObject* pTargetPed = m_pManager->FromId(nTargetId);
+			CNetObject* pAttackerPed = m_pManager->FromId(nAttackerId);
+			if (pTargetPed != nullptr && pTargetPed->GetSyncer() == pClient)
+			{
+				{
+					Packet Packet(MAFIAPACKET_HUMAN_HIT);
+					Packet.Write<int32_t>(pTargetPed->GetId());
+					if (pAttackerPed != nullptr) {
+						Packet.Write<int32_t>(pAttackerPed->GetId());
+					}
+					else {
+						Packet.Write<int32_t>(INVALID_NETWORK_ID);
+					}
+					Packet.Write<CVector3D>(vecPosition1);
+					Packet.Write<CVector3D>(vecPosition2);
+					Packet.Write<CVector3D>(vecPosition3);
+					Packet.Write<int32_t>(iHitType);
+					Packet.Write<float>(damage);
+					Packet.Write<int32_t>(iBodyPart);
+					m_pManager->SendPacketExcluding(&Packet, pClient);
+
+					// Scripting event
+					CArguments Args(6);
+					Args.AddObject(pTargetPed);
+					if (pTargetPed != nullptr) {
+						Args.AddObject(pAttackerPed);
+					}
+					else {
+						Args.AddNull();
+					}
+					Args.AddVector3D(vecPosition1);
+					Args.AddVector3D(vecPosition2);
+					Args.AddVector3D(vecPosition3);
+					Args.AddNumber(iHitType);
+					Args.AddNumber(damage);
+					Args.AddNumber(iBodyPart);
+					bool bPreventDefault = false;
+					m_pManager->m_pOnPedHitEventType->Trigger(Args, bPreventDefault);
+				}
+			}
+		}
+		break;
+
 		case MAFIAPACKET_HUMAN_DIE:
 			{
 				int32_t nTargetId;
@@ -1599,12 +1750,24 @@ void CServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, Stream
 					{
 						Packet Packet(MAFIAPACKET_HUMAN_DIE);
 						Packet.Write<int32_t>(pTargetPed->GetId());
-						if(pTargetPed != nullptr) {
+						if(pAttackerPed != nullptr) {
 							Packet.Write<int32_t>(pAttackerPed->GetId());
 						} else {
 							Packet.Write<int32_t>(INVALID_NETWORK_ID);
 						}
 						m_pManager->SendPacketExcluding(&Packet, pClient);
+
+						// Scripting event
+						CArguments Args(2);
+						Args.AddObject(pTargetPed);
+						if (pTargetPed != nullptr) {
+							Args.AddObject(pAttackerPed);
+						}
+						else {
+							Args.AddNull();
+						}
+						bool bPreventDefault = false;
+						m_pManager->m_pOnPedDeathEventType->Trigger(Args, bPreventDefault);
 					}
 				}
 			}
