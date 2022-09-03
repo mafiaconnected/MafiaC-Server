@@ -56,6 +56,9 @@ public:
 	Galactic3D::EventHandlers::CEventType* m_pOnPedDeathEventType;
 	Galactic3D::EventHandlers::CEventType* m_pOnPedSpawnEventType;
 	Galactic3D::EventHandlers::CEventType* m_pOnPedFallEventType;
+	Galactic3D::EventHandlers::CEventType* m_pOnPedHitEventType;
+	Galactic3D::EventHandlers::CEventType* m_pOnPedShootEventType;
+	Galactic3D::EventHandlers::CEventType* m_pOnPedThrowGrenadeEventType;
 
 	Galactic3D::EventHandlers::CEventType* m_pOnReceivePacketEventType;
 
