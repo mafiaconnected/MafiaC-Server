@@ -8,11 +8,11 @@
 	<game>mafia:one</game>
 	<gamemode>Free Roam</gamemode>
 	<serverbrowser>true</serverbrowser>
-	<maxplayers>32</maxplayers>
+	<maxplayers>120</maxplayers>
 	<password></password>
 	<minclientversion>1.0.0</minclientversion>
 	<duplicatenames>true</duplicatenames>
-	<mapname>FREERIDENOC</mapname>
+	<mapname>FREERIDE</mapname>
 
 	<!-- Networking -->
 	<port>22000</port>
@@ -21,8 +21,6 @@
 	<syncinterval>30</syncinterval>
 	<processinterval>30</processinterval>
 	<syncmethod>interval</syncmethod>
-	<compresspackets>false</compresspackets>
-	<packetcompressionlevel>default</packetcompressionlevel>
 	<synclocalentities>true</synclocalentities>
 
 	<!-- Element Streaming -->
@@ -41,7 +39,11 @@
 
 	<!-- Global CVars -->
 	<!-- https://wiki.gtaconnected.com/CVars -->
-	<cvar name="nametags" value="1" />
+	<cvar name="bridges" value="0" />
+	<cvar name="trains" value="0" />
+	<cvar name="traffic" value="0" />
+	<cvar name="civilians" value="0" />
+	<cvar name="scripts" value="0" />
 
 	<!-- Rules -->
 	<!-- https://wiki.gtaconnected.com/ServerRules -->
