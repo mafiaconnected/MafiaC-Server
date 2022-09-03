@@ -47,9 +47,12 @@ CMafiaServerManager::CMafiaServerManager(Context* pContext, CServer* pServer) :
 	m_pOnPedExitedVehicleEventType = m_pServer->m_ResourceMgr.m_pEventHandlers->CreateEventType(_gstr("OnPedExitedVehicle"), _gstr("Called when a ped has finished exiting a vehicle."), 3);
 	m_pOnPedEnteringVehicleEventType = m_pServer->m_ResourceMgr.m_pEventHandlers->CreateEventType(_gstr("OnPedEnteringVehicle"), _gstr("Called when a ped is started entering a vehicle."), 3);
 	m_pOnPedExitingVehicleEventType = m_pServer->m_ResourceMgr.m_pEventHandlers->CreateEventType(_gstr("OnPedExitingVehicle"), _gstr("Called when a ped has started exiting a vehicle."), 3);
-	m_pOnPedDeathEventType = m_pServer->m_ResourceMgr.m_pEventHandlers->CreateEventType(_gstr("OnPedDeath"), _gstr("Called when a ped dies."), 4);
+	m_pOnPedDeathEventType = m_pServer->m_ResourceMgr.m_pEventHandlers->CreateEventType(_gstr("OnPedDeath"), _gstr("Called when a ped dies."), 2);
 	m_pOnPedSpawnEventType = m_pServer->m_ResourceMgr.m_pEventHandlers->CreateEventType(_gstr("OnPedSpawn"), _gstr("Called when a ped is spawned."), 1);
 	m_pOnPedFallEventType = m_pServer->m_ResourceMgr.m_pEventHandlers->CreateEventType(_gstr("OnPedFall"), _gstr("Called when a ped falls."), 1);
+	m_pOnPedHitEventType = m_pServer->m_ResourceMgr.m_pEventHandlers->CreateEventType(_gstr("OnPedHit"), _gstr("Called when a ped falls."), 1);
+	m_pOnPedShootEventType = m_pServer->m_ResourceMgr.m_pEventHandlers->CreateEventType(_gstr("OnPedShoot"), _gstr("Called when a ped shoots."), 1);
+	m_pOnPedThrowGrenadeEventType = m_pServer->m_ResourceMgr.m_pEventHandlers->CreateEventType(_gstr("OnPedThrowGrenade"), _gstr("Called when a ped throws a grenade."), 1);
 
 	m_pOnReceivePacketEventType = m_pServer->m_ResourceMgr.m_pEventHandlers->CreateEventType(_gstr("OnReceivePacket"), _gstr("Called when a packet is received"), 2);
 	m_pOnReceivePacketEventType->m_bCanPreventDefault = true;
@@ -819,19 +822,18 @@ static bool FunctionCreateVehicle(IScriptState* pState, int argc, void* pUser)
 	if (argc > 2 && !pState->CheckNumber(2, angle))
 		return false;
 
-	/*
 	double twoPi = M_PI * 2.0;
 	while (angle < -twoPi)
 		angle += twoPi;
 	while (angle > twoPi)
 		angle -= twoPi;
-	*/
 	
 	Strong<CServerVehicle> pServerVehicle;
 
 	pServerVehicle = Strong<CServerVehicle>::New(pServerManager->Create(ELEMENT_VEHICLE));
 
-	CVector3D vecRot = CVecTools::ComputeDirEuler(CVecTools::RadToDeg(angle));
+	//angle = CVecTools::RadToDeg(angle);
+	CVector3D vecRot = CVecTools::ComputeDirEuler(angle);
 
 	pServerVehicle->SetModel(sModel);
 	pServerVehicle->SetPosition(vecPos);
@@ -1280,8 +1282,8 @@ void CMafiaServerManager::RegisterFunctions(CScripting* pScripting)
 		pServerNamespace->AddProperty(this, _gstr("duplicateNames"), ARGUMENT_BOOLEAN, FunctionGetServerDuplicateNames);
 		pServerNamespace->AddProperty(this, _gstr("streamInDistance"), ARGUMENT_FLOAT, FunctionGetServerStreamInDistance);
 		pServerNamespace->AddProperty(this, _gstr("streamOutDistance"), ARGUMENT_FLOAT, FunctionGetServerStreamOutDistance);
-		pServerNamespace->AddProperty(this, _gstr("pickupStreamInDistance"), ARGUMENT_FLOAT, FunctionGetServerPickupStreamInDistance);
-		pServerNamespace->AddProperty(this, _gstr("pickupStreamOutDistance"), ARGUMENT_FLOAT, FunctionGetServerPickupStreamOutDistance);
+		//pServerNamespace->AddProperty(this, _gstr("pickupStreamInDistance"), ARGUMENT_FLOAT, FunctionGetServerPickupStreamInDistance);
+		//pServerNamespace->AddProperty(this, _gstr("pickupStreamOutDistance"), ARGUMENT_FLOAT, FunctionGetServerPickupStreamOutDistance);
 		pServerNamespace->AddProperty(this, _gstr("logPath"), ARGUMENT_STRING, FunctionGetServerLogPath);
 		pServerNamespace->AddProperty(this, _gstr("syncLocalEntities"), ARGUMENT_BOOLEAN, FunctionGetServerSyncLocalEntities);
 
