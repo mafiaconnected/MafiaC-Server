@@ -1662,9 +1662,9 @@ void CServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, Stream
 			if (!Reader.ReadInt32(&nTargetId, 1))
 				return;
 
-			int32_t nAttackerId;
-			if (!Reader.ReadInt32(&nAttackerId, 1))
-				return;
+			//int32_t nAttackerId;
+			//if (!Reader.ReadInt32(&nAttackerId, 1))
+			//	return;
 
 			CVector3D vecPosition1;
 			if (!Reader.ReadVector3D(&vecPosition1, 1))
@@ -1697,12 +1697,12 @@ void CServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, Stream
 				{
 					Packet Packet(MAFIAPACKET_HUMAN_HIT);
 					Packet.Write<int32_t>(pTargetPed->GetId());
-					if (pAttackerPed != nullptr) {
-						Packet.Write<int32_t>(pAttackerPed->GetId());
-					}
-					else {
-						Packet.Write<int32_t>(INVALID_NETWORK_ID);
-					}
+					//if (pAttackerPed != nullptr) {
+					//	Packet.Write<int32_t>(pAttackerPed->GetId());
+					//}
+					//else {
+					//	Packet.Write<int32_t>(INVALID_NETWORK_ID);
+					//}
 					Packet.Write<CVector3D>(vecPosition1);
 					Packet.Write<CVector3D>(vecPosition2);
 					Packet.Write<CVector3D>(vecPosition3);
