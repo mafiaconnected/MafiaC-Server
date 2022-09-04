@@ -1691,7 +1691,7 @@ void CServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, Stream
 				return;
 
 			CNetObject* pTargetPed = m_pManager->FromId(nTargetId);
-			CNetObject* pAttackerPed = m_pManager->FromId(nAttackerId);
+			//CNetObject* pAttackerPed = m_pManager->FromId(nAttackerId);
 			if (pTargetPed != nullptr && pTargetPed->GetSyncer() == pClient)
 			{
 				{
@@ -1714,12 +1714,12 @@ void CServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, Stream
 					// Scripting event
 					CArguments Args(6);
 					Args.AddObject(pTargetPed);
-					if (pTargetPed != nullptr) {
-						Args.AddObject(pAttackerPed);
-					}
-					else {
-						Args.AddNull();
-					}
+					//if (pTargetPed != nullptr) {
+					//	Args.AddObject(pAttackerPed);
+					//}
+					//else {
+					//	Args.AddNull();
+					//}
 					Args.AddVector3D(vecPosition1);
 					Args.AddVector3D(vecPosition2);
 					Args.AddVector3D(vecPosition3);
