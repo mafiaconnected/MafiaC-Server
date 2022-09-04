@@ -47,6 +47,7 @@
 	<cvar name="doors" value="0" />
 	<cvar name="dogs" value="0" />
 	<cvar name="planes" value="0" />
+	<cvar name="fuelstations" value="0" />
 
 	<!-- Rules -->
 	<!-- https://wiki.gtaconnected.com/ServerRules -->
