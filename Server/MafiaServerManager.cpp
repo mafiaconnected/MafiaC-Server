@@ -784,6 +784,27 @@ static bool FunctionPlayerCountdown(IScriptState* pState, int argc, void* pUser)
 	return true;
 }
 
+static bool FunctionCreateDummyElement(IScriptState* pState, int argc, void* pUser)
+{
+	CMafiaServerManager* pServerManager = (CMafiaServerManager*)pUser;
+	CVector3D vecPos;
+	if (!pState->CheckVector3D(0, vecPos))
+		return false;
+
+	auto pDummyElement = Strong<CServerEntity>::New(pServerManager->Create(ELEMENT_ENTITY));
+	if (pDummyElement == nullptr)
+	{
+		pState->Error(_gstr("Failed to create dummy element"));
+		return false;
+	}
+
+	pDummyElement->SetPosition(vecPos);
+	pDummyElement->m_pResource = pState->GetResource();
+	pServerManager->RegisterNetObject(pDummyElement);
+	pState->ReturnObject(pDummyElement);
+	return true;
+}
+
 static bool FunctionCreateExplosion(IScriptState* pState, int argc, void* pUser)
 {
 	CMafiaServerManager* pServerManager = (CMafiaServerManager*)pUser;
@@ -1207,8 +1228,8 @@ void CMafiaServerManager::RegisterFunctions(CScripting* pScripting)
 	}
 
 	{
+		m_pServerEntityClass->AddProperty(this, _gstr("heading"), ARGUMENT_FLOAT, FunctionEntityGetHeading, FunctionEntitySetHeading);
 		m_pServerEntityClass->AddProperty(this, _gstr("model"), ARGUMENT_STRING, FunctionEntityGetModel, FunctionEntitySetModel);
-		m_pServerEntityClass->AddProperty(this, _gstr("heading"), ARGUMENT_STRING, FunctionEntityGetHeading, FunctionEntitySetHeading);
 		m_pServerEntityClass->AddProperty(this, _gstr("modelIndex"), ARGUMENT_STRING, FunctionEntityGetModel, FunctionEntitySetModel); // For GTAC compatibility
 		m_pServerEntityClass->AddProperty(this, _gstr("velocity"), ARGUMENT_VECTOR3D, FunctionEntityGetVelocity, FunctionEntitySetVelocity);
 		m_pServerEntityClass->AddProperty(this, _gstr("turnVelocity"), ARGUMENT_VECTOR3D, FunctionEntityGetRotationVelocity, FunctionEntityGetRotationVelocity); // For GTAC compatibility
@@ -1262,6 +1283,7 @@ void CMafiaServerManager::RegisterFunctions(CScripting* pScripting)
 	pGameNamespace->AddProperty(this, _gstr("mapName"), ARGUMENT_STRING, FunctionGameGetLevel);
 	pGameNamespace->RegisterFunction(_gstr("changeMap"), _gstr("s"), FunctionGameSetLevel, this);
 
+	pGameNamespace->RegisterFunction(_gstr("createDummy"), _gstr("v"), FunctionCreateDummyElement, this);
 	pGameNamespace->RegisterFunction(_gstr("createExplosion"), _gstr("vff"), FunctionCreateExplosion, this);
 	pGameNamespace->RegisterFunction(_gstr("createVehicle"), _gstr("sv|f"), FunctionCreateVehicle, this);
 	pGameNamespace->RegisterFunction(_gstr("createPlayer"), _gstr("sv|f"), FunctionCreatePlayer, this);
