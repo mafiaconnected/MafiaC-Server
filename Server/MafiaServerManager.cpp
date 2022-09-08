@@ -797,8 +797,14 @@ static bool FunctionCreateDummyElement(IScriptState* pState, int argc, void* pUs
 		pState->Error(_gstr("Failed to create dummy element"));
 		return false;
 	}
+	
+	const GChar* sModel = _gstr("");
 
+	pDummyElement->SetModel(sModel);
 	pDummyElement->SetPosition(vecPos);
+	pDummyElement->SetRotation({ 0.0, 0.0, 0.0 });
+	pDummyElement->SetVelocity({ 0.0, 0.0, 0.0 });
+	pDummyElement->SetRotationVelocity({ 0.0, 0.0, 0.0 });
 	pDummyElement->m_pResource = pState->GetResource();
 	pServerManager->RegisterNetObject(pDummyElement);
 	pState->ReturnObject(pDummyElement);
