@@ -840,20 +840,22 @@ static bool FunctionCreateVehicle(IScriptState* pState, int argc, void* pUser)
 	const GChar* sModel = pState->CheckString(0);
 	if (!sModel)
 		return false;
+
 	CVector3D vecPos(0.0f, 0.0f, 0.0f);
 	if (!pState->CheckVector3D(1, vecPos))
 		return false;
 
 	float angle = 0.0;
-
 	if (argc > 2 && !pState->CheckNumber(2, angle))
 		return false;
 
-	double twoPi = M_PI * 2.0;
-	while (angle < -twoPi)
-		angle += twoPi;
-	while (angle > twoPi)
-		angle -= twoPi;
+	_glogprintf(_gstr("HEADING: %f"), angle);
+
+	//double twoPi = M_PI * 2.0;
+	//while (angle < -twoPi)
+	//	angle += twoPi;
+	//while (angle > twoPi)
+	//	angle -= twoPi;
 	
 	Strong<CServerVehicle> pServerVehicle;
 
@@ -861,10 +863,16 @@ static bool FunctionCreateVehicle(IScriptState* pState, int argc, void* pUser)
 
 	//angle = CVecTools::RadToDeg(angle);
 	CVector3D vecRot = CVecTools::ComputeDirEuler(angle);
+	
+	_glogprintf(_gstr("ROTATION: %f, %f, %f"), vecRot.x, vecRot.y, vecRot.z);
 
 	pServerVehicle->SetModel(sModel);
 	pServerVehicle->SetPosition(vecPos);
 	pServerVehicle->SetRotation(vecRot);
+	pServerVehicle->m_RotationFront = CVecTools::ComputeDirVector(CVecTools::RadToDeg(angle));
+	pServerVehicle->m_RotationUp = { 0.0, 0.0, 0.0 };
+	pServerVehicle->m_RotationRight = { 0.0, 0.0, 0.0 };
+	//pServerVehicle->SetRotationMat(CVecTools::ComputeDirVector(CVecTools::RadToDeg(angle)), 0.0, 0.0);
 
 	pServerVehicle->m_Health = 100.0f;
 	pServerVehicle->m_EngineHealth = 100.0f;
