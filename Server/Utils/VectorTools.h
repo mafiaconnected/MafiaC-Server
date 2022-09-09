@@ -110,4 +110,6 @@ public:
 
 	static float RadToDeg(float rad);
 	static float DegToRad(float deg);
+
+	static void Rotate(double heading, double attitude, double bank, CQuaternion& quat);
 };
