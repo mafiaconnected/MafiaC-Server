@@ -37,6 +37,8 @@ target_link_libraries(Server
 	FileIntegrity_static
 	Galactic_static)
 
+target_link_spidermonkey(Server)
+
 if(WIN32)
 target_link_libraries(Server
 	PRIVATE
