@@ -27,6 +27,7 @@ endif()
 new_library_executable(Server "${SOURCES}" "")
 
 target_link_libraries(Server
+	PRIVATE
 	Multiplayer_static
 	Network_static
 	Scripting_static
@@ -38,7 +39,7 @@ target_link_libraries(Server
 
 if(WIN32)
 target_link_libraries(Server
-	mozjs-52
+	PRIVATE
 	sqstdlib_static
 	squirrel_static
 	#RakNet_static
@@ -61,7 +62,7 @@ target_link_libraries(Server
 	psapi)
 else()
 target_link_libraries(Server
-	mozjs-60
+	PRIVATE
 	#js_static
 	sqstdlib_static
 	squirrel_static
@@ -76,6 +77,7 @@ endif()
 
 if(WIN32)
 target_link_libraries(Server
+	PRIVATE
 	wldap32
 	crypt32
 	ws2_32
@@ -94,11 +96,9 @@ target_link_libraries(Server
 endif()
 
 if(MSVC)
-	add_custom_command(TARGET Server POST_BUILD COMMAND copy \"${SPIDERMONKEY_LIBS}\\$<$<CONFIG:Debug>:Debug>$<$<NOT:$<CONFIG:Debug>>:Release>\\*.dll\" \"$<TARGET_FILE_DIR:Server>\" WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+	#add_custom_command(TARGET Server POST_BUILD COMMAND copy \"${SPIDERMONKEY_LIBS}\\$<$<CONFIG:Debug>:Debug>$<$<NOT:$<CONFIG:Debug>>:Release>\\*.dll\" \"$<TARGET_FILE_DIR:Server>\" WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 
-	install(DIRECTORY "${SPIDERMONKEY_LIBS}/Debug/" DESTINATION "${LIB_DIRECTORY}/Debug" CONFIGURATIONS Debug FILES_MATCHING PATTERN "*.dll")
-	install(DIRECTORY "${SPIDERMONKEY_LIBS}/Release/" DESTINATION "${LIB_DIRECTORY}/Release" CONFIGURATIONS Release FILES_MATCHING PATTERN "*.dll")
-	install(DIRECTORY "${SPIDERMONKEY_LIBS}/Release/" DESTINATION "${LIB_DIRECTORY}/RelWithDebInfo" CONFIGURATIONS RelWithDebInfo FILES_MATCHING PATTERN "*.dll")
+	install_spidermonkey_to("")
 
 	#copy_dependency("${DEPENDENCIES_LIBS}" SDL2 dll)
 	#copy_dependency("${DEPENDENCIES_LIBS}" enet dll)
