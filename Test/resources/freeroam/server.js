@@ -141,15 +141,21 @@ addCommandHandler("skin", (command, params, client) => {
 // ===========================================================================
 
 function getVehicleModelFromParams(params) {
-	for (let i in vehicleNames) {
-		if (vehicleNames[i].toLowerCase().indexOf(params.toLowerCase()) != -1) {
-			return vehicleModels[i];
+	if (isNaN(params)) {
+		let tempVehicleNames = vehicleNames.toLowerCase();
+		let indexName = tempVehicleNames.indexOf(params.toLowerCase());
+		if (indexName != -1) {
+			return vehicleNames[indexName];
 		}
-	}
 
-	for (let i in vehicleModels) {
-		if (vehicleModels[i].toLowerCase().indexOf(params.toLowerCase()) != -1) {
-			return vehicleModels[i];
+		let tempVehicleModels = vehicleModels.toLowerCase();
+		let indexModel = tempVehicleModels.indexOf(params.toLowerCase());
+		if (indexModel != -1) {
+			return vehicleModels[indexModel];
+		}
+	} else {
+		if (typeof vehicleModels[Number(params)] != "undefined") {
+			return vehicleModels[Number(params)];
 		}
 	}
 
