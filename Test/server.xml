@@ -58,11 +58,5 @@
 	<!-- https://wiki.gtaconnected.com/Resources -->
 	<resources>
 		<resource src="freeroam" />
-		<resource src="runcode" />
-		<resource src="admin" />
-		<resource src="scoreboard" />
-		<resource src="playercolours" />
-		<resource src="chat" />
-		<resource src="joinquit" />
 	</resources>
 </server>
