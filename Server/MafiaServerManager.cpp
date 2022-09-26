@@ -241,7 +241,7 @@ static bool FunctionEntityGetModel(IScriptState* pState, int argc, void* pUser)
 	if (!pState->GetThis(pServerManager->m_pServerEntityClass,&pServerEntity))
 		return false;
 
-	UTF16String model(true, pServerEntity->m_szModel);
+	CString model(false, pServerEntity->m_szModel);
 
 	pState->ReturnString(model.CString());
 	return true;
@@ -590,7 +590,7 @@ static bool FunctionPedGetSkin(IScriptState* pState, int argc, void* pUser)
 	if (!pState->GetThis(pServerManager->m_pServerHumanClass,&pServerHuman))
 		return false;
 
-	UTF16String model(true, pServerHuman->m_szModel);
+	CString model(false, pServerHuman->m_szModel);
 
 	pState->ReturnString(model.CString());
 	return true;
