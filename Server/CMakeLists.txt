@@ -10,7 +10,7 @@ if(NOT BIN2H)
 endif()
 
 file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/generated)
-execute_process(COMMAND ${BIN2H} "${CMAKE_SOURCE_DIR}/MafiaCServer.tar" -o "${CMAKE_BINARY_DIR}/generated/MafiaServerArchive.h")
+execute_process(COMMAND ${BIN2H} "${CMAKE_SOURCE_DIR}/MafiaCServer.tar" -o "${CMAKE_BINARY_DIR}/generated/MafiaCServerArchive.h")
 
 include_directories(${CMAKE_BINARY_DIR}/generated)
 
