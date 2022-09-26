@@ -71,7 +71,7 @@ target_link_libraries(Server
 	#RakNet_static
 	enet_static
 	mongoose6_static
-	libSDL2.a libssl.so libcrypto.so libz.a libpng16.a libtinyxml.a dl pthread libcurl.a
+	libssl.so libcrypto.so zlib_static png_static tinyxml_static dl pthread libcurl.a
 	squirrel_static
 	sqstdlib_static
 	lua53_static)
