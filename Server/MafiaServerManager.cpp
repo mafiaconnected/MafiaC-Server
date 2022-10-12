@@ -50,9 +50,9 @@ CMafiaServerManager::CMafiaServerManager(Context* pContext, CServer* pServer) :
 	m_pOnPedDeathEventType = m_pServer->m_ResourceMgr.m_pEventHandlers->CreateEventType(_gstr("OnPedDeath"), _gstr("Called when a ped dies."), 2);
 	m_pOnPedSpawnEventType = m_pServer->m_ResourceMgr.m_pEventHandlers->CreateEventType(_gstr("OnPedSpawn"), _gstr("Called when a ped is spawned."), 1);
 	m_pOnPedFallEventType = m_pServer->m_ResourceMgr.m_pEventHandlers->CreateEventType(_gstr("OnPedFall"), _gstr("Called when a ped falls."), 1);
-	m_pOnPedHitEventType = m_pServer->m_ResourceMgr.m_pEventHandlers->CreateEventType(_gstr("OnPedHit"), _gstr("Called when a ped falls."), 1);
-	m_pOnPedShootEventType = m_pServer->m_ResourceMgr.m_pEventHandlers->CreateEventType(_gstr("OnPedShoot"), _gstr("Called when a ped shoots."), 1);
-	m_pOnPedThrowGrenadeEventType = m_pServer->m_ResourceMgr.m_pEventHandlers->CreateEventType(_gstr("OnPedThrowGrenade"), _gstr("Called when a ped throws a grenade."), 1);
+	m_pOnPedHitEventType = m_pServer->m_ResourceMgr.m_pEventHandlers->CreateEventType(_gstr("OnPedHit"), _gstr("Called when a ped is hit."), 7);
+	m_pOnPedShootEventType = m_pServer->m_ResourceMgr.m_pEventHandlers->CreateEventType(_gstr("OnPedShoot"), _gstr("Called when a ped shoots."), 3);
+	m_pOnPedThrowGrenadeEventType = m_pServer->m_ResourceMgr.m_pEventHandlers->CreateEventType(_gstr("OnPedThrowGrenade"), _gstr("Called when a ped throws a grenade."), 2);
 
 	m_pOnReceivePacketEventType = m_pServer->m_ResourceMgr.m_pEventHandlers->CreateEventType(_gstr("OnReceivePacket"), _gstr("Called when a packet is received"), 2);
 	m_pOnReceivePacketEventType->m_bCanPreventDefault = true;
