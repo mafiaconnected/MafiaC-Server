@@ -1,0 +1,1 @@
+cmake -S . -B "./MafiaCServer.build" -G"Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="." -DDEPENDENCIES_PATH="/opt/jdependencies/Dependencies" -DSPIDERMONKEY_PATH="/opt/jdependencies/SpiderMonkey" -DGALACTIC_PATH="/opt/jdependencies/Galactic"
