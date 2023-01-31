@@ -93,6 +93,7 @@ CMafiaServerManager::CMafiaServerManager(Context* pContext, CServer* pServer) :
 	RegisterFunctions(m_pServer->m_ResourceMgr.m_pScripting);
 }
 
+/*
 CNetObject* CMafiaServerManager::Create(int32_t nType)
 {
 	CServerHuman* human;
@@ -141,7 +142,25 @@ CNetObject* CMafiaServerManager::Create(int32_t nType)
 	}
 	return nullptr;
 }
+*/
 
+CNetObject* CMafiaServerManager::Create(int32_t nType)
+{
+	switch (nType)
+	{
+	case ELEMENT_VEHICLE:
+		return new CServerVehicle(this);
+	case ELEMENT_PLAYER:
+		return new CServerPlayer(this);
+	case ELEMENT_PED:
+		return new CServerHuman(this);
+	default:
+		break;
+	}
+	return nullptr;
+}
+
+/*
 void CMafiaServerManager::Remove(CServerVehicle *pServerVehicle)
 {
 	for (int i = 0; i < 128; i++)
@@ -154,6 +173,7 @@ void CMafiaServerManager::Remove(CServerVehicle *pServerVehicle)
 		}
 	}
 }
+*/
 
 bool CMafiaServerManager::IsAnythingBlocking(CVector3D vecPos)
 {
