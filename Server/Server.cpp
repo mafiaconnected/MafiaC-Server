@@ -2022,6 +2022,7 @@ void CServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, Stream
 		}
 		break;
 
+		/*
 		case MAFIAPACKET_ELEMENT_REMOVE:
 		{
 			bool bRemoveByElementId;
@@ -2054,6 +2055,7 @@ void CServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, Stream
 			}
 		}
 		break;
+		*/
 
 		default:
 			break;

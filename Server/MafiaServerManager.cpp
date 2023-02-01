@@ -160,21 +160,6 @@ CNetObject* CMafiaServerManager::Create(int32_t nType)
 	return nullptr;
 }
 
-/*
-void CMafiaServerManager::Remove(CServerVehicle *pServerVehicle)
-{
-	for (int i = 0; i < 128; i++)
-	{
-		if (!m_rgpVehicles[i].IsNull() && m_rgpVehicles[i].GetPointer() == pServerVehicle)
-		{
-			bool bResult = DestroyObject(pServerVehicle, true, false);
-			m_rgpVehicles[i].SetNull();
-			return;
-		}
-	}
-}
-*/
-
 bool CMafiaServerManager::IsAnythingBlocking(CVector3D vecPos)
 {
 	for (size_t i = 0; i < m_Objects.GetSize(); i++)
