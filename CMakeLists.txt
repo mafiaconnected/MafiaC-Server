@@ -7,6 +7,9 @@ project(Server C CXX)
 # Embedded pdb in static libraries
 set(EMBEDDED_PDB OFF)
 
+# Disable the architecture postfix
+set(DISABLE_ARCH_POSTFIX ON)
+
 # Warning level 4
 set(CUSTOM_MSVC_WARNING_LEVEL 4)
 
