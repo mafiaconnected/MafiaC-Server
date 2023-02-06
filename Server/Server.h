@@ -9,7 +9,9 @@
 #include "UnleashedGameProtocolHandler.h"
 #include <Network/MongooseSystem.h>
 #include <Network/ENetSystem.h>
-#include <Engine/Config.h>
+#include "RConServer.h"
+#include "ServerListing.h"
+#include "ServerConfiguration.h"
 
 #define MAX_CHAT_MESSAGE_LENGTH 4096
 #define MAX_COMMAND_LENGTH MAX_CHAT_MESSAGE_LENGTH
@@ -20,73 +22,6 @@ class CServerHuman;
 class CServerVehicle;
 class CServerPlayer;
 class CMafiaServerManager;
-
-class CRConServer : public WebConnection
-{
-public:
-	CRConServer(CServer* pServer);
-
-	CServer* m_pServer;
-	CSecurePassword m_Password;
-
-	virtual void ProcessPacket(mg_connection* nc, unsigned int PacketID, Stream* pStream) override;
-	virtual void EventHandler(struct mg_connection* nc, int ev, void* ev_data) override;
-
-	void Log(mg_connection* nc, eLogType LogType, const GChar* psz);
-	void Auth(mg_connection* nc, bool b);
-};
-
-enum eMasterlistState
-{
-	MASTERLIST_NONE,
-	MASTERLIST_CONNECTING,
-	MASTERLIST_CONNECTED,
-	MASTERLIST_DISCONNECTED,
-	MASTERLIST_DEAD,
-};
-
-class CMasterlistAnnouncer : public Galactic3D::WebConnection
-{
-public:
-	CMasterlistAnnouncer(CServer* pServer);
-
-protected:
-	CServer* m_pServer;
-	float m_fRetryTime;
-	eMasterlistState m_OldState;
-	eMasterlistState m_State;
-
-	void ChangeState(eMasterlistState State);
-
-public:
-	void Pulse(float fDeltaTime);
-	virtual void EventHandler(struct mg_connection* nc, int ev, void* ev_data) override;
-	virtual void ProcessPacket(mg_connection* nc, unsigned int PacketID, Stream* pStream) override;
-
-	void PlayerAdd(CNetMachine* pNetMachine);
-	void PlayerRemove(CNetMachine* pNetMachine);
-	void SetGameMode(const GChar* pszGameMode, size_t Length);
-	void SetName(const GChar* pszName, size_t Length);
-
-	virtual void OnPlayerConnect(mg_connection *nc) override;
-	virtual void OnPlayerDisconnect(mg_connection *nc) override;
-};
-
-class CServerConfiguration
-{
-public:
-	CServerConfiguration();
-	~CServerConfiguration();
-
-	CElementChunk* m_pConfig;
-
-	bool GetBoolValue(const GChar* pszName, bool bDefault) const;
-	const GChar* GetStringValue(const GChar* pszName, const GChar* pszDefault) const;
-	int32_t GetInt32Value(const GChar* pszName, int32_t iDefault) const;
-	float GetFloatValue(const GChar* pszName, float fDefault) const;
-
-	bool Read(Stream* pStream);
-};
 
 class CUnhandledCommandHandler2 : public CUnhandledCommandHandler
 {
