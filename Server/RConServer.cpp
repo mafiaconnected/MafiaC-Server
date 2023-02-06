@@ -1,3 +1,9 @@
+
+#include "pch.h"
+#include "Server.h"
+#include "RConServer.h"
+#include <mongoose.h>
+
 class CRConLogger : public Logger
 {
 public:
