@@ -2544,6 +2544,15 @@ bool CServer::StartServer(void)
 		return false;
 	}
 
+#if defined(_WIN32) && !defined(_WIN64)
+	if (WinUtil::IsWOW64Process())
+	{
+		_glogwarnprintf(_gstr("The 32-bit server is deprecated, please upgrade to the 64-bit server."));
+		_glogwarnprintf(_gstr("You are running a 64-bit OS and will benefit from the 64-bit server."));
+		_glogwarnprintf(_gstr("The 64-bit server will run faster and have access to more memory."));
+	}
+#endif
+
 	_glogprintf(_gstr("Server is now listening on port %hu max players %d..."), m_usPort, (unsigned int)m_MaxClients);
 
 	if (m_bRCon)
