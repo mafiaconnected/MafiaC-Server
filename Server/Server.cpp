@@ -1240,8 +1240,8 @@ void CServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, Stream
 			if (!Reader.ReadInt32(&iHitType, 1))
 				return;
 
-			float damage;
-			if (!Reader.ReadSingle(&damage, 1))
+			float fDamage;
+			if (!Reader.ReadSingle(&fDamage, 1))
 				return;
 
 			int32_t iBodyPart;
@@ -1265,7 +1265,7 @@ void CServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, Stream
 					Packet.Write<CVector3D>(vecPosition2);
 					Packet.Write<CVector3D>(vecPosition3);
 					Packet.Write<int32_t>(iHitType);
-					Packet.Write<float>(damage);
+					Packet.Write<float>(fDamage);
 					Packet.Write<int32_t>(iBodyPart);
 					m_pManager->SendPacketExcluding(&Packet, pClient);
 
@@ -1282,7 +1282,7 @@ void CServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, Stream
 					Args.AddVector3D(vecPosition2);
 					Args.AddVector3D(vecPosition3);
 					Args.AddNumber(iHitType);
-					Args.AddNumber(damage);
+					Args.AddNumber(fDamage);
 					Args.AddNumber(iBodyPart);
 					bool bPreventDefault = false;
 					m_pManager->m_pOnPedHitEventType->Trigger(Args, bPreventDefault);
@@ -1322,7 +1322,7 @@ void CServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, Stream
 							Args.AddObject(pAttackerPed);
 						}
 						else {
-							Args.AddNull();
+							Args.AddNull();	
 						}
 						bool bPreventDefault = false;
 						m_pManager->m_pOnPedDeathEventType->Trigger(Args, bPreventDefault);
