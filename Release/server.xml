@@ -10,7 +10,7 @@
 	<serverbrowser>true</serverbrowser>
 	<maxplayers>120</maxplayers>
 	<password></password>
-	<minclientversion>1.0.0</minclientversion>
+	<minclientversion>1.1.0</minclientversion>
 	<duplicatenames>true</duplicatenames>
 	<mapname>FREERIDE</mapname>
 
