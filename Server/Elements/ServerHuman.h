@@ -1,5 +1,3 @@
-
-#include "pch.h"
 #include "Server.h"
 #include "../MafiaServerManager.h"
 #include "Elements.h"
@@ -7,9 +5,9 @@
 class InventoryItem
 {
 public:
-	unsigned short weapId = 0;
-	unsigned short ammo1 = 0;
-	unsigned short ammo2 = 0;
+	unsigned short weapId;
+	unsigned short ammo1;
+	unsigned short ammo2;
 };
 
 class CServerHuman : public CServerEntity
@@ -19,25 +17,25 @@ public:
 
 	InventoryItem items[8];
 
-	uint8_t m_AnimationStateLocal = 0;
-	bool m_IsInAnimWithCarLocal = false;
-	uint8_t m_AnimationState = 0;
-	bool m_IsInAnimWithCar = false;
-	float m_fInCarRotation = 0.0f;
-	bool m_IsCrouching = false;
-	bool m_IsAiming = false;
-	bool m_IsShooting = false;
-	int32_t m_iAnimStopTime = 0;
-	int16_t m_WeaponId = 0;
+	uint8_t m_AnimationStateLocal;
+	bool m_IsInAnimWithCarLocal;
+	uint8_t m_AnimationState;
+	bool m_IsInAnimWithCar;
+	float m_fInCarRotation;
+	bool m_IsCrouching;
+	bool m_IsAiming;
+	bool m_IsShooting;
+	int32_t m_iAnimStopTime;
+	int16_t m_WeaponId;
 	CVector3D m_Camera;
 
 	float m_fCurrentRotation;
-	float m_fHealth = 200;
-	int32_t m_nVehicleNetworkIndex = INVALID_NETWORK_ID;
-	size_t m_ucSeat = 0;
-	uint32_t m_Behavior = 4;
+	float m_fHealth;
+	int32_t m_nVehicleNetworkIndex;
+	size_t m_ucSeat;
+	uint32_t m_Behavior;
 
-	bool m_EnteringExitingVehicle = false;
+	bool m_EnteringExitingVehicle;
 
 	Galactic3D::Weak<CServerVehicle> m_pCurrentVehicle;
 

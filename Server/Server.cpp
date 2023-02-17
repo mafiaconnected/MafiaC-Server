@@ -23,8 +23,6 @@ extern bool RegisterLuaVM(CScripting* pScripting);
 extern bool RegisterJSVM(CScripting* pScripting);
 extern bool RegisterSqVM(CScripting* pScripting);
 
-
-
 class CExitCommandHandler : public CCommandHandler
 {
 public:
@@ -1322,7 +1320,7 @@ void CServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, Stream
 							Args.AddObject(pAttackerPed);
 						}
 						else {
-							Args.AddNull();	
+							Args.AddNull();
 						}
 						bool bPreventDefault = false;
 						m_pManager->m_pOnPedDeathEventType->Trigger(Args, bPreventDefault);

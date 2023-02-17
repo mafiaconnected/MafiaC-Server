@@ -8,6 +8,26 @@ CServerHuman::CServerHuman(CMafiaServerManager* pServerManager) : CServerEntity(
 	m_Type = ELEMENT_PED;
 
 	m_Camera = CVector3D(0.0f, 0.0f, 0.0f);
+
+	m_AnimationStateLocal = 0;
+	m_IsInAnimWithCarLocal = false;
+	m_AnimationState = 0;
+	m_IsInAnimWithCar = false;
+	m_fInCarRotation = 0.0f;
+	m_IsCrouching = false;
+	m_IsAiming = false;
+	m_IsShooting = false;
+	m_iAnimStopTime = 0;
+	m_WeaponId = 0;
+	CVector3D m_Camera;
+
+	m_fCurrentRotation;
+	m_fHealth = 200;
+	m_nVehicleNetworkIndex = INVALID_NETWORK_ID;
+	m_ucSeat = 0;
+	m_Behavior = 4;
+
+	m_EnteringExitingVehicle = false;
 }
 
 void CServerHuman::SetModel(const GChar* sModel)

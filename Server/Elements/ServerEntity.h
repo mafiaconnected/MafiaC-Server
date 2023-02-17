@@ -1,5 +1,3 @@
-
-#include "pch.h"
 #include "Server.h"
 #include "../MafiaServerManager.h"
 #include "Elements.h"
