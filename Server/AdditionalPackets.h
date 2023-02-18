@@ -1,9 +1,6 @@
-#ifndef __ADDITIONALPACKETS__H__
-#define __ADDITIONALPACKETS__H__
+#pragma once
 
-#ifdef WIN32
 #pragma pack(push,1)
-#endif
 
 #include "ServerVersion.h"
 
@@ -180,7 +177,4 @@ struct tVehicleSyncPacket
 	CVector3D rotSpeed;
 };
 
-#ifdef WIN32
 #pragma pack(pop)
-#endif
-#endif
