@@ -94,7 +94,7 @@ struct tEntitySyncPacket
 struct tHumanCreatePacket
 {
 	float health;
-	uint32_t vehicleNetworkIndex;
+	int32_t vehicleNetworkIndex;
 	uint32_t seat;
 	bool isCrouching;
 	bool isAiming;
@@ -111,7 +111,7 @@ struct tHumanCreatePacket
 struct tHumanSyncPacket
 {
 	float health;
-	uint32_t vehicleNetworkIndex;
+	int32_t vehicleNetworkIndex;
 	uint32_t seat;
 	bool isCrouching;
 	bool isAiming;
