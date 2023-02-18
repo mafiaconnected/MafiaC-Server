@@ -19,9 +19,8 @@ CServerHuman::CServerHuman(CMafiaServerManager* pServerManager) : CServerEntity(
 	m_IsShooting = false;
 	m_iAnimStopTime = 0;
 	m_WeaponId = 0;
-	CVector3D m_Camera;
 
-	m_fCurrentRotation;
+	m_fCurrentRotation = 0.0;
 	m_fHealth = 200;
 	m_nVehicleNetworkIndex = INVALID_NETWORK_ID;
 	m_ucSeat = 0;
