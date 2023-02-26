@@ -32,7 +32,7 @@ public:
 	float m_fCurrentRotation;
 	float m_fHealth;
 	int32_t m_nVehicleNetworkIndex;
-	size_t m_ucSeat;
+	int8_t m_nSeat;
 	uint32_t m_Behavior;
 
 	bool m_EnteringExitingVehicle;
@@ -55,10 +55,10 @@ public:
 	virtual void Kill();
 
 	virtual bool IsInVehicle(void);
-	virtual bool CanEnterVehicle(CServerVehicle* pVehicle, unsigned char ucSeat);
+	virtual bool CanEnterVehicle(CServerVehicle* pVehicle, int8_t iSeat);
 	virtual bool CanExitVehicle(void);
 
-	virtual void WarpIntoVehicle(CServerVehicle* pVehicle, unsigned char ucSeat);
+	virtual void WarpIntoVehicle(CServerVehicle* pVehicle, int8_t iSeat);
 
 	virtual bool CanExistForMachine(CNetMachine* pClient) override;
 

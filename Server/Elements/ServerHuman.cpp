@@ -23,7 +23,7 @@ CServerHuman::CServerHuman(CMafiaServerManager* pServerManager) : CServerEntity(
 	m_fCurrentRotation = 0.0;
 	m_fHealth = 200;
 	m_nVehicleNetworkIndex = INVALID_NETWORK_ID;
-	m_ucSeat = 0;
+	m_nSeat = 0;
 	m_Behavior = 4;
 
 	m_EnteringExitingVehicle = false;
@@ -84,7 +84,7 @@ bool CServerHuman::ReadCreatePacket(Stream* pStream)
 
 	m_fHealth = Packet.health;
 	m_nVehicleNetworkIndex = Packet.vehicleNetworkIndex;
-	m_ucSeat = Packet.seat;
+	m_nSeat = Packet.seat;
 	m_IsCrouching = Packet.isCrouching;
 	m_IsAiming = Packet.isAiming;
 	m_IsShooting = Packet.isShooting;
@@ -112,11 +112,11 @@ bool CServerHuman::ReadSyncPacket(Stream* pStream)
 		return false;
 
 	int32_t nOldVehicleNetworkIndex = m_nVehicleNetworkIndex;
-	int8_t nOldSeat = m_ucSeat;
+	int8_t nOldSeat = m_nSeat;
 
 	m_fHealth = Packet.health;
 	m_nVehicleNetworkIndex = Packet.vehicleNetworkIndex;
-	m_ucSeat = Packet.seat;
+	m_nSeat = Packet.seat;
 	m_IsCrouching = Packet.isCrouching;
 	m_IsAiming = Packet.isAiming;
 	m_IsShooting = Packet.isShooting;
@@ -149,9 +149,9 @@ bool CServerHuman::ReadSyncPacket(Stream* pStream)
 		{
 			if (pOldVehicle == nullptr)
 			{
-				if (m_ucSeat > 0 && m_ucSeat < ARRAY_COUNT(CServerVehicle::m_pProbableOccupants))
+				if (m_nSeat > 0 && m_nSeat < ARRAY_COUNT(CServerVehicle::m_pProbableOccupants))
 				{
-					pNewVehicle->m_pProbableOccupants[m_ucSeat] = this;
+					pNewVehicle->m_pProbableOccupants[m_nSeat] = this;
 				}
 			}
 			else if (pOldVehicle != pNewVehicle)
@@ -161,9 +161,9 @@ bool CServerHuman::ReadSyncPacket(Stream* pStream)
 					pOldVehicle->m_pProbableOccupants[nOldSeat] = nullptr;
 				}
 
-				if (m_ucSeat > 0 && m_ucSeat < ARRAY_COUNT(CServerVehicle::m_pProbableOccupants))
+				if (m_nSeat > 0 && m_nSeat < ARRAY_COUNT(CServerVehicle::m_pProbableOccupants))
 				{
-					pNewVehicle->m_pProbableOccupants[m_ucSeat] = this;
+					pNewVehicle->m_pProbableOccupants[m_nSeat] = this;
 				}
 			}
 
@@ -191,7 +191,7 @@ bool CServerHuman::WriteCreatePacket(Stream* pStream)
 
 	Packet.health = m_fHealth;
 	Packet.vehicleNetworkIndex = m_nVehicleNetworkIndex;
-	Packet.seat = m_ucSeat;
+	Packet.seat = m_nSeat;
 	Packet.isCrouching = m_IsCrouching;
 	Packet.isAiming = m_IsAiming;
 	Packet.isShooting = m_IsShooting;
@@ -217,7 +217,7 @@ bool CServerHuman::WriteSyncPacket(Stream* pStream)
 
 	Packet.health = m_fHealth;
 	Packet.vehicleNetworkIndex = m_nVehicleNetworkIndex;
-	Packet.seat = m_ucSeat;
+	Packet.seat = m_nSeat;
 	Packet.isCrouching = m_IsCrouching;
 	Packet.isAiming = m_IsAiming;
 	Packet.isShooting = m_IsShooting;
@@ -400,7 +400,7 @@ bool CServerHuman::IsInVehicle(void)
 	return m_nVehicleNetworkIndex != INVALID_NETWORK_ID;
 }
 
-bool CServerHuman::CanEnterVehicle(CServerVehicle* pVehicle, unsigned char ucSeat)
+bool CServerHuman::CanEnterVehicle(CServerVehicle* pVehicle, int8_t iSeat)
 {
 	//CArguments Arguments(3);
 	//Arguments.AddObject(this);
@@ -436,7 +436,7 @@ bool CServerHuman::CanExitVehicle(void)
 	return false;
 }
 
-void CServerHuman::WarpIntoVehicle(CServerVehicle* pVehicle, unsigned char ucSeat)
+void CServerHuman::WarpIntoVehicle(CServerVehicle* pVehicle, int8_t iSeat)
 {
 
 }

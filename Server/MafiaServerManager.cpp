@@ -1115,7 +1115,7 @@ static bool FunctionPedGetSeat(IScriptState* pState, int argc, void* pUser)
 	CServerHuman* pServerPed;
 	if (!pState->GetThis(pServerManager->m_pServerHumanClass, &pServerPed))
 		return false;
-	pState->ReturnNumber(pServerPed->m_ucSeat);
+	pState->ReturnNumber(pServerPed->m_nSeat);
 	return true;
 }
 

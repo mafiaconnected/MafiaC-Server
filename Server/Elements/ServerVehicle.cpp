@@ -360,12 +360,12 @@ void CServerVehicle::SetEngineHealth(float fEngineHealth)
 	}
 }
 
-CServerHuman* CServerVehicle::GetOccupant(size_t Index)
+CServerHuman* CServerVehicle::GetOccupant(int8_t Index)
 {
 	if (Index >= ARRAY_COUNT(m_pProbableOccupants))
 		return nullptr;
 	auto pProbableOccupant = m_pProbableOccupants[Index];
-	if (pProbableOccupant != nullptr && pProbableOccupant->m_nVehicleNetworkIndex == GetId() && pProbableOccupant->m_ucSeat == Index)
+	if (pProbableOccupant != nullptr && pProbableOccupant->m_nVehicleNetworkIndex == GetId() && pProbableOccupant->m_nSeat == Index)
 		return pProbableOccupant;
 	return nullptr;
 }

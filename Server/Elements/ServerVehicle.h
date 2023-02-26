@@ -91,5 +91,5 @@ public:
 	//void GetRotationVelocity(CVector3D& vecRotationVelocity);
 	//void SetRotationVelocity(const CVector3D& vecRotationVelocity);
 
-	CServerHuman* GetOccupant(size_t Index);
+	CServerHuman* GetOccupant(int8_t Index);
 };
