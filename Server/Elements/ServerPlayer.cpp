@@ -10,7 +10,7 @@ CServerPlayer::CServerPlayer(CMafiaServerManager* pServerManager) : CServerHuman
 	m_Flags.m_bAlwaysExistForSyncer = true;
 }
 
-ReflectedClass* CServerPlayer::GetReflectedClass(void)
+ReflectedClass* CServerPlayer::GetReflectedClass()
 {
 	return static_cast<CMafiaServerManager*>(m_pNetObjectMgr)->m_pServerPlayerClass;
 }

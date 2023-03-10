@@ -28,7 +28,7 @@ public:
 class CWorld : public CBaseObject
 {
 public:
-	CWorld(void);
+	CWorld();
 
 	CMafiaServerManager* m_pManager;
 

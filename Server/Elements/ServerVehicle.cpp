@@ -19,7 +19,7 @@ CServerVehicle::CServerVehicle(CMafiaServerManager* pServerManager) : CServerEnt
 	m_quatRot.w = 0.0f;
 }
 
-ReflectedClass* CServerVehicle::GetReflectedClass(void)
+ReflectedClass* CServerVehicle::GetReflectedClass()
 {
 	return static_cast<CMafiaServerManager*>(m_pNetObjectMgr)->m_pServerVehicleClass;
 }
@@ -200,7 +200,7 @@ bool CServerVehicle::SetRotation(const CVector3D& vecRotation)
 	return true;
 }
 
-void CServerVehicle::Remove(void)
+void CServerVehicle::Remove()
 {
 	for (size_t i=0; i< m_pNetObjectMgr->m_Objects.GetSize(); i++)
 	{

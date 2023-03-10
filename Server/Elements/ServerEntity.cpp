@@ -33,7 +33,7 @@ float CServerEntity::GetHeading(void)
 	return CVecTools::DegToRad(CVecTools::DirToRotation360(CVecTools::EulerToDir(m_Rotation)));
 }
 
-ReflectedClass* CServerEntity::GetReflectedClass(void)
+ReflectedClass* CServerEntity::GetReflectedClass()
 {
 	return static_cast<CMafiaServerManager*>(m_pNetObjectMgr)->m_pServerEntityClass;
 }

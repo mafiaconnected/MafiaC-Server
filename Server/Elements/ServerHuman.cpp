@@ -43,7 +43,7 @@ void CServerHuman::SetModel(const GChar* sModel)
 	}
 }
 
-ReflectedClass* CServerHuman::GetReflectedClass(void)
+ReflectedClass* CServerHuman::GetReflectedClass()
 {
 	return static_cast<CMafiaServerManager*>(m_pNetObjectMgr)->m_pServerHumanClass;
 }

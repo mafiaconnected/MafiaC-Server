@@ -8,7 +8,7 @@ class CRConLogger : public Logger
 {
 public:
 	CRConLogger(CRConServer* pServer, mg_connection* pConnection);
-	virtual ~CRConLogger(void);
+	virtual ~CRConLogger();
 
 	CRConServer* m_pServer;
 	mg_connection* m_pConnection;
@@ -21,7 +21,7 @@ CRConLogger::CRConLogger(CRConServer* pServer, mg_connection* pConnection) : m_p
 	pServer->m_pServer->m_ResourceMgr.m_pCommandHandlers->PushLogger(this);
 }
 
-CRConLogger::~CRConLogger(void)
+CRConLogger::~CRConLogger()
 {
 	m_pServer->m_pServer->m_ResourceMgr.m_pCommandHandlers->PopLogger();
 }

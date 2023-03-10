@@ -5,9 +5,9 @@
 class InventoryItem
 {
 public:
-	unsigned short weapId;
-	unsigned short ammo1;
-	unsigned short ammo2;
+	uint16_t weapId;
+	uint16_t ammo1;
+	uint16_t ammo2;
 };
 
 class CServerHuman : public CServerEntity
@@ -41,9 +41,9 @@ public:
 
 	virtual void SetModel(const GChar* sModel) override;
 
-	virtual ReflectedClass* GetReflectedClass(void) override;
+	virtual ReflectedClass* GetReflectedClass() override;
 
-	virtual void OnCreated(void) override;
+	virtual void OnCreated() override;
 	void OnSpawned();
 
 	virtual void Shoot(bool state, const CVector3D& distPos);
@@ -54,9 +54,9 @@ public:
 
 	virtual void Kill();
 
-	virtual bool IsInVehicle(void);
+	virtual bool IsInVehicle();
 	virtual bool CanEnterVehicle(CServerVehicle* pVehicle, int8_t iSeat);
-	virtual bool CanExitVehicle(void);
+	virtual bool CanExitVehicle();
 
 	virtual void WarpIntoVehicle(CServerVehicle* pVehicle, int8_t iSeat);
 
@@ -71,11 +71,11 @@ public:
 	virtual InventoryItem GetInventoryItem(int index) { if (index >= 0 && index < 8) return items[index]; else return { 0 }; }
 	virtual InventoryItem* GetInventory() { return items; }
 	virtual void ClearInventory();
-	void GiveWeapon(unsigned short ucWeapon, unsigned short ucAmmo1, unsigned short ucAmmo2);
-	bool HasWeapon(unsigned short ucWeapon);
+	void GiveWeapon(uint16_t ucWeapon, uint16_t ucAmmo1, uint16_t ucAmmo2);
+	bool HasWeapon(uint16_t ucWeapon);
 	int GetFirstEmptyWeaponIndex();
-	int GetIndexOfWeapon(unsigned short ucWeapon);
-	void TakeWeapon(unsigned short ucWeapon);
+	int GetIndexOfWeapon(uint16_t ucWeapon);
+	void TakeWeapon(uint16_t ucWeapon);
 	void DropWeapon();
 
 	void SetHealth(float fHealth);

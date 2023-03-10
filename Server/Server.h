@@ -33,7 +33,7 @@ class CServer : public CNetCompatibilityShim
 {
 public:
 	CServer(Galactic3D::Context* pContext);
-	~CServer(void);
+	~CServer();
 
 	struct tRule
 	{
@@ -66,11 +66,11 @@ public:
 	bool m_bRCon;
 	bool m_bHttpServer;
 	bool m_bServerQuery;
-	unsigned short m_usPort;
-	unsigned short m_usHTTPPort;
+	uint16_t m_usPort;
+	uint16_t m_usHTTPPort;
 	GString m_HTTPUrl;
-	unsigned short m_usRConPort;
-	unsigned short m_usSyncInterval;
+	uint16_t m_usRConPort;
+	uint16_t m_usSyncInterval;
 	eSyncMethod m_SyncMethod;
 	bool m_bDuplicateNames;
 	uint32_t m_uiMinMajorVersion;
@@ -147,28 +147,28 @@ public:
 	void AddGame(const GChar* pszName);
 	void SendSync(CNetMachine* pNetMachine);
 	void ManageElements(CNetMachine* pNetMachine);
-	void SendAllSync(void);
+	void SendAllSync();
 	void SendChat(CNetMachine* pNetMachine, const GChar* pszMessage, size_t MessageLength, unsigned int uiColour);
 	void SendChatExcept(CNetMachine* pNetMachine, const GChar* pszMessage, size_t MessageLength, unsigned int uiColour);
 	void UserChat(CNetMachine* pNetMachine, const GChar* pszMessage, size_t MessageLength);
 	bool ParseConfig(const CServerConfiguration& Config);
 	bool LoadConfig(const GChar* pszPath);
 	bool StartInitialResources();
-	bool StartServer(void);
+	bool StartServer();
 	void ShutDown();
 	void StartInputThread();
-	bool StartMasterlist(void);
-	bool OnFrame(void);
-	void MainLoop(void);
+	bool StartMasterlist();
+	bool OnFrame();
+	void MainLoop();
 	void InputThread();
 
-	const GChar* GetGameMode(void) { return m_szGameMode; }
+	const GChar* GetGameMode() { return m_szGameMode; }
 	void SetGameMode(const GChar* pszGameMode);
 	void SendGameMode(CNetMachine* pNetMachine);
 
-	const GChar* GetServerName(void) { return m_szServerName; }
+	const GChar* GetServerName() { return m_szServerName; }
 	void SetServerName(const GChar* pszName);
-	const GChar* GetMapName(void) { return m_szLevel; }
+	const GChar* GetMapName() { return m_szLevel; }
 	void SetMapName(const GChar* pszName);
 	void SendServerName(CNetMachine* pNetMachine);
 	void SendMapName(CNetMachine* pNetMachine);

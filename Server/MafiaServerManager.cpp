@@ -622,15 +622,15 @@ static bool FunctionHumanGiveWeapon(IScriptState* pState, int argc, void* pUser)
 	if (!pState->GetThis(pServerManager->m_pServerHumanClass, &pServerHuman))
 		return false;
 
-	unsigned short weaponId;
+	uint16_t weaponId = 0;
 	if (!pState->CheckNumber(0, weaponId))
 		return false;
 
-	unsigned short ammo1 = 999;
+	uint16_t ammo1 = 999;
 	if (!pState->CheckNumber(1, ammo1))
 		return false;
 
-	unsigned short ammo2 = 999;
+	uint16_t ammo2 = 999;
 	if (!pState->CheckNumber(2, ammo2))
 		return false;
 

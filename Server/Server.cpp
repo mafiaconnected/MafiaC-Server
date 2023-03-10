@@ -215,7 +215,7 @@ CServer::CServer(Galactic3D::Context* pContext) :
 	});
 }
 
-CServer::~CServer(void)
+CServer::~CServer()
 {
 	m_InputEvent.Clear();
 	m_Announcer.StopServer();
@@ -660,7 +660,7 @@ void CServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, Stream
 						return;
 					}
 				}
-				unsigned short usNicknameLength = 0;
+				uint16_t usNicknameLength = 0;
 				Reader.ReadUInt16(&usNicknameLength, 1);
 				GChar szName[NETGAME_MAX_NAME_BUFFER] = { 0 };
 				if (usNicknameLength <= 0 || usNicknameLength >= NETGAME_MAX_NAME_BUFFER || usNicknameLength >= NETGAME_MAX_NAME)
@@ -850,7 +850,7 @@ void CServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, Stream
 			break;
 		case PACKET_PLAYERSYNC:
 			{
-				unsigned short usCount = 0;
+				uint16_t usCount = 0;
 				Reader.ReadUInt16(&usCount, 1);
 
 				for (size_t i = 0; i < usCount; i++)
@@ -1658,7 +1658,7 @@ void CServer::ManageElements(CNetMachine* pClient)
 	m_pManager->DeleteFarAwayStuff(pClient, NETOBJECT_NETOBJECT);
 }
 
-void CServer::SendAllSync(void)
+void CServer::SendAllSync()
 {
 	if (m_SyncMethod == SYNCMETHOD_INTERVAL)
 	{
@@ -2088,7 +2088,7 @@ bool CServer::StartInitialResources()
 	return iErrors == 0;
 }
 
-bool CServer::StartServer(void)
+bool CServer::StartServer()
 {
 	_glogprintf(_gstr("Server is starting..."));
 
@@ -2176,7 +2176,7 @@ void CServer::StartInputThread()
 	}
 }
 
-bool CServer::StartMasterlist(void)
+bool CServer::StartMasterlist()
 {
 	_glogprintf(_gstr("Connecting to the server listing..."));
 	GChar szURL[256];
@@ -2191,7 +2191,7 @@ bool CServer::StartMasterlist(void)
 	return true;
 }
 
-bool CServer::OnFrame(void)
+bool CServer::OnFrame()
 {
 	CLockable::CLock Lock(&m_Lock, true);
 
@@ -2223,7 +2223,7 @@ bool CServer::OnFrame(void)
 	return true;
 }
 
-void CServer::MainLoop(void)
+void CServer::MainLoop()
 {
 	while (OnFrame())
 	{
