@@ -1,6 +1,4 @@
-#include "Server.h"
-#include "../MafiaServerManager.h"
-#include "Elements.h"
+#pragma once
 
 class CServerEntity : public CNetObject
 {
@@ -16,12 +14,11 @@ public:
 	int32_t m_nRelativeElement;
 	CVector3D m_vecRelativePos;
 	int32_t m_nRef;
-	CMafiaServerManager* m_pServerManager;
 
 	virtual void SetHeading(float fHeading);
-	virtual float GetHeading(void);
+	virtual float GetHeading();
 
-	virtual ReflectedClass* GetReflectedClass(void) override;
+	virtual ReflectedClass* GetReflectedClass() override;
 
 	virtual bool SetPosition(const CVector3D& vecPos) override;
 	virtual bool GetPosition(CVector3D& vecPos) override;

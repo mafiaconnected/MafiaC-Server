@@ -1,6 +1,4 @@
-#include "Server.h"
-#include "../MafiaServerManager.h"
-#include "Elements.h"
+#pragma once
 
 class CServerVehicle : public CServerEntity
 {

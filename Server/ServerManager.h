@@ -5,14 +5,14 @@
 #include <Multiplayer/NetObjectMgr.h>
 #include "ServerResourceMgr.h"
 
-class CServer;
+class CBaseServer;
 
 class CServerManager : public CManager, public CNetObjectMgr
 {
 public:
-	CServerManager(Context* pContext, CServer* pServer);
+	CServerManager(Context* pContext, CBaseServer* pServer);
 
-	CServer* m_pServer;
+	CBaseServer* m_pServer;
 
 protected:
 	void RegisterFunctions(CScripting* pScripting);

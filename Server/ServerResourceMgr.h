@@ -3,14 +3,14 @@
 #include <Scripting/Resource.h>
 #include <Multiplayer/Multiplayer.h>
 
-class CServer;
+class CBaseServer;
 
 class CServerResourceMgr : public CNetGameResourceMgr
 {
 public:
-	CServerResourceMgr(Galactic3D::Context* pContext, CNetCompatibilityShim* pNetGame);
+	CServerResourceMgr(Galactic3D::Context* pContext, CBaseServer* pServer);
 
-	CNetCompatibilityShim* m_pNetGame;
+	CBaseServer* m_pServer;
 	//CResource* EnsureLoadedResource(const GChar* pszName, const GChar* pszPath);
 	//void UpdateResources(const GPlatformChar* pszFolder);
 	void UpdateAResource(CNetCompatibilityShim* pNetGame, CResource* pResource);

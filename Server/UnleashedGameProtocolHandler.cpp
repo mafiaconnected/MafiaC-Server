@@ -1,11 +1,11 @@
 
 #include "pch.h"
-#include "Server.h"
+#include "BaseServer.h"
 #include "UnleashedGameProtocolHandler.h"
 
 using namespace Galactic3D;
 
-CUnleashedGameProtocolHandler::CUnleashedGameProtocolHandler(CServer* pServer) :
+CUnleashedGameProtocolHandler::CUnleashedGameProtocolHandler(CBaseServer* pServer) :
 	m_pServer(pServer)
 {
 	m_pResponse = new CUGPResponse;
@@ -22,12 +22,12 @@ void CUnleashedGameProtocolHandler::UpdateResponse()
 
 	m_pResponse->m_ucGameID = (uint8_t)m_pServer->m_GameId;
 
-	_gstrcpy_s(m_pResponse->m_ServerInfo.m_szGameName, ARRAY_COUNT(m_pResponse->m_ServerInfo.m_szGameName), _gstr("Mafia Connected"));
+	_gstrcpy_s(m_pResponse->m_ServerInfo.m_szGameName, ARRAY_COUNT(m_pResponse->m_ServerInfo.m_szGameName), _gstr("Grand Theft Auto: Connected"));
 	m_pResponse->m_ServerInfo.m_bPassworded = m_pServer->m_Password.HasPassword();
 	_gstrcpy_s(m_pResponse->m_ServerInfo.m_szVersion, ARRAY_COUNT(m_pResponse->m_ServerInfo.m_szVersion), _gstr(""));
 	_gstrcpy_s(m_pResponse->m_ServerInfo.m_szName, ARRAY_COUNT(m_pResponse->m_ServerInfo.m_szName), m_pServer->GetServerName());
 	_gstrcpy_s(m_pResponse->m_ServerInfo.m_szGameMode, ARRAY_COUNT(m_pResponse->m_ServerInfo.m_szGameMode), m_pServer->GetGameMode());
-	_gstrcpy_s(m_pResponse->m_ServerInfo.m_szMap, ARRAY_COUNT(m_pResponse->m_ServerInfo.m_szMap), m_pServer->m_szLevel);
+	_gstrcpy_s(m_pResponse->m_ServerInfo.m_szMap, ARRAY_COUNT(m_pResponse->m_ServerInfo.m_szMap), m_pServer->m_szMap);
 	m_pResponse->m_ServerInfo.m_PlayerCount = (uint8_t)m_pServer->m_CurrentClients;
 	m_pResponse->m_ServerInfo.m_MaxPlayers = (uint8_t)m_pServer->m_MaxClients;
 

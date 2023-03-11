@@ -9,15 +9,7 @@
 #else
 #include <direct.h>
 #endif
-#include <RakNet/SecureHandshake.h>
 #include <mongoose.h>
-#include <iostream>
-#include <string>
-#include <sstream>
-#include <zlib.h>
-#include "MafiaServerManager.h"
-
-using namespace Galactic3D;
 
 extern bool RegisterLuaVM(CScripting* pScripting);
 extern bool RegisterJSVM(CScripting* pScripting);
@@ -29,6 +21,7 @@ public:
 	CExitCommandHandler(CBaseServer* pServer) : m_pServer(pServer)
 	{
 	}
+
 	CBaseServer* m_pServer;
 
 	virtual void Execute(const GChar* pszCommandName, const GChar* pszArguments, CBaseObject* pClient) override
@@ -44,6 +37,7 @@ public:
 	CSayCommandHandler(CBaseServer* pServer) : m_pServer(pServer)
 	{
 	}
+
 	CBaseServer* m_pServer;
 
 	virtual void Execute(const GChar* pszCommandName, const GChar* pszArguments, CBaseObject* pClient) override;
@@ -55,7 +49,7 @@ void CSayCommandHandler::Execute(const GChar* pszCommandName, const GChar* pszAr
 		pszArguments = _gstr("");
 
 	CNetMachine* pClient2 = static_cast<CNetMachine*>(pClient);
-	assert(pClient2);
+	_gassert(pClient2);
 	if (pClient2 != nullptr)
 		m_pServer->UserChat(pClient2, pszArguments, _gstrlen(pszArguments));
 }
@@ -86,17 +80,16 @@ CBaseServer::CBaseServer(Galactic3D::Context* pContext) :
 	m_MaxClients = 32;
 	m_pContext = pContext;
 	m_pLog = NULL;
-	m_pOnPlayerConnectEventType = m_ResourceMgr.m_pEventHandlers->CreateEventType(_gstr("OnPlayerConnect"), _gstr("Called when a player is attempting to connect"), 1);
-	m_pOnPlayerConnectEventType->m_bCanPreventDefault = true;
-	m_pOnPlayerJoinEventType = m_ResourceMgr.m_pEventHandlers->CreateEventType(_gstr("OnPlayerJoin"), _gstr("Called when a player has connected and is joining"), 1);
-	m_pOnPlayerJoinedEventType = m_ResourceMgr.m_pEventHandlers->CreateEventType(_gstr("OnPlayerJoined"), _gstr("Called when the player has joined the game"), 1);
-	m_pOnPlayerQuitEventType = m_ResourceMgr.m_pEventHandlers->CreateEventType(_gstr("OnPlayerQuit"), _gstr("Called when a player disconnects"), 2);
-	m_pOnPlayerChatEventType = m_ResourceMgr.m_pEventHandlers->CreateEventType(_gstr("OnPlayerChat"), _gstr("Called when a player chats"), 2);
-	m_pOnPlayerChatEventType->m_bCanPreventDefault = true;
-	m_pOnPlayerCommandEventType = m_ResourceMgr.m_pEventHandlers->CreateEventType(_gstr("OnPlayerCommand"), _gstr("Called when a player types a command"), 3);
-	m_pOnPlayerCommandEventType->m_bCanPreventDefault = true;
-	m_pOnProcessEventType = m_ResourceMgr.m_pEventHandlers->CreateEventType(_gstr("OnProcess"), _gstr("Called every process"), 1);
-	m_pOnServerStartEventType = m_ResourceMgr.m_pEventHandlers->CreateEventType(_gstr("OnServerStart"), _gstr("Called when the server finished the start sequence"), 0);
+
+	m_pOnPlayerConnectEventType = m_ResourceMgr.m_pEventHandlers->CreateEventType(_gstr("OnPlayerConnect"), _gstr("Called when a player is attempting to connect"), 1, true);
+	m_pOnPlayerJoinEventType = m_ResourceMgr.m_pEventHandlers->CreateEventType(_gstr("OnPlayerJoin"), _gstr("Called when a player has connected and is joining"), 1, false);
+	m_pOnPlayerJoinedEventType = m_ResourceMgr.m_pEventHandlers->CreateEventType(_gstr("OnPlayerJoined"), _gstr("Called when the player has joined the game"), 1, false);
+	m_pOnPlayerQuitEventType = m_ResourceMgr.m_pEventHandlers->CreateEventType(_gstr("OnPlayerQuit"), _gstr("Called when a player disconnects"), 2, false);
+	m_pOnPlayerChatEventType = m_ResourceMgr.m_pEventHandlers->CreateEventType(_gstr("OnPlayerChat"), _gstr("Called when a player chats"), 2, true);
+	m_pOnPlayerCommandEventType = m_ResourceMgr.m_pEventHandlers->CreateEventType(_gstr("OnPlayerCommand"), _gstr("Called when a player types a command"), 3, true);
+	m_pOnProcessEventType = m_ResourceMgr.m_pEventHandlers->CreateEventType(_gstr("OnProcess"), _gstr("Called every process"), 1, false);
+	m_pOnServerStartEventType = m_ResourceMgr.m_pEventHandlers->CreateEventType(_gstr("OnServerStart"), _gstr("Called when the server finished the start sequence"), 0, false);
+
 	m_bExit = false;
 	m_bServerBrowser = false;
 	m_bRCon = false;
@@ -110,7 +103,6 @@ CBaseServer::CBaseServer(Galactic3D::Context* pContext) :
 	m_szLogTimeStamp[0] = '\0';
 	m_CurrentClients = 0;
 	m_ResourceMgr.m_pCommandHandlers->AddCommandHandler(new CSayCommandHandler(this), _gstr("say"));
-	m_ResourceMgr.m_pCommandHandlers->AddCommandHandler(new CHelpCommandHandler, _gstr("help"));
 	m_ResourceMgr.m_pCommandHandlers->AddCommandHandler(new CExitCommandHandler(this), _gstr("quit"));
 	m_ResourceMgr.m_pCommandHandlers->AddCommandHandler(new CExitCommandHandler(this), _gstr("exit"));
 
@@ -132,10 +124,8 @@ CBaseServer::CBaseServer(Galactic3D::Context* pContext) :
 	m_SyncPacketFlags = PACKETFLAGS_NONE;
 
 	m_szGameMode[0] = '\0';
-	m_szLevel[0] = '\0';
 
-	m_uiNetVersion = NETGAME_CURRENT_VERSION;
-
+	m_uiNetVersion = 0;
 #ifdef _DEBUG
 	m_uiFakeNetVersion = 0;
 #endif
@@ -144,10 +134,10 @@ CBaseServer::CBaseServer(Galactic3D::Context* pContext) :
 	RegisterJSVM(m_ResourceMgr.m_pScripting);
 	RegisterSqVM(m_ResourceMgr.m_pScripting);
 
-	SetRule(_gstr("Version"), __gstr(MAFIAC_SERVER_VERSION));
+	RegisterConfig();
 }
 
-CBaseServer::~CServer(void)
+CBaseServer::~CBaseServer()
 {
 	m_InputEvent.Clear();
 	m_Announcer.StopServer();
@@ -502,49 +492,23 @@ void CBaseServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, St
 {
 	CBinaryReader Reader(pStream);
 
-	CMafiaClient* pClient = static_cast<CMafiaClient*>(m_NetMachines.GetMachineFromPeer(Peer.m_Peer));
+	auto pClient = m_NetMachines.GetMachineFromPeer(Peer.m_Peer);
 
-	{
-		CArguments Args(2);
-		Args.AddNumber(PacketID);
-		Args.AddObject(pClient);
-
-		bool bPreventDefault = false;
-		m_pManager->m_pOnReceivePacketEventType->Trigger(Args, bPreventDefault);
-		if (bPreventDefault)
-			return;
-	}
-
-	if (PacketID == PACKET_INITIAL)
-	{
-		// Prevent first packet unless first packet if first packet already received.
-		if (pClient != nullptr)
-		{
-			// TODO: Disconnect. Because it is likely that trailing data was sent with the PACKET_INITIAL opcode.
-			return;
-		}
-	}
-	else
-	{
-		// Prevent packets unless player actually passed the first packet checks.
-		if (pClient == nullptr)
-		{
-			return;
-		}
-	}
-
-	auto pMafiaManager = static_cast<CMafiaServerManager*>(m_pManager);
+	if (pClient == nullptr && PacketID != PACKET_INITIAL)
+		return;
 
 	switch (PacketID)
 	{
 		case PACKET_INITIAL:
 			{
+				if (pClient != nullptr) // Stop more than one initial packet!
+					return;
+
 				GChar szHost[MAX_IPSTRING] = { 0 };
 				CIPAddress IPAddress;
 				GetPeerIP(Peer.m_Peer, IPAddress);
 				if (!IPAddress.ToString(szHost, ARRAY_COUNT(szHost), false))
 				{
-					_glogwarnprintf(_gstr("CONNECT: %s failed connection [IP FAIL]"), szHost);
 					DisconnectPeer(Peer.m_Peer, DISCONNECT_FAILED);
 					return;
 				}
@@ -597,6 +561,13 @@ void CBaseServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, St
 						return;
 					}
 				}
+
+				//if (!VerifyGameExecutableHash((eGameVersion)pPkt->m_uiGameVersion,pPkt->m_uiGameHash))
+				//{
+				//	_glogwarnprintf(_gstr("CONNECT: %s:%u revoked connection [UNSUPPORTED EXECUTABLE]"), Host.CString(), pPeer->address.port);
+				//	DisconnectPeer(pPeer,DISCONNECT_UNSUPPORTEDEXECUTABLE);
+				//	return;
+				//}
 				uint16_t usNicknameLength = 0;
 				Reader.ReadUInt16(&usNicknameLength, 1);
 				GChar szName[NETGAME_MAX_NAME_BUFFER] = { 0 };
@@ -619,6 +590,10 @@ void CBaseServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, St
 						return;
 					}
 				}
+				//if (usNicknameLength == 0)
+				//{
+				//	_gsnprintf(szName, ARRAY_COUNT(szName), _gstr("%s"), szHost);
+				//}
 				uint8_t ucGame;
 				Reader.ReadUInt8(&ucGame, 1);
 				if (std::find(m_AllowedGameIds.begin(), m_AllowedGameIds.end(), ucGame) == m_AllowedGameIds.end())
@@ -629,6 +604,12 @@ void CBaseServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, St
 				}
 				uint8_t ucGameVersion;
 				Reader.ReadUInt8(&ucGameVersion, 1);
+				//if (!bOkayGameVersion)
+				//{
+				//	_glogwarnprintf(_gstr("CONNECT: %s revoked connection [WRONG GAME VERSION]"), szName);
+				//	DisconnectPeer(SystemAddress,DISCONNECT_UNSUPPORTEDENGINE);
+				//	return;
+				//}
 				if (IsNameInUse(szName))
 				{
 					_glogwarnprintf(_gstr("CONNECT: %s revoked connection [NICKNAME IN USE]"), szName);
@@ -641,18 +622,18 @@ void CBaseServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, St
 					DisconnectPeer(Peer.m_Peer, DISCONNECT_FULL);
 					return;
 				}
+
 				Strong<CNetMachine> pNetMachine;
 				for (size_t i = 0; i < MAX_MACHINES; i++)
 				{
 					if (m_NetMachines.m_rgpMachines[i] == nullptr)
 					{
-						pNetMachine = Strong<CNetMachine>::New(new CMafiaClient(m_pManager));
+						pNetMachine = Strong<CNetMachine>::New(NewMachine(m_pManager));
 						m_NetMachines.m_rgpMachines[i] = pNetMachine;
 						pNetMachine->m_Peer = Peer.m_Peer;
 						const GChar* pszGame = m_pManager->m_Games.GetGameName(ucGame);
 						pNetMachine->m_Game.assign(pszGame);
 						pNetMachine->m_GameId = ucGame;
-						//pNetMachine->m_uiVersion = uiVersion;
 						pNetMachine->m_ucGameVersion = ucGameVersion;
 						pNetMachine->m_nIndex = (uint32_t)i;
 						pNetMachine->m_GlobalIdentifier = Peer.m_GlobalPeer;
@@ -663,6 +644,7 @@ void CBaseServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, St
 						break;
 					}
 				}
+
 				if (pNetMachine == nullptr)
 				{
 					_glogwarnprintf(_gstr("CONNECT: %s revoked connection [SERVER FULL]"), szName);
@@ -673,10 +655,14 @@ void CBaseServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, St
 				{
 					{
 						CArguments Args(1);
+						//Args.AddInt32(iLocalIndex);
 						Args.AddObject(pNetMachine);
 						m_pOnPlayerJoinEventType->Trigger(Args);
 					}
 					OnPlayerJoin(pNetMachine);
+					//ChatPrintf("%s joined the game",szName);
+					//CString Name(false, szName);
+					//_glogprintf(_gstr("%s joined the game."), Name.CString());
 					SendCVars(pNetMachine);
 					{
 						Packet Packet(PACKET_RESPONSE);
@@ -700,89 +686,89 @@ void CBaseServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, St
 
 						pNetMachine->SendPacket(&Packet);
 					}
-				}
 
-				SendMapName(pNetMachine);
+					// delay creation until we get some sync...
+					//m_pManager->SendCreatePacket(m_rgpPlayers[iLocalIndex]);
+
+					//{
+					//	CEvent* pEvent2 = new CEvent(m_pOnPlayerJoinedEventType);
+					//	//lua_pushinteger(m_ResourceMgr.m_Scripting.m_pState,iLocalIndex);
+					//	m_rgpPlayers[iLocalIndex]->Push(m_ResourceMgr.m_Scripting.m_pState);
+					//	pEvent2->Trigger(m_ResourceMgr.m_Scripting.m_pState,1);
+					//	lua_pop(m_ResourceMgr.m_Scripting.m_pState,1);
+					//	pEvent2->Release();
+					//}
+				}
 			}
 			break;
 		case PACKET_JOIN:
 			{
-				if (pClient != nullptr)
+				bool bWasJoined = pClient->m_bJoined;
+				pClient->m_bJoined = true;
+				pClient->m_bStreaming = true;
+
+				m_ResourceMgr.UpdateAllResource(this, Peer.m_Peer);
+
+				SendGameMode(pClient);
+				SendServerName(pClient);
+
+				OnPlayerJoined(pClient);
+
+				// moved OnPlayerJoined here
 				{
-					bool bWasJoined = pClient->m_bJoined;
-					pClient->m_bJoined = true;
-
-					m_ResourceMgr.UpdateAllResource(this, Peer.m_Peer);
-
-					//_glogprintf(_gstr("Sending gamemode and servername"));
-					SendGameMode(pClient);
-					SendServerName(pClient);
-
-					//_glogprintf(_gstr("Calling CServer OnPlayerJoined for %i"), pClient->m_nIndex);
-					OnPlayerJoined(pClient);
-
-					//_glogprintf(_gstr("Sending PACKET_JOINED to %i"), pClient->m_nIndex);
-					// moved OnPlayerJoined here
-					{
-						CArguments Args(1);
-						//Args.AddInt32(iLocalIndex);
-						Args.AddObject(pClient);
-						m_pOnPlayerJoinedEventType->Trigger(Args);
-					}
-
-					if (!bWasJoined)
-					{
-						// Inform everyone else we joined
-						// Calculate PeersSize also while we are looping here...
-						size_t PeerCount = 0;
-						{
-							for (size_t i = 0; i < MAX_MACHINES; i++)
-							{
-								if (m_NetMachines.m_rgpMachines[i] != nullptr && m_NetMachines.m_rgpMachines[i]->m_bJoined)
-								{
-									PeerCount++;
-
-									// Don't tell ourself we joined
-									if (m_NetMachines.m_rgpMachines[i] != pClient)
-									{
-										Packet Packet(PACKET_ADDMACHINE);
-
-										Packet.Write<Uint16>(1);
-										Packet.Write<Uint32>(pClient->m_nIndex);
-										if (pClient->Write(&Packet, m_NetMachines.m_rgpMachines[i]))
-											m_NetMachines.m_rgpMachines[i]->SendPacket(&Packet, PACKETPRIORITY_DEFAULT, PACKETFLAGS_RELIABLE, PACKETORDERINGCHANNEL_NETMACHINES);
-
-										//_glogprintf(_gstr("Sending machine %i to client %i"), i, pClient->m_nIndex);
-									}
-								}
-							}
-						}
-
-						// Inform this player who is joined
-						{
-							Packet Packet(PACKET_EXISTINGMACHINES);
-							Packet.Write<Uint16>((Uint16)PeerCount);
-							Packet.Write<Uint16>((Uint16)m_MaxClients);
-							for (size_t i = 0; i < MAX_MACHINES; i++)
-							{
-								if (m_NetMachines.m_rgpMachines[i] != nullptr && m_NetMachines.m_rgpMachines[i]->m_bJoined)
-								{
-									Packet.Write<Uint32>(m_NetMachines.m_rgpMachines[i]->m_nIndex);
-									m_NetMachines.m_rgpMachines[i]->Write(&Packet, pClient);
-								}
-							}
-							//_glogprintf(_gstr("Sending PACKET_EXISTINGMACHINES to client %i"), pClient->m_nIndex);
-							pClient->SendPacket(&Packet, PACKETPRIORITY_DEFAULT, PACKETFLAGS_RELIABLE, PACKETORDERINGCHANNEL_NETMACHINES);
-						}
-					}
-
-					//_glogprintf(_gstr("Sending player to %i"), pClient->m_nIndex);
-					pClient->SendPlayer();
-
-					//_glogprintf(_gstr("Sending PACKET_JOINED to %i"), pClient->m_nIndex);
-					Packet Packet(PACKET_JOINED);
-					pClient->SendPacket(&Packet);
+					CArguments Args(1);
+					//Args.AddInt32(iLocalIndex);
+					Args.AddObject(pClient);
+					m_pOnPlayerJoinedEventType->Trigger(Args);
 				}
+
+				if (!bWasJoined)
+				{
+					// Inform everyone else we joined
+					// Calculate PeersSize also while we are looping here...
+					size_t PeerCount = 0;
+					{
+						for (size_t i = 0; i < MAX_MACHINES; i++)
+						{
+							if (m_NetMachines.m_rgpMachines[i] != nullptr && m_NetMachines.m_rgpMachines[i]->m_bJoined)
+							{
+								PeerCount++;
+
+								// Don't tell ourself we joined
+								if (m_NetMachines.m_rgpMachines[i] != pClient)
+								{
+									Packet Packet(PACKET_ADDMACHINE);
+
+									Packet.Write<Uint16>(1);
+									Packet.Write<Uint32>(pClient->m_nIndex);
+									if (pClient->Write(&Packet))
+										m_NetMachines.m_rgpMachines[i]->SendPacket(&Packet, PACKETPRIORITY_DEFAULT, PACKETFLAGS_RELIABLE, PACKETORDERINGCHANNEL_NETMACHINES);
+								}
+							}
+						}
+					}
+
+					// Inform this player who is joined
+					{
+						Packet Packet(PACKET_EXISTINGMACHINES);
+						Packet.Write<Uint16>((Uint16)PeerCount);
+						Packet.Write<Uint16>((Uint16)m_MaxClients);
+						for (size_t i = 0; i < MAX_MACHINES; i++)
+						{
+							if (m_NetMachines.m_rgpMachines[i] != nullptr && m_NetMachines.m_rgpMachines[i]->m_bJoined)
+							{
+								Packet.Write<Uint32>(m_NetMachines.m_rgpMachines[i]->m_nIndex);
+								m_NetMachines.m_rgpMachines[i]->Write(&Packet);
+							}
+						}
+						pClient->SendPacket(&Packet, PACKETPRIORITY_DEFAULT, PACKETFLAGS_RELIABLE, PACKETORDERINGCHANNEL_NETMACHINES);
+					}
+				}
+
+				pClient->SendPlayer();
+
+				Packet Packet(PACKET_JOINED);
+				pClient->SendPacket(&Packet);
 			}
 			break;
 		case PACKET_PLAYERSYNC:
@@ -819,7 +805,7 @@ void CBaseServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, St
 						auto Pos = (size_t)pStream->Tell();
 						pServerElement->ReadSyncPacket(pStream);
 						size_t Read = ((size_t)pStream->Tell() - Pos);
-						assert(Read == usSize); // ReadSyncPacket didn't read all the data
+						_gassert(Read == usSize); // ReadSyncPacket didn't read all the data
 						pStream->Seek(Pos + usSize, SEEK_SET);
 					}
 					else
@@ -1011,548 +997,43 @@ void CBaseServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, St
 				}
 			}
 			break;
-		case MAFIAPACKET_HUMAN_SHOOT:
+		case PACKET_DELETETHING:
 			{
-				int32_t nId;
-				if (!Reader.ReadInt32(&nId, 1))
-					return;
+				uint16_t usCount = 0;
+				Reader.ReadUInt16(&usCount, 1);
 
-				bool state = false;
-				Reader.ReadBoolean(state);
-
-				CVector3D vecShotPosition;
-				Reader.ReadVector3D(&vecShotPosition, 1);
-
-				CNetObject* pPed = m_pManager->FromId(nId);
-				if (pPed != nullptr && pPed->GetSyncer() == pClient)
+				for (size_t i = 0; i < usCount; i++)
 				{
-					{
-						Packet Packet(MAFIAPACKET_HUMAN_SHOOT);
-						Packet.Write<int32_t>(pPed->GetId());
-						Packet.Write<bool>(state);
-						Packet.Write<CVector3D>(vecShotPosition);
-						m_pManager->SendPacketExcluding(&Packet, pClient);
+					int32_t nId;
+					Reader.ReadInt32(&nId, 1);
 
-						// Scripting event
-						CArguments Args(3);
-						Args.AddObject(pPed);
-						Args.AddBoolean(state);
-						Args.AddVector3D(vecShotPosition);
-						bool bPreventDefault = false;
-						m_pManager->m_pOnPedShootEventType->Trigger(Args, bPreventDefault);
+					CNetObject* pElement = m_pManager->FromId(nId);
+					if (pElement != nullptr)
+					{
+						pElement->SetCreatedFor(pClient, false);
+
+						// Inform the peer2peer system that a client deleted this element
+						m_pManager->PossiblyDeleteObject(pElement);
 					}
 				}
 			}
 			break;
-		case MAFIAPACKET_HUMAN_THROWGRENADE:
-		{
-			int32_t nId;
-			if (!Reader.ReadInt32(&nId, 1))
-				return;
-
-			CVector3D vecShotPosition;
-			Reader.ReadVector3D(&vecShotPosition, 1);
-
-			CNetObject* pPed = m_pManager->FromId(nId);
-			if (pPed != nullptr && pPed->GetSyncer() == pClient)
+		case PACKET_SETSTREAMING:
 			{
-				{
-					Packet Packet(MAFIAPACKET_HUMAN_THROWGRENADE);
-					Packet.Write<int32_t>(pPed->GetId());
-					Packet.Write<CVector3D>(vecShotPosition);
-					m_pManager->SendPacketExcluding(&Packet, pClient);
+				bool bStreaming = false;
+				Reader.ReadBoolean(bStreaming);
 
-					// Scripting event
-					CArguments Args(2);
-					Args.AddObject(pPed);
-					Args.AddVector3D(vecShotPosition);
-					bool bPreventDefault = false;
-					m_pManager->m_pOnPedThrowGrenadeEventType->Trigger(Args, bPreventDefault);
-				}
-			}
-		}
-		break;
-		case MAFIAPACKET_HUMAN_DROPWEAP:
-			{
-				int32_t nId;
-				if (!Reader.ReadInt32(&nId, 1))
-					return;
-
-				CNetObject* pPed = m_pManager->FromId(nId);
-				if (pPed != nullptr && pPed->GetSyncer() == pClient)
-				{
-					{
-						Packet Packet(MAFIAPACKET_HUMAN_DROPWEAP);
-						Packet.Write<int32_t>(pPed->GetId());
-						m_pManager->SendPacketExcluding(&Packet, pClient);
-					}
-				}
+				pClient->m_bStreaming = bStreaming;
 			}
 			break;
-		case MAFIAPACKET_HUMAN_RELOAD:
-		{
-			int32_t nId;
-			if (!Reader.ReadInt32(&nId, 1))
-				return;
-
-			CNetObject* pPed = m_pManager->FromId(nId);
-			if (pPed != nullptr && pPed->GetSyncer() == pClient)
-			{
-				{
-					Packet Packet(MAFIAPACKET_HUMAN_RELOAD);
-					Packet.Write<int32_t>(pPed->GetId());
-					m_pManager->SendPacketExcluding(&Packet, pClient);
-				}
-			}
-		}
-		break;
-		case MAFIAPACKET_HUMAN_HOLSTER:
-		{
-			int32_t nId;
-			if (!Reader.ReadInt32(&nId, 1))
-				return;
-
-			CNetObject* pPed = m_pManager->FromId(nId);
-			if (pPed != nullptr && pPed->GetSyncer() == pClient)
-			{
-				{
-					Packet Packet(MAFIAPACKET_HUMAN_HOLSTER);
-					Packet.Write<int32_t>(pPed->GetId());
-					m_pManager->SendPacketExcluding(&Packet, pClient);
-				}
-			}
-		}
-		break;
-		case MAFIAPACKET_HUMAN_CHANGEWEAP:
-			{
-				int32_t nId;
-				if (!Reader.ReadInt32(&nId, 1))
-					return;
-
-				int32_t nWeapon;
-				if (!Reader.ReadInt32(&nWeapon, 1))
-					return;
-
-				CNetObject* pPed = m_pManager->FromId(nId);
-				if (pPed != nullptr && pPed->GetSyncer() == pClient)
-				{
-					CServerHuman *pServerHuman = (CServerHuman*)pPed;
-
-					pServerHuman->m_WeaponId = (int16_t)nWeapon;
-
-					{
-						Packet Packet(MAFIAPACKET_HUMAN_CHANGEWEAP);
-						Packet.Write<int32_t>(pPed->GetId());
-						Packet.Write<int32_t>(nWeapon);
-						m_pManager->SendPacketExcluding(&Packet, pClient);
-					}
-				}
-			}
-			break;
-		case MAFIAPACKET_HUMAN_HIT:
-		{
-			int32_t nTargetId;
-			if (!Reader.ReadInt32(&nTargetId, 1))
-				return;
-
-			//int32_t nAttackerId;
-			//if (!Reader.ReadInt32(&nAttackerId, 1))
-			//	return;
-
-			CVector3D vecPosition1;
-			if (!Reader.ReadVector3D(&vecPosition1, 1))
-				return;
-
-			CVector3D vecPosition2;
-			if (!Reader.ReadVector3D(&vecPosition2, 1))
-				return;
-
-			CVector3D vecPosition3;
-			if (!Reader.ReadVector3D(&vecPosition3, 1))
-				return;
-
-			int32_t iHitType;
-			if (!Reader.ReadInt32(&iHitType, 1))
-				return;
-
-			float fDamage;
-			if (!Reader.ReadSingle(&fDamage, 1))
-				return;
-
-			int32_t iBodyPart;
-			if (!Reader.ReadInt32(&iBodyPart, 1))
-				return;
-
-			CNetObject* pTargetPed = m_pManager->FromId(nTargetId);
-			//CNetObject* pAttackerPed = m_pManager->FromId(nAttackerId);
-			if (pTargetPed != nullptr && pTargetPed->GetSyncer() == pClient)
-			{
-				{
-					Packet Packet(MAFIAPACKET_HUMAN_HIT);
-					Packet.Write<int32_t>(pTargetPed->GetId());
-					//if (pAttackerPed != nullptr) {
-					//	Packet.Write<int32_t>(pAttackerPed->GetId());
-					//}
-					//else {
-					//	Packet.Write<int32_t>(INVALID_NETWORK_ID);
-					//}
-					Packet.Write<CVector3D>(vecPosition1);
-					Packet.Write<CVector3D>(vecPosition2);
-					Packet.Write<CVector3D>(vecPosition3);
-					Packet.Write<int32_t>(iHitType);
-					Packet.Write<float>(fDamage);
-					Packet.Write<int32_t>(iBodyPart);
-					m_pManager->SendPacketExcluding(&Packet, pClient);
-
-					// Scripting event
-					CArguments Args(6);
-					Args.AddObject(pTargetPed);
-					//if (pTargetPed != nullptr) {
-					//	Args.AddObject(pAttackerPed);
-					//}
-					//else {
-					//	Args.AddNull();
-					//}
-					Args.AddVector3D(vecPosition1);
-					Args.AddVector3D(vecPosition2);
-					Args.AddVector3D(vecPosition3);
-					Args.AddNumber(iHitType);
-					Args.AddNumber(fDamage);
-					Args.AddNumber(iBodyPart);
-					bool bPreventDefault = false;
-					m_pManager->m_pOnPedHitEventType->Trigger(Args, bPreventDefault);
-				}
-			}
-		}
-		break;
-
-		case MAFIAPACKET_HUMAN_DIE:
-			{
-				int32_t nTargetId;
-				if (!Reader.ReadInt32(&nTargetId, 1))
-					return;
-
-				int32_t nAttackerId;
-				if (!Reader.ReadInt32(&nAttackerId, 1))
-					return;
-
-				CNetObject* pTargetPed = m_pManager->FromId(nTargetId);
-				CNetObject* pAttackerPed = m_pManager->FromId(nAttackerId);
-				if (pTargetPed != nullptr && pTargetPed->GetSyncer() == pClient)
-				{
-					{
-						Packet Packet(MAFIAPACKET_HUMAN_DIE);
-						Packet.Write<int32_t>(pTargetPed->GetId());
-						if(pAttackerPed != nullptr) {
-							Packet.Write<int32_t>(pAttackerPed->GetId());
-						} else {
-							Packet.Write<int32_t>(INVALID_NETWORK_ID);
-						}
-						m_pManager->SendPacketExcluding(&Packet, pClient);
-
-						// Scripting event
-						CArguments Args(2);
-						Args.AddObject(pTargetPed);
-						if (pTargetPed != nullptr) {
-							Args.AddObject(pAttackerPed);
-						}
-						else {
-							Args.AddNull();
-						}
-						bool bPreventDefault = false;
-						m_pManager->m_pOnPedDeathEventType->Trigger(Args, bPreventDefault);
-					}
-				}
-			}
-			break;
-
-		case MAFIAPACKET_HUMAN_ENTERINGVEHICLE:
-		{
-			int32_t nPedId;
-			Reader.ReadInt32(&nPedId, 1);
-
-			int32_t nVehicleId;
-			Reader.ReadInt32(&nVehicleId, 1);
-
-			int8_t nSeat;
-			Reader.ReadInt8(&nSeat, 1);
-
-			int32_t nAction;
-			Reader.ReadInt32(&nAction, 1);
-
-			int32_t nUnknown;
-			Reader.ReadInt32(&nUnknown, 1);
-
-			CNetObject* pPed = m_pManager->FromId(nPedId);
-			CNetObject* pVehicle = m_pManager->FromId(nVehicleId);
-
-			if (pPed == nullptr
-			|| pVehicle == nullptr
-			|| pClient != pPed->GetSyncer()
-			|| nSeat < 0
-			|| nSeat > 20)
-			{
-				break;
-			}
-
-			{
-				Packet Packet(MAFIAPACKET_HUMAN_ENTERINGVEHICLE);
-				Packet.Write<int32_t>(pPed->GetId());
-				Packet.Write<int32_t>(pVehicle->GetId());
-				Packet.Write<int8_t>(nSeat);
-				Packet.Write<int32_t>(nAction);
-				Packet.Write<int32_t>(nUnknown);
-				m_pManager->SendPacketExcluding(&Packet, pClient);
-			}
-
-			if (nSeat == 0 && pVehicle->CanBeSyncer(pClient))
-			{
-				_glogprintf(_gstr("Setting vehicle %d syncer to %d"), pVehicle->GetId(), pClient->m_nIndex);
-				pVehicle->SetSyncer(pClient, true);
-			}
-		}
-		break;
-
-		case MAFIAPACKET_HUMAN_EXITINGVEHICLE:
-		{
-			int32_t nPedId;
-			Reader.ReadInt32(&nPedId, 1);
-
-			int32_t nVehicleId;
-			Reader.ReadInt32(&nVehicleId, 1);
-
-			int8_t nSeat;
-			Reader.ReadInt8(&nSeat, 1);
-
-			int32_t nAction;
-			Reader.ReadInt32(&nAction, 1);
-
-			int32_t nUnknown;
-			Reader.ReadInt32(&nUnknown, 1);
-
-			CNetObject* pPed = m_pManager->FromId(nPedId);
-			CNetObject* pVehicle = m_pManager->FromId(nVehicleId);
-
-			if (pPed == nullptr
-				|| pVehicle == nullptr
-				|| pClient != pPed->GetSyncer()
-				|| nSeat < 0
-				|| nSeat > 20)
-			{
-				break;
-			}
-
-			{
-				Packet Packet(MAFIAPACKET_HUMAN_EXITINGVEHICLE);
-				Packet.Write<int32_t>(pPed->GetId());
-				Packet.Write<int32_t>(pVehicle->GetId());
-				Packet.Write<int8_t>(nSeat);
-				Packet.Write<int32_t>(nAction);
-				Packet.Write<int32_t>(nUnknown);
-				m_pManager->SendPacketExcluding(&Packet, pClient);
-			}
-		}
-		break;
-
-		case MAFIAPACKET_HUMAN_EXITEDVEHICLE:
-		{
-			int32_t nPedId;
-			Reader.ReadInt32(&nPedId, 1);
-
-			int32_t nVehicleId;
-			Reader.ReadInt32(&nVehicleId, 1);
-
-			int8_t nSeat;
-			Reader.ReadInt8(&nSeat, 1);
-
-			int32_t nAction;
-			Reader.ReadInt32(&nAction, 1);
-
-			int32_t nUnknown;
-			Reader.ReadInt32(&nUnknown, 1);
-
-			CNetObject* pPed = m_pManager->FromId(nPedId);
-			CNetObject* pVehicle = m_pManager->FromId(nVehicleId);
-
-			if (pPed == nullptr
-				|| pVehicle == nullptr
-				|| pClient != pPed->GetSyncer()
-				|| nSeat < 0
-				|| nSeat > 20)
-			{
-				break;
-			}
-
-			{
-				Packet Packet(MAFIAPACKET_HUMAN_EXITEDVEHICLE);
-				Packet.Write<int32_t>(pPed->GetId());
-				Packet.Write<int32_t>(pVehicle->GetId());
-				Packet.Write<int8_t>(nSeat);
-				Packet.Write<int32_t>(nAction);
-				Packet.Write<int32_t>(nUnknown);
-				m_pManager->SendPacketExcluding(&Packet, pClient);
-			}
-		}
-		break;
-
-		case MAFIAPACKET_HUMAN_ENTEREDVEHICLE:
-		{
-			int32_t nPedId;
-			Reader.ReadInt32(&nPedId, 1);
-
-			int32_t nVehicleId;
-			Reader.ReadInt32(&nVehicleId, 1);
-
-			int8_t nSeat;
-			Reader.ReadInt8(&nSeat, 1);
-
-			int32_t nAction;
-			Reader.ReadInt32(&nAction, 1);
-
-			int32_t nUnknown;
-			Reader.ReadInt32(&nUnknown, 1);
-
-			CNetObject* pPed = m_pManager->FromId(nPedId);
-			CNetObject* pVehicle = m_pManager->FromId(nVehicleId);
-
-			if (pPed == nullptr
-				|| pVehicle == nullptr
-				|| pClient != pPed->GetSyncer()
-				|| nSeat < 0
-				|| nSeat > 20)
-			{
-				break;
-			}
-
-			{
-				Packet Packet(MAFIAPACKET_HUMAN_ENTEREDVEHICLE);
-				Packet.Write<int32_t>(pPed->GetId());
-				Packet.Write<int32_t>(pVehicle->GetId());
-				Packet.Write<int8_t>(nSeat);
-				Packet.Write<int32_t>(nAction);
-				Packet.Write<int32_t>(nUnknown);
-				m_pManager->SendPacketExcluding(&Packet, pClient);
-			}
-
-			if (nSeat == 0 && pVehicle->CanBeSyncer(pClient))
-			{
-				_glogprintf(_gstr("Setting vehicle %d syncer to %d"), pVehicle->GetId(), pClient->m_nIndex);
-				pVehicle->SetSyncer(pClient, true);
-			}
-		}
-		break;
-
-		case MAFIAPACKET_HUMAN_JACKVEHICLE:
-		{
-			int32_t nPedId;
-			Reader.ReadInt32(&nPedId, 1);
-
-			int32_t nVehicleId;
-			Reader.ReadInt32(&nVehicleId, 1);
-
-			int8_t nSeat;
-			Reader.ReadInt8(&nSeat, 1);
-
-			CNetObject* pPed = m_pManager->FromId(nPedId);
-			CNetObject* pVehicle = m_pManager->FromId(nVehicleId);
-
-			if (pPed == nullptr
-				|| pVehicle == nullptr
-				|| pClient != pPed->GetSyncer()
-				|| nSeat < 0
-				|| nSeat > 20)
-			{
-				break;
-			}
-
-			{
-				Packet Packet(MAFIAPACKET_HUMAN_JACKVEHICLE);
-				Packet.Write<int32_t>(pPed->GetId());
-				Packet.Write<int32_t>(pVehicle->GetId());
-				Packet.Write<int8_t>(nSeat);
-				m_pManager->SendPacketExcluding(&Packet, pClient);
-			}
-
-			if (nSeat == 0)
-			{
-				pVehicle->SetSyncer(pClient);
-			}
-		}
-		break;
-
-		case MAFIAPACKET_VEHICLE_CREATE:
-		{
-			uint64_t nLocalVehicleId = 0;
-			Reader.ReadUInt64(&nLocalVehicleId, 1);
-
-			//CNetObject* pServerElement = m_pManager->FromId(nLocalVehicleId);
-			//if (pServerElement == nullptr)
-
-			Strong<CServerVehicle> pServerVehicle;
-
-			{
-				pServerVehicle = Strong<CServerVehicle>::New(m_pManager->Create(ELEMENT_VEHICLE));
-
-				if (pServerVehicle == nullptr)
-					return;
-
-				pServerVehicle->m_pResource = nullptr;
-				pServerVehicle->ReadCreatePacket(pStream);
-
-				//if(!m_pManager->RegisterObject(pServerVehicle))
-				//	return;
-
-				pServerVehicle->SetCreatedFor(pClient, true);
-				pServerVehicle->SetSyncer(pClient, true);
-			}
-
-			{
-				Packet Packet(MAFIAPACKET_ELEMENT_UPDATE_ID);
-				Packet.Write<uint64_t>(nLocalVehicleId);
-				Packet.Write<int32_t>(pServerVehicle->GetId());
-				pClient->SendPacket(&Packet);
-			}
-		}
-		break;
-
-		/*
-		case MAFIAPACKET_ELEMENT_REMOVE:
-		{
-			bool bRemoveByElementId;
-			Reader.ReadBoolean(bRemoveByElementId);
-
-			if (bRemoveByElementId)
-			{
-				uint32_t nServerVehicleId = 0;
-				Reader.ReadUInt32(&nServerVehicleId, 1);
-
-				CServerVehicle* pServerVehicle = (CServerVehicle*)m_pManager->FromId(nServerVehicleId);
-
-				if (pServerVehicle != nullptr)
-				{
-					printf("Destroyed vehicle ID %i\n", pServerVehicle->GetId());
-
-					{
-						Packet Packet(MAFIAPACKET_ELEMENT_REMOVE);
-						Packet.Write<int32_t>(pServerVehicle->GetId());
-						m_pManager->SendPacketExcluding(&Packet, pClient);
-					}
-
-					m_pManager->Remove(pServerVehicle);
-				}
-			}
-			else
-			{
-				uint64_t nServerVehicleGuid = 0;
-				Reader.ReadUInt64(&nServerVehicleGuid, 1);
-			}
-		}
-		break;
-		*/
-
 		default:
 			break;
 	}
+}
+
+bool CBaseServer::ReceiveDatagram(CNetSocket* pNetSocket)
+{
+	return m_UGP.ReceiveDatagram(pNetSocket);
 }
 
 void CBaseServer::SetGame(const GChar* pszName)
@@ -1577,25 +1058,16 @@ void CBaseServer::SendSync(CNetMachine* pClient)
 	m_pManager->SendSync(pClient, m_SyncPacketPriority, m_SyncPacketFlags, true);
 }
 
-bool CBaseServer::ReceiveDatagram(CNetSocket* pNetSocket)
-{
-	return m_UGP.ReceiveDatagram(pNetSocket);
-}
-
 void CBaseServer::ManageElements(CNetMachine* pClient)
 {
 	if (!pClient->m_bJoined)
 		return;
 
-	m_pManager->CreateObjectsAsNeeded(pClient, ELEMENT_VEHICLE); // create vehicles first
-	m_pManager->DeleteFarAwayStuff(pClient, ELEMENT_PED);
-	m_pManager->DeleteFarAwayStuff(pClient, ELEMENT_VEHICLE);
-
-	m_pManager->CreateObjectsAsNeeded(pClient, NETOBJECT_NETOBJECT);
-	m_pManager->DeleteFarAwayStuff(pClient, NETOBJECT_NETOBJECT);
+	m_pManager->CreateObjectsAsNeeded(pClient);
+	m_pManager->DeleteFarAwayStuff(pClient);
 }
 
-void CBaseServer::SendAllSync(void)
+void CBaseServer::SendAllSync()
 {
 	if (m_SyncMethod == SYNCMETHOD_INTERVAL)
 	{
@@ -1705,7 +1177,6 @@ bool CBaseServer::ParseConfig(const CServerConfiguration& Config)
 
 	_gstrlcpy(m_szBindIP, Config.GetStringValue(_gstr("bindip"), _gstr("")), ARRAY_COUNT(m_szBindIP));
 	_gstrlcpy(m_szServerName, Config.GetStringValue(_gstr("servername"), _gstr("")), ARRAY_COUNT(m_szServerName));
-	_gstrlcpy(m_szLevel, Config.GetStringValue(_gstr("mapname"), _gstr("")), ARRAY_COUNT(m_szLevel));
 	_gstrlcpy(m_szGameMode, Config.GetStringValue(_gstr("gamemode"), _gstr("")), ARRAY_COUNT(m_szGameMode));
 
 	_gstrlcpy(m_szServerListing, Config.GetStringValue(_gstr("serverlistingurl"), _gstr("")), ARRAY_COUNT(m_szServerListing));
@@ -1726,9 +1197,9 @@ bool CBaseServer::ParseConfig(const CServerConfiguration& Config)
 		return false;
 	}
 
-	if (m_MaxClients > 255)
+	if (m_MaxClients > 127)
 	{
-		_glogerrorprintf(_gstr("The max players should not be set to anything more than 255!"));
+		_glogerrorprintf(_gstr("The max players should not be set to anything more than 127!"));
 		return false;
 	}
 
@@ -1833,7 +1304,6 @@ bool CBaseServer::ParseConfig(const CServerConfiguration& Config)
 		//_glogprintf(_gstr("Minimum client version: %d.%d.%d"), m_uiMinMajorVersion, m_uiMinMinorVersion, m_uiMinPatchVersion);
 	}
 
-	m_pManager = new CMafiaServerManager(m_pContext, this);
 	m_pManager->m_pNetMachines = &m_NetMachines;
 
 	m_Password.SetPassword(Config.GetStringValue(_gstr("password"), nullptr));
@@ -1949,28 +1419,27 @@ bool CBaseServer::ParseConfig(const CServerConfiguration& Config)
 		}
 	}
 
-	SetGame(Config.GetStringValue(_gstr("game"), _gstr("mafia:one")));
-
-	if (m_GameId == GAME_MAFIA_ONE)
-	{
-		auto pStream = Strong<Stream>::New(m_pContext->GetFileSystem()->Open(_gstr("/MafiaInterface/MafiaOneEnums.h"), false));
-		if (pStream != nullptr)
-			m_ResourceMgr.m_pDefineHandlers->Process(pStream, _gstr("MafiaOneEnums.h"));
-	}
+	SetGame(Config.GetStringValue(_gstr("game"), _gstr("gta:iii")));
 
 	const CElementChunk* pGamesElement = Config.m_pConfig->FirstChildElement(_gstr("games"));
 	if (pGamesElement != nullptr)
 	{
+		//if (pGamesElement->FirstChildElement("gta:iii") != NULL)
+		//	m_Games.push_back(GAME_GTA_III);
+		//if (pGamesElement->FirstChildElement("gta:vc") != NULL)
+		//	m_Games.push_back(GAME_GTA_VC);
+		//if (pGamesElement->FirstChildElement("gta:sa") != NULL)
+		//	m_Games.push_back(GAME_GTA_SA);
+		//if (pGamesElement->FirstChildElement("gta:ug") != NULL)
+		//	m_Games.push_back(GAME_GTA_UG);
+		//if (pGamesElement->FirstChildElement("gta:iv") != NULL)
+		//	m_Games.push_back(GAME_GTA_IV);
+		//if (pGamesElement->FirstChildElement("gta:iv_eflc") != NULL)
+		//	m_Games.push_back(GAME_GTA_IV_EFLC);
 	}
 
 	m_fStreamInDistance = Config.GetFloatValue(_gstr("streamindistance"), 100.0f);
 	m_fStreamOutDistance = Config.GetFloatValue(_gstr("streamoutdistance"), 200.0f);
-
-	m_fPickupStreamInDistance = Config.GetFloatValue(_gstr("pickupstreamindistance"), 50.0f);
-	m_fPickupStreamOutDistance = Config.GetFloatValue(_gstr("pickupstreamoutdistance"), 100.0f);
-
-	m_bNametags = Config.GetBoolValue(_gstr("nametags"), true);
-	m_bWeatherSync = Config.GetBoolValue(_gstr("weathersync"), true);
 
 	return true;
 }
@@ -1992,6 +1461,81 @@ bool CBaseServer::LoadConfig(const GChar* pszPath)
 	if (!ParseConfig(Config))
 		return false;
 	return true;
+}
+
+void CBaseServer::RegisterConfig()
+{
+	m_ServerConfig.RegisterCallback(_gstr("server_name"), this, [](const GChar* pszName, const GChar* pszValue, void* pUser) {
+		CBaseServer* pServer = (CBaseServer*)pUser;
+		_gstrlcpy(pServer->m_szServerName, pszValue, ARRAY_COUNT(pServer->m_szServerName));
+		return true;
+	});
+
+	m_ServerConfig.RegisterCallback(_gstr("listen_ip"), this, [](const GChar* pszName, const GChar* pszValue, void* pUser) {
+		CBaseServer* pServer = (CBaseServer*)pUser;
+		_gstrlcpy(pServer->m_szBindIP, pszValue, ARRAY_COUNT(pServer->m_szBindIP));
+		return true;
+	});
+
+	m_ServerConfig.RegisterCallback(_gstr("listen_port"), this, [](const GChar* pszName, int32_t iValue, void* pUser) {
+		CBaseServer* pServer = (CBaseServer*)pUser;
+		pServer->m_usPort = (uint16_t)iValue;
+		return true;
+	});
+
+	m_ServerConfig.RegisterCallback(_gstr("max_players"), this, [](const GChar* pszName, int32_t iValue, void* pUser) {
+		CBaseServer* pServer = (CBaseServer*)pUser;
+		pServer->m_MaxClients = (size_t)iValue;
+		return true;
+	});
+
+	m_ServerConfig.RegisterCallback(_gstr("password"), this, [](const GChar* pszName, const GChar* pszValue, void* pUser) {
+		CBaseServer* pServer = (CBaseServer*)pUser;
+		pServer->m_Password.SetPassword(pszValue);
+		return true;
+	});
+
+	m_ServerConfig.RegisterCallback(_gstr("owner"), this, [](const GChar* pszName, const GChar* pszValue, void* pUser) {
+		CBaseServer* pServer = (CBaseServer*)pUser;
+		pServer->SetRule(_gstr("Owner"), pszValue);
+		return true;
+	});
+
+	m_ServerConfig.RegisterCallback(_gstr("website"), this, [](const GChar* pszName, const GChar* pszValue, void* pUser) {
+		CBaseServer* pServer = (CBaseServer*)pUser;
+		pServer->SetRule(_gstr("Website"), pszValue);
+		return true;
+	});
+
+	m_ServerConfig.RegisterCallback(_gstr("gamemode_name"), this, [](const GChar* pszName, const GChar* pszValue, void* pUser) {
+		CBaseServer* pServer = (CBaseServer*)pUser;
+		_gstrlcpy(pServer->m_szGameMode, pszValue, ARRAY_COUNT(pServer->m_szGameMode));
+		return true;
+	});
+
+	m_ServerConfig.RegisterCallback(_gstr("map_name"), this, [](const GChar* pszName, const GChar* pszValue, void* pUser) {
+		CBaseServer* pServer = (CBaseServer*)pUser;
+		_gstrlcpy(pServer->m_szMap, pszValue, ARRAY_COUNT(pServer->m_szMap));
+		return true;
+	});
+
+	m_ServerConfig.RegisterCallback(_gstr("rcon"), this, [](const GChar* pszName, bool bValue, void* pUser) {
+		CBaseServer* pServer = (CBaseServer*)pUser;
+		pServer->m_bRCon = bValue;
+		return true;
+	});
+
+	m_ServerConfig.RegisterCallback(_gstr("rcon_port"), this, [](const GChar* pszName, int32_t iValue, void* pUser) {
+		CBaseServer* pServer = (CBaseServer*)pUser;
+		pServer->m_usRConPort = (uint16_t)iValue;
+		return true;
+	});
+
+	m_ServerConfig.RegisterCallback(_gstr("rcon_pass"), this, [](const GChar* pszName, const GChar* pszValue, void* pUser) {
+		CBaseServer* pServer = (CBaseServer*)pUser;
+		pServer->m_RCon.m_Password.SetPassword(pszValue);
+		return true;
+	});
 }
 
 bool CBaseServer::StartInitialResources()
@@ -2025,7 +1569,7 @@ bool CBaseServer::StartInitialResources()
 	return iErrors == 0;
 }
 
-bool CBaseServer::StartServer(void)
+bool CBaseServer::StartServer()
 {
 	_glogprintf(_gstr("Server is starting..."));
 
@@ -2066,15 +1610,13 @@ bool CBaseServer::StartServer(void)
 	}
 
 	{
-		m_pConsole = Strong<CNetMachine>::New(new CMafiaClient(m_pManager));
+		m_pConsole = Strong<CNetMachine>::New(NewMachine(m_pManager));
 		m_pConsole->m_Game = m_Game;
 		m_pConsole->m_GameId = m_GameId;
-		//m_pConsole->m_uiVersion = m_uiVersionMax;
 		m_pConsole->m_ucGameVersion = 0;
 		m_pConsole->m_nIndex = 255;
 		m_pConsole->m_bAdministrator = true;
 		m_pConsole->m_bConsole = true;
-		m_pConsole->m_bJoined = true; // Consequences?
 		m_pConsole->SetName(_gstr("Console"));
 		m_NetMachines.m_nOurMachineId = 255;
 		m_NetMachines.m_rgpMachines[255] = m_pConsole;
@@ -2113,7 +1655,7 @@ void CBaseServer::StartInputThread()
 	}
 }
 
-bool CBaseServer::StartMasterlist(void)
+bool CBaseServer::StartMasterlist()
 {
 	_glogprintf(_gstr("Connecting to the server listing..."));
 	GChar szURL[256];
@@ -2128,7 +1670,7 @@ bool CBaseServer::StartMasterlist(void)
 	return true;
 }
 
-bool CBaseServer::OnFrame(void)
+bool CBaseServer::OnFrame()
 {
 	CLockable::CLock Lock(&m_Lock, true);
 
@@ -2160,7 +1702,7 @@ bool CBaseServer::OnFrame(void)
 	return true;
 }
 
-void CBaseServer::MainLoop(void)
+void CBaseServer::MainLoop()
 {
 	while (OnFrame())
 	{
@@ -2223,30 +1765,11 @@ void CBaseServer::SetServerName(const GChar* pszName)
 	SendGameMode(nullptr);
 }
 
-void CBaseServer::SetMapName(const GChar* pszName)
-{
-	_gstrlcpy(m_szLevel, pszName, ARRAY_COUNT(m_szLevel));
-
-	SendMapName(nullptr);
-}
-
 void CBaseServer::SendServerName(CNetMachine* pClient)
 {
 	Packet Packet(PACKET_SETSERVERNAME);
 	CBinaryWriter Writer(&Packet);
 	Writer.WriteString(m_szServerName);
-	if (pClient == nullptr)
-		SendEveryonePacket(&Packet, PACKETPRIORITY_DEFAULT, PACKETFLAGS_RELIABLE, PACKETORDERINGCHANNEL_INFO);
-	else
-		pClient->SendPacket(&Packet, PACKETPRIORITY_DEFAULT, PACKETFLAGS_RELIABLE, PACKETORDERINGCHANNEL_INFO);
-}
-
-void CBaseServer::SendMapName(CNetMachine* pClient)
-{
-	Packet Packet(MAFIAPACKET_CHANGEMAP);
-	CBinaryWriter Writer(&Packet);
-	Writer.WriteString(m_szLevel);
-
 	if (pClient == nullptr)
 		SendEveryonePacket(&Packet, PACKETPRIORITY_DEFAULT, PACKETFLAGS_RELIABLE, PACKETORDERINGCHANNEL_INFO);
 	else
@@ -2330,81 +1853,4 @@ const GChar* CBaseServer::GetRule(const GChar* pszKey)
 			return Rule.m_Value.c_str();
 	}
 	return nullptr;
-}
-
-void CBaseServer::SyncroniseEnterVehicle(CServerHuman* pHuman, CServerVehicle* pVehicle, bool bDriver)
-{
-}
-
-void CBaseServer::SyncroniseExitVehicle(CServerHuman* pHuman)
-{
-}
-
-void CBaseServer::RegisterConfig()
-{
-		m_ServerConfig.RegisterCallback(_gstr("server_name"), this, [](const GChar* pszName, const GChar* pszValue, void* pUser) {
-		CBaseServer* pServer = (CBaseServer*)pUser;
-		_gstrlcpy(pServer->m_szServerName, pszValue, ARRAY_COUNT(pServer->m_szServerName));
-		return true;
-	});
-
-	m_ServerConfig.RegisterCallback(_gstr("listen_ip"), this, [](const GChar* pszName, const GChar* pszValue, void* pUser) {
-		CBaseServer* pServer = (CBaseServer*)pUser;
-		_gstrlcpy(pServer->m_szBindIP, pszValue, ARRAY_COUNT(pServer->m_szBindIP));
-		return true;
-	});
-
-	m_ServerConfig.RegisterCallback(_gstr("listen_port"), this, [](const GChar* pszName, int32_t iValue, void* pUser) {
-		CBaseServer* pServer = (CBaseServer*)pUser;
-		pServer->m_usPort = (uint16_t)iValue;
-		return true;
-	});
-
-	m_ServerConfig.RegisterCallback(_gstr("max_players"), this, [](const GChar* pszName, int32_t iValue, void* pUser) {
-		CBaseServer* pServer = (CBaseServer*)pUser;
-		pServer->m_MaxClients = (size_t)iValue;
-		return true;
-	});
-
-	m_ServerConfig.RegisterCallback(_gstr("password"), this, [](const GChar* pszName, const GChar* pszValue, void* pUser) {
-		CBaseServer* pServer = (CBaseServer*)pUser;
-		pServer->m_Password.SetPassword(pszValue);
-		return true;
-	});
-
-	m_ServerConfig.RegisterCallback(_gstr("owner"), this, [](const GChar* pszName, const GChar* pszValue, void* pUser) {
-		CBaseServer* pServer = (CBaseServer*)pUser;
-		pServer->SetRule(_gstr("Owner"), pszValue);
-		return true;
-	});
-
-	m_ServerConfig.RegisterCallback(_gstr("website"), this, [](const GChar* pszName, const GChar* pszValue, void* pUser) {
-		CBaseServer* pServer = (CBaseServer*)pUser;
-		pServer->SetRule(_gstr("Website"), pszValue);
-		return true;
-	});
-
-	m_ServerConfig.RegisterCallback(_gstr("gamemode_name"), this, [](const GChar* pszName, const GChar* pszValue, void* pUser) {
-		CBaseServer* pServer = (CBaseServer*)pUser;
-		_gstrlcpy(pServer->m_szGameMode, pszValue, ARRAY_COUNT(pServer->m_szGameMode));
-		return true;
-	});
-
-	m_ServerConfig.RegisterCallback(_gstr("rcon"), this, [](const GChar* pszName, bool bValue, void* pUser) {
-		CBaseServer* pServer = (CBaseServer*)pUser;
-		pServer->m_bRCon = bValue;
-		return true;
-	});
-
-	m_ServerConfig.RegisterCallback(_gstr("rcon_port"), this, [](const GChar* pszName, int32_t iValue, void* pUser) {
-		CBaseServer* pServer = (CBaseServer*)pUser;
-		pServer->m_usRConPort = (uint16_t)iValue;
-		return true;
-	});
-
-	m_ServerConfig.RegisterCallback(_gstr("rcon_pass"), this, [](const GChar* pszName, const GChar* pszValue, void* pUser) {
-		CBaseServer* pServer = (CBaseServer*)pUser;
-		pServer->m_RCon.m_Password.SetPassword(pszValue);
-		return true;
-	});
 }

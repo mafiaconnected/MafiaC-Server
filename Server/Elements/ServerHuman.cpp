@@ -1,7 +1,10 @@
 
 #include "pch.h"
-#include "Server.h"
+#include "MafiaServer.h"
 #include "MafiaServerManager.h"
+#include "ServerHuman.h"
+
+class CServerVehicle;
 
 CServerHuman::CServerHuman(CMafiaServerManager* pServerManager) : CServerEntity(pServerManager)
 {

@@ -1,6 +1,5 @@
 
 #include "pch.h"
-#include "Server.h"
 #include "ServerConfiguration.h"
 
 CServerConfiguration::CServerConfiguration()

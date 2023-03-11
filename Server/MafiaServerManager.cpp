@@ -1,7 +1,10 @@
 ﻿
+
 #include "pch.h"
-#include "Server.h"
+#include "MafiaServer.h"
 #include "MafiaServerManager.h"
+#include "Peer2PeerSystem.h"
+#include "Elements/Elements.h"
 #include "Utils/VectorTools.h"
 
 CMafiaClient::CMafiaClient(CNetObjectMgr* pServer) :
@@ -20,12 +23,12 @@ void CMafiaClient::SpawnPlayer(const CVector3D& vecPos, float fRotation, const G
 	_gstrcpy_s(pPlayer->m_szModel, ARRAY_COUNT(pPlayer->m_szModel), modelName);
 	pPlayer->SetSyncer(this, true);
 	pPlayer->SetHeading(fRotation);
-	
+
 	// The special "set position" packet was fucking this up
 	// I removed the packet send for now. This will just update the net object's position data
 	pPlayer->SetPosition(vecPos);
 	pPlayer->SetRotation(CVecTools::ComputeDirEuler(fRotation));
-	
+
 	if (!m_pNetObjectMgr->RegisterNetObject(pPlayer))
 		return;
 
@@ -35,8 +38,10 @@ void CMafiaClient::SpawnPlayer(const CVector3D& vecPos, float fRotation, const G
 	pPlayer->OnSpawned();
 }
 
-CMafiaServerManager::CMafiaServerManager(Context* pContext, CServer* pServer) :
-	CServerManager(pContext, pServer)
+CMafiaServerManager::CMafiaServerManager(Context* pContext, CMafiaServer* pServer) :
+	CServerManager(pContext, pServer),
+	m_pMafiaServer(pServer),
+	m_Peer2Peer(this)
 {
 	m_Games.Register(_gstr("mafia:one"), GAME_MAFIA_ONE);
 	m_Games.Register(_gstr("mafia:two"), GAME_MAFIA_TWO);
@@ -802,7 +807,7 @@ static bool FunctionCreateDummyElement(IScriptState* pState, int argc, void* pUs
 		pState->Error(_gstr("Failed to create dummy element"));
 		return false;
 	}
-	
+
 	const GChar* sModel = _gstr("");
 
 	pDummyElement->SetModel(sModel);
@@ -861,14 +866,14 @@ static bool FunctionCreateVehicle(IScriptState* pState, int argc, void* pUser)
 	//	angle += twoPi;
 	//while (angle > twoPi)
 	//	angle -= twoPi;
-	
+
 	Strong<CServerVehicle> pServerVehicle;
 
 	pServerVehicle = Strong<CServerVehicle>::New(pServerManager->Create(ELEMENT_VEHICLE));
 
 	//angle = CVecTools::RadToDeg(angle);
 	CVector3D vecRot = CVecTools::ComputeDirEuler(angle);
-	
+
 	_glogprintf(_gstr("ROTATION: %f, %f, %f"), vecRot.x, vecRot.y, vecRot.z);
 
 	pServerVehicle->SetModel(sModel);
@@ -1041,20 +1046,6 @@ static bool FunctionGetServerStreamOutDistance(IScriptState* pState, int argc, v
 	return true;
 }
 
-static bool FunctionGetServerPickupStreamInDistance(IScriptState* pState, int argc, void* pUser)
-{
-	CMafiaServerManager* pServerManager = (CMafiaServerManager*)pUser;
-	pState->ReturnNumber(pServerManager->m_pServer->m_fPickupStreamInDistance);
-	return true;
-}
-
-static bool FunctionGetServerPickupStreamOutDistance(IScriptState* pState, int argc, void* pUser)
-{
-	CMafiaServerManager* pServerManager = (CMafiaServerManager*)pUser;
-	pState->ReturnNumber(pServerManager->m_pServer->m_fPickupStreamOutDistance);
-	return true;
-}
-
 static bool FunctionGetServerLogPath(IScriptState* pState, int argc, void* pUser)
 {
 	CMafiaServerManager* pServerManager = (CMafiaServerManager*)pUser;
@@ -1065,7 +1056,7 @@ static bool FunctionGetServerLogPath(IScriptState* pState, int argc, void* pUser
 static bool FunctionGetServerSyncLocalEntities(IScriptState* pState, int argc, void* pUser)
 {
 	CMafiaServerManager* pServerManager = (CMafiaServerManager*)pUser;
-	pState->ReturnBoolean(pServerManager->m_pServer->m_bSyncLocalEntities);
+	pState->ReturnBoolean(pServerManager->m_pMafiaServer->m_bSyncLocalEntities);
 	return true;
 }
 

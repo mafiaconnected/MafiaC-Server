@@ -5,9 +5,9 @@ class CServer;
 class CRConServer : public WebConnection
 {
 public:
-	CRConServer(CServer* pServer);
+	CRConServer(CBaseServer* pServer);
 
-	CServer* m_pServer;
+	CBaseServer* m_pServer;
 	CSecurePassword m_Password;
 
 	virtual void ProcessPacket(mg_connection* nc, unsigned int PacketID, Stream* pStream) override;

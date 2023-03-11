@@ -1,7 +1,9 @@
 
 #include "pch.h"
-#include "Server.h"
+#include "MafiaServer.h"
 #include "MafiaServerManager.h"
+#include "ServerEntity.h"
+
 #include "Utils/VectorTools.h"
 
 CServerEntity::CServerEntity(CMafiaServerManager* pServerManager) : CNetObject(pServerManager)
@@ -20,7 +22,6 @@ CServerEntity::CServerEntity(CMafiaServerManager* pServerManager) : CNetObject(p
 	//m_szModel = L"";
 	m_nRelativeElement = INVALID_NETWORK_ID;
 	m_nRef = -1;
-	m_pServerManager = pServerManager;
 }
 
 void CServerEntity::SetHeading(float fHeading)
@@ -114,7 +115,7 @@ bool CServerEntity::ReadCreatePacket(Stream* pStream)
 	if (Packet.position.x != NAN && Packet.position.y != NAN && Packet.position.z != NAN) {
 		m_Position = Packet.position;
 	}
-	
+
 	if (Packet.positionRel.x != NAN && Packet.positionRel.y != NAN && Packet.positionRel.z != NAN) {
 		m_RelPosition = Packet.positionRel;
 	}
@@ -122,7 +123,7 @@ bool CServerEntity::ReadCreatePacket(Stream* pStream)
 	if (Packet.rotation.x != NAN && Packet.rotation.y != NAN && Packet.rotation.z != NAN) {
 		m_Rotation = Packet.rotation;
 	}
-	
+
 	if (Packet.rotationRel.x != NAN && Packet.rotationRel.y != NAN && Packet.rotationRel.z != NAN) {
 		m_RelRotation = Packet.rotationRel;
 	}

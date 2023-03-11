@@ -1,8 +1,10 @@
 
 #include "pch.h"
-#include "Server.h"
+#include "BaseServer.h"
 #include "RConServer.h"
 #include <mongoose.h>
+
+using namespace Galactic3D;
 
 class CRConLogger : public Logger
 {
@@ -31,7 +33,7 @@ void CRConLogger::Log(eLogType LogType, const GChar* pszMessage)
 	m_pServer->Log(m_pConnection, LogType, pszMessage);
 }
 
-CRConServer::CRConServer(CServer* pServer) : m_pServer(pServer)
+CRConServer::CRConServer(CBaseServer* pServer) : m_pServer(pServer)
 {
 }
 

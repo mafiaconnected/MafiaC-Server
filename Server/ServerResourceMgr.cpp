@@ -3,13 +3,13 @@
 #include "ServerResourceMgr.h"
 #include "MafiaServerManager.h"
 #include <mongoose.h>
-#include "Server.h"
+#include "BaseServer.h"
 
 using namespace Galactic3D;
 
-CServerResourceMgr::CServerResourceMgr(Galactic3D::Context* pContext, CNetCompatibilityShim* pNetGame) : CNetGameResourceMgr(pContext)
+CServerResourceMgr::CServerResourceMgr(Galactic3D::Context* pContext, CBaseServer* pServer) : CNetGameResourceMgr(pContext)
 {
-	m_pNetGame = pNetGame;
+	m_pServer = pServer;
 	m_bIsServer = true;
 	m_pCommandHandlers->m_bClientThere = true;
 	m_pNetworkHandlers->m_bClientThere = true;
@@ -38,7 +38,7 @@ void CServerResourceMgr::UpdateAllResource(CNetCompatibilityShim* pNetGame, cons
 void CServerResourceMgr::RefreshResourceState(CResource* pResource)
 {
 	if (pResource->IsStarted())
-		UpdateAResource(m_pNetGame,pResource);
+		UpdateAResource(m_pServer, pResource);
 	else
 	{
 		Packet Packet(PACKET_REMOVERESOURCE);
@@ -46,25 +46,23 @@ void CServerResourceMgr::RefreshResourceState(CResource* pResource)
 		uint32_t uiHash = CRC32Hash::GetHash(pResource->m_Name.c_str(), pResource->m_Name.size(), true);
 		Packet.Write<uint32_t>(uiHash);
 
-		m_pNetGame->SendEveryonePacket(&Packet, PACKETPRIORITY_LOW, PACKETFLAGS_RELIABLE, PACKETORDERINGCHANNEL_RESOURCES);
+		m_pServer->SendEveryonePacket(&Packet, PACKETPRIORITY_LOW, PACKETFLAGS_RELIABLE, PACKETORDERINGCHANNEL_RESOURCES);
 	}
 }
 
 void CServerResourceMgr::RemoveThingsAssociatedWithResource(CResource* pResource)
 {
-	CServer* pServer = static_cast<CServer*>(m_pNetGame);
-
-	for (size_t i=0; i<pServer->m_pManager->m_Objects.GetSize(); i++)
+	for (size_t i=0; i<m_pServer->m_pManager->m_Objects.GetSize(); i++)
 	{
-		if (pServer->m_pManager->m_Objects.IsUsedAt(i))
+		if (m_pServer->m_pManager->m_Objects.IsUsedAt(i))
 		{
-			CNetObject* pObject = pServer->m_pManager->m_Objects.GetAt(i);
+			CNetObject* pObject = m_pServer->m_pManager->m_Objects.GetAt(i);
 
 			if (pObject != nullptr)
 			{
 				if (pObject->m_pResource == pResource)
 				{
-					pServer->m_pManager->DestroyObject(pObject);
+					m_pServer->m_pManager->DestroyObject(pObject);
 				}
 			}
 		}

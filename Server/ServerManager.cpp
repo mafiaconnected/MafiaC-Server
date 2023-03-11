@@ -1,11 +1,11 @@
 
 #include "pch.h"
 #include "ServerManager.h"
-#include "Server.h"
+#include "BaseServer.h"
 
 using namespace Galactic3D;
 
-CServerManager::CServerManager(Context* pContext, CServer* pServer) :
+CServerManager::CServerManager(Context* pContext, CBaseServer* pServer) :
 	CManager(pContext),
 	CNetObjectMgr(&pServer->m_ResourceMgr, true)
 {

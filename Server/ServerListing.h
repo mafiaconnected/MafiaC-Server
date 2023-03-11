@@ -1,6 +1,6 @@
 #pragma once
 
-class CServer;
+class CBaseServer;
 
 enum eMasterlistState
 {
@@ -14,10 +14,10 @@ enum eMasterlistState
 class CMasterlistAnnouncer : public Galactic3D::WebConnection
 {
 public:
-	CMasterlistAnnouncer(CServer* pServer);
+	CMasterlistAnnouncer(CBaseServer* pServer);
 
 protected:
-	CServer* m_pServer;
+	CBaseServer* m_pServer;
 	float m_fRetryTime;
 	eMasterlistState m_OldState;
 	eMasterlistState m_State;

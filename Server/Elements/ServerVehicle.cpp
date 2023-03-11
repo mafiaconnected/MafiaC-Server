@@ -1,8 +1,11 @@
 
 #include "pch.h"
-#include "Server.h"
+#include "MafiaServer.h"
 #include "MafiaServerManager.h"
+#include "ServerVehicle.h"
 #include <Utils/VectorTools.h>
+
+class CServerHuman;
 
 CServerVehicle::CServerVehicle(CMafiaServerManager* pServerManager) : CServerEntity(pServerManager)
 {

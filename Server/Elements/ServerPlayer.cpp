@@ -1,7 +1,11 @@
 
+
 #include "pch.h"
-#include "Server.h"
+#include "MafiaServer.h"
 #include "MafiaServerManager.h"
+#include "ServerPlayer.h"
+
+class CServerHuman;
 
 CServerPlayer::CServerPlayer(CMafiaServerManager* pServerManager) : CServerHuman(pServerManager)
 {

@@ -2,12 +2,10 @@
 
 #include "ServerManager.h"
 #include "Elements/Elements.h"
+#include "Peer2PeerSystem.h"
 
-class CServerEntity;
-class CServerHuman;
-class CServerPlayer;
-class CServerVehicle;
 class CMafiaServerManager;
+class CMafiaServer;
 
 enum eMafiaElementType
 {
@@ -45,7 +43,11 @@ public:
 class CMafiaServerManager : public CServerManager
 {
 public:
-	CMafiaServerManager(Galactic3D::Context* pContext, CServer* pServer);
+	CMafiaServerManager(Galactic3D::Context* pContext, CMafiaServer* pServer);
+
+	CMafiaServer* m_pMafiaServer;
+
+	CPeer2PeerSystem m_Peer2Peer;
 
 	const char* m_szLevel;
 

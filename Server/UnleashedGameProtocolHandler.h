@@ -3,15 +3,15 @@
 #include <vector>
 #include <Multiplayer/UnleashedGameProtocol.h>
 
-class CServer;
+class CBaseServer;
 
 class CUnleashedGameProtocolHandler
 {
 public:
-	CUnleashedGameProtocolHandler(CServer* pServer);
+	CUnleashedGameProtocolHandler(CBaseServer* pServer);
 	~CUnleashedGameProtocolHandler();
 
-	CServer* m_pServer;
+	CBaseServer* m_pServer;
 	CLockable m_Lock;
 	CUGPResponse* m_pResponse;
 

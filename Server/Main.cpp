@@ -2,7 +2,7 @@
 //
 
 #include "pch.h"
-#include "Server.h"
+#include "MafiaServer.h"
 #include <openssl/ssl.h>
 #ifdef _WIN32
 #include <crtdbg.h>
@@ -19,7 +19,7 @@
 #include <MafiaCServerArchive.h>
 #endif
 
-static CServer* g_pServer = NULL;
+static CBaseServer* g_pServer = NULL;
 
 #ifdef _WIN32
 EXTERN_C IMAGE_DOS_HEADER __ImageBase;
@@ -100,6 +100,10 @@ int main(int argc, char* argv[])
 	_set_error_mode(_OUT_TO_MSGBOX);
 #endif
 
+#ifndef _DEBUG
+	_GSetAsserts(false);
+#endif
+
 	curl_global_init(CURL_GLOBAL_ALL);
 	enet_initialize();
 	atexit(curl_global_cleanup);
@@ -122,9 +126,9 @@ int main(int argc, char* argv[])
 				LoadTARArchive(Context.GetFileSystem(), pStream, _gstr("/"), true, false);
 			}
 		}
-#elif defined(M_A_F_I_A_C_SERVER_ARCHIVE_H)
+#elif defined(G_T_A_C_SERVER_ARCHIVE_H)
 		{
-			auto pStream = Strong<Stream>::New(new CMemoryStream((void*)M_A_F_I_A_C_SERVER, ARRAY_COUNT(M_A_F_I_A_C_SERVER), true, false));
+			auto pStream = Strong<Stream>::New(new CMemoryStream((void*)G_T_A_C_SERVER, ARRAY_COUNT(G_T_A_C_SERVER), true, false));
 			if (pStream != nullptr)
 			{
 				LoadTARArchive(Context.GetFileSystem(), pStream, _gstr("/"), true, false);
@@ -134,7 +138,7 @@ int main(int argc, char* argv[])
 		LoadTARArchive(Context.GetFileSystem(), _gstr("/MafiaCServer.tar"), _gstr("/"), true, false);
 #endif
 
-		CServer Server(&Context);
+		CMafiaServer Server(&Context);
 		g_pServer = &Server;
 
 		CSignalHandlers::Install([]() {
@@ -211,9 +215,9 @@ int main(int argc, char* argv[])
 			}
 		}
 
-		bool bSuccess = false;
+		bool bSuccess = Server.LoadConfig(Config.c_str());
 
-		if (bSuccess = Server.LoadConfig(Config.c_str()))
+		if (bSuccess)
 		{
 			if (iPort.m_bData)
 			{
@@ -240,7 +244,9 @@ int main(int argc, char* argv[])
 				_gstrcpy_s(Server.m_szBindIP, ARRAY_COUNT(Server.m_szBindIP), BindIP.m_Data.c_str());
 			}
 
-			if (bSuccess = Server.StartServer())
+			bSuccess = Server.StartServer();
+
+			if (bSuccess)
 			{
 				{
 					auto pStream = Strong<Stream>::New(Context.GetFileSystem()->Open(_gstr("/commandline.txt"), false));

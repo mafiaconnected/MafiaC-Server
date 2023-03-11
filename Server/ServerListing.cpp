@@ -1,9 +1,10 @@
+
 #include "pch.h"
-#include "Server.h"
+#include "BaseServer.h"
 #include "ServerListing.h"
 #include <mongoose.h>
 
-CMasterlistAnnouncer::CMasterlistAnnouncer(CServer* pServer)
+CMasterlistAnnouncer::CMasterlistAnnouncer(CBaseServer* pServer)
 	: m_pServer(pServer)
 {
 	m_State = MASTERLIST_NONE;
@@ -204,7 +205,7 @@ void CMasterlistAnnouncer::OnPlayerConnect(mg_connection* nc)
 	CBinaryWriter Writer(&Packet);
 
 	Writer.Write7BitEncodedInt(0); // JOIN
-	int32_t Flags = MASTERLISTJOINFLAGS_SERVER | MASTERLISTJOINFLAGS_NETVERSION;;
+	int32_t Flags = MASTERLISTJOINFLAGS_SERVER | MASTERLISTJOINFLAGS_NETVERSION;
 	if (m_pServer->m_pConsole != nullptr)
 		Flags |= MASTERLISTJOINFLAGS_CONSOLE;
 	if (m_pServer->m_Password.HasPassword())

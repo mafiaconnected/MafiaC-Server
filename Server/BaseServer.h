@@ -17,12 +17,6 @@
 #define MAX_COMMAND_LENGTH MAX_CHAT_MESSAGE_LENGTH
 #define MAX_COMMAND_MESSAGE_LENGTH MAX_COMMAND_LENGTH
 
-class CServer;
-class CServerHuman;
-class CServerVehicle;
-class CServerPlayer;
-class CMafiaServerManager;
-
 class CUnhandledCommandHandler2 : public CUnhandledCommandHandler
 {
 public:
@@ -45,8 +39,6 @@ public:
 	size_t m_MaxClients;
 	Galactic3D::Context* m_pContext;
 	Galactic3D::Signalable m_ExitSignal;
-	uint32_t m_uiVersionMin;
-	uint32_t m_uiVersionMax;
 	uint32_t m_uiNetVersion;
 #ifdef _DEBUG
 	uint32_t m_uiFakeNetVersion;
@@ -82,13 +74,13 @@ public:
 	GChar m_szBindIP[64];
 	GChar m_szServerName[64];
 	GChar m_szGameMode[64];
-	GChar m_szLevel[64];
+	GChar m_szMap[64];
 	GChar m_szServerListing[64];
 	CSecurePassword m_Password;
 	bool m_bAllowModdedExecutables;
 	size_t m_CurrentClients;
 	Strong<CNetMachine> m_pConsole;
-	CMafiaServerManager* m_pManager;
+	CServerManager* m_pManager;
 	TimeManager m_TimeManager;
 	CRConServer m_RCon;
 	CMasterlistAnnouncer m_Announcer;
@@ -118,26 +110,13 @@ public:
 	float m_fStreamInDistance;
 	float m_fStreamOutDistance;
 
-	float m_fPickupStreamInDistance;
-	float m_fPickupStreamOutDistance;
-
-	bool m_bSyncLocalEntities;
-	bool m_bPlanes;
-	bool m_bTrains;
-	bool m_bStuntJumps;
-	bool m_bUniqueStuntJumps;
-	bool m_bGunShops;
-	bool m_bCamera;
-	bool m_bNametags;
-	bool m_bTimeSync;
-	bool m_bWeatherSync;
-
 protected:
 	void RegisterFunctions(CScripting* pScripting);
 
 public:
 	bool IsVersionAllowed(uint32_t Major, uint32_t Minor, uint32_t Patch, uint32_t Build);
 
+	virtual CNetMachine* NewMachine(CServerManager* pServerManager);
 	virtual bool OnPlayerConnect(const Peer_t Peer) override;
 	virtual void OnPlayerDisconnect(const Peer_t Peer, unsigned int uiReason) override;
 	virtual void ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, Galactic3D::Stream* pStream) override;
@@ -151,8 +130,9 @@ public:
 	void SendChat(CNetMachine* pNetMachine, const GChar* pszMessage, size_t MessageLength, unsigned int uiColour);
 	void SendChatExcept(CNetMachine* pNetMachine, const GChar* pszMessage, size_t MessageLength, unsigned int uiColour);
 	void UserChat(CNetMachine* pNetMachine, const GChar* pszMessage, size_t MessageLength);
-	bool ParseConfig(const CServerConfiguration& Config);
+	virtual bool ParseConfig(const CServerConfiguration& Config);
 	bool LoadConfig(const GChar* pszPath);
+	virtual void RegisterConfig();
 	bool StartInitialResources();
 	bool StartServer();
 	void ShutDown();
@@ -168,15 +148,12 @@ public:
 
 	const GChar* GetServerName() { return m_szServerName; }
 	void SetServerName(const GChar* pszName);
-	const GChar* GetMapName() { return m_szLevel; }
-	void SetMapName(const GChar* pszName);
 	void SendServerName(CNetMachine* pNetMachine);
-	void SendMapName(CNetMachine* pNetMachine);
 	void SendCVars(CNetMachine* pNetMachine);
 
-	void OnProcess(const FrameTimeInfo* pTime);
-	void OnPlayerJoin(CNetMachine* pNetMachine);
-	void OnPlayerJoined(CNetMachine* pNetMachine);
+	virtual void OnProcess(const FrameTimeInfo* pTime);
+	virtual void OnPlayerJoin(CNetMachine* pNetMachine);
+	virtual void OnPlayerJoined(CNetMachine* pNetMachine);
 
 	void ProcessConsoleInput(const GChar* pszCommandString);
 
@@ -184,7 +161,4 @@ public:
 
 	void SetRule(const GChar* pszKey, const GChar* pszValue);
 	const GChar* GetRule(const GChar* pszKey);
-
-	void SyncroniseEnterVehicle(CServerHuman* pHuman, CServerVehicle* pVehicle, bool bDriver);
-	void SyncroniseExitVehicle(CServerHuman* pHuman);
 };
