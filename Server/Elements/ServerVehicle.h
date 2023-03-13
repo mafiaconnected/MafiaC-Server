@@ -1,5 +1,9 @@
 #pragma once
 
+#include "ServerEntity.h"
+
+class CServerHuman;
+
 class CServerVehicle : public CServerEntity
 {
 public:

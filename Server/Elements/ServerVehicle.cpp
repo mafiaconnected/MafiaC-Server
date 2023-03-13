@@ -3,6 +3,7 @@
 #include "MafiaServer.h"
 #include "MafiaServerManager.h"
 #include "ServerVehicle.h"
+#include "ServerHuman.h"
 #include <Utils/VectorTools.h>
 
 class CServerHuman;
@@ -205,7 +206,7 @@ bool CServerVehicle::SetRotation(const CVector3D& vecRotation)
 
 void CServerVehicle::Remove()
 {
-	for (size_t i=0; i< m_pNetObjectMgr->m_Objects.GetSize(); i++)
+	for (size_t i = 0; i < m_pNetObjectMgr->m_Objects.GetSize(); i++)
 	{
 		if (m_pNetObjectMgr->m_Objects.IsUsedAt(i) && m_pNetObjectMgr->m_Objects.GetAt(i)->IsType(ELEMENT_PED))
 		{

@@ -2,12 +2,6 @@
 
 #include "BaseServer.h"
 
-class CServer;
-class CServerHuman;
-class CServerVehicle;
-class CServerPlayer;
-class CMafiaServerManager;
-
 class CMafiaServer : public CBaseServer
 {
 public:

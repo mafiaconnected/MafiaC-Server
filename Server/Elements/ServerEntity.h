@@ -14,6 +14,7 @@ public:
 	int32_t m_nRelativeElement;
 	CVector3D m_vecRelativePos;
 	int32_t m_nRef;
+	uint8_t m_ucCreatedBy;
 
 	virtual void SetHeading(float fHeading);
 	virtual float GetHeading();

@@ -5,7 +5,12 @@
 #include "MafiaServerManager.h"
 #include "Peer2PeerSystem.h"
 #include "Elements/Elements.h"
+
 #include "Utils/VectorTools.h"
+
+class CServerVehicle;
+class CServerHuman;
+class CServerPlayer;
 
 CMafiaClient::CMafiaClient(CNetObjectMgr* pServer) :
 	CNetMachine(pServer)
@@ -48,19 +53,18 @@ CMafiaServerManager::CMafiaServerManager(Context* pContext, CMafiaServer* pServe
 	m_Games.Register(_gstr("mafia:three"), GAME_MAFIA_THREE);
 	m_Games.Register(_gstr("mafia:one_de"), GAME_MAFIA_ONE_DE);
 
-	m_pOnPedEnteredVehicleEventType = m_pServer->m_ResourceMgr.m_pEventHandlers->CreateEventType(_gstr("OnPedEnteredVehicle"), _gstr("Called when a ped is finished entering a vehicle."), 3);
-	m_pOnPedExitedVehicleEventType = m_pServer->m_ResourceMgr.m_pEventHandlers->CreateEventType(_gstr("OnPedExitedVehicle"), _gstr("Called when a ped has finished exiting a vehicle."), 3);
-	m_pOnPedEnteringVehicleEventType = m_pServer->m_ResourceMgr.m_pEventHandlers->CreateEventType(_gstr("OnPedEnteringVehicle"), _gstr("Called when a ped is started entering a vehicle."), 3);
-	m_pOnPedExitingVehicleEventType = m_pServer->m_ResourceMgr.m_pEventHandlers->CreateEventType(_gstr("OnPedExitingVehicle"), _gstr("Called when a ped has started exiting a vehicle."), 3);
-	m_pOnPedDeathEventType = m_pServer->m_ResourceMgr.m_pEventHandlers->CreateEventType(_gstr("OnPedDeath"), _gstr("Called when a ped dies."), 2);
-	m_pOnPedSpawnEventType = m_pServer->m_ResourceMgr.m_pEventHandlers->CreateEventType(_gstr("OnPedSpawn"), _gstr("Called when a ped is spawned."), 1);
-	m_pOnPedFallEventType = m_pServer->m_ResourceMgr.m_pEventHandlers->CreateEventType(_gstr("OnPedFall"), _gstr("Called when a ped falls."), 1);
-	m_pOnPedHitEventType = m_pServer->m_ResourceMgr.m_pEventHandlers->CreateEventType(_gstr("OnPedHit"), _gstr("Called when a ped is hit."), 7);
-	m_pOnPedShootEventType = m_pServer->m_ResourceMgr.m_pEventHandlers->CreateEventType(_gstr("OnPedShoot"), _gstr("Called when a ped shoots."), 3);
-	m_pOnPedThrowGrenadeEventType = m_pServer->m_ResourceMgr.m_pEventHandlers->CreateEventType(_gstr("OnPedThrowGrenade"), _gstr("Called when a ped throws a grenade."), 2);
+	m_pOnPedEnteredVehicleEventType = m_pServer->m_ResourceMgr.m_pEventHandlers->CreateEventType(_gstr("OnPedEnteredVehicle"), _gstr("Called when a ped is finished entering a vehicle."), 3, true);
+	m_pOnPedExitedVehicleEventType = m_pServer->m_ResourceMgr.m_pEventHandlers->CreateEventType(_gstr("OnPedExitedVehicle"), _gstr("Called when a ped has finished exiting a vehicle."), 3, true);
+	m_pOnPedEnteringVehicleEventType = m_pServer->m_ResourceMgr.m_pEventHandlers->CreateEventType(_gstr("OnPedEnteringVehicle"), _gstr("Called when a ped is started entering a vehicle."), 3, true);
+	m_pOnPedExitingVehicleEventType = m_pServer->m_ResourceMgr.m_pEventHandlers->CreateEventType(_gstr("OnPedExitingVehicle"), _gstr("Called when a ped has started exiting a vehicle."), 3, true);
+	m_pOnPedDeathEventType = m_pServer->m_ResourceMgr.m_pEventHandlers->CreateEventType(_gstr("OnPedDeath"), _gstr("Called when a ped dies."), 2, true);
+	m_pOnPedSpawnEventType = m_pServer->m_ResourceMgr.m_pEventHandlers->CreateEventType(_gstr("OnPedSpawn"), _gstr("Called when a ped is spawned."), 1, true);
+	m_pOnPedFallEventType = m_pServer->m_ResourceMgr.m_pEventHandlers->CreateEventType(_gstr("OnPedFall"), _gstr("Called when a ped falls."), 1, true);
+	m_pOnPedHitEventType = m_pServer->m_ResourceMgr.m_pEventHandlers->CreateEventType(_gstr("OnPedHit"), _gstr("Called when a ped is hit."), 7, true);
+	m_pOnPedShootEventType = m_pServer->m_ResourceMgr.m_pEventHandlers->CreateEventType(_gstr("OnPedShoot"), _gstr("Called when a ped shoots."), 3, true);
+	m_pOnPedThrowGrenadeEventType = m_pServer->m_ResourceMgr.m_pEventHandlers->CreateEventType(_gstr("OnPedThrowGrenade"), _gstr("Called when a ped throws a grenade."), 2, true);
 
-	m_pOnReceivePacketEventType = m_pServer->m_ResourceMgr.m_pEventHandlers->CreateEventType(_gstr("OnReceivePacket"), _gstr("Called when a packet is received"), 2);
-	m_pOnReceivePacketEventType->m_bCanPreventDefault = true;
+	m_pOnReceivePacketEventType = m_pServer->m_ResourceMgr.m_pEventHandlers->CreateEventType(_gstr("OnReceivePacket"), _gstr("Called when a packet is received"), 2, true);
 
 	auto pMafia = m_pServer->m_ResourceMgr.m_pScripting->m_Global.AddNamespace(_gstr("mafia"));
 	pMafia->SetAlias(_gstr("game"));
@@ -649,7 +653,7 @@ static bool FunctionGameSetLevel(IScriptState* pState, int argc, void* pUser)
 
 	const GChar* level = pState->CheckString(0);
 
-	pServerManager->m_pServer->SetMapName(level);
+	pServerManager->m_pMafiaServer->SetMapName(level);
 
 	return true;
 }
@@ -658,7 +662,7 @@ static bool FunctionGameGetLevel(IScriptState* pState, int argc, void* pUser)
 {
 	CMafiaServerManager* pServerManager = (CMafiaServerManager*)pUser;
 
-	pState->ReturnString(pServerManager->m_pServer->GetMapName());
+	pState->ReturnString(pServerManager->m_pMafiaServer->m_szMap);
 
 	return true;
 }

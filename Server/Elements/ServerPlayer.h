@@ -1,5 +1,7 @@
 #pragma once
 
+#include "ServerHuman.h"
+
 class CServerPlayer : public CServerHuman
 {
 public:

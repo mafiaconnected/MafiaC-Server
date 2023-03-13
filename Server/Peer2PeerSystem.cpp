@@ -76,7 +76,7 @@ void CPeer2PeerSystem::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketI
 				uint64_t Nonce;
 				Reader.ReadUInt64(&Nonce, 1);
 
-				auto pPed = Strong<CServerPed>::New(m_pManager->Create(ELEMENT_PED));
+				auto pPed = Strong<CServerHuman>::New(m_pManager->Create(ELEMENT_PED));
 				pPed->m_nRef = nRef;
 				pPed->m_Flags.m_bAlwaysExistForSyncer = true;
 				pPed->m_Flags.m_bTransient = true;

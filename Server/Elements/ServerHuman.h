@@ -1,5 +1,9 @@
 #pragma once
 
+#include "ServerEntity.h"
+
+class CServerVehicle;
+
 class InventoryItem
 {
 public:

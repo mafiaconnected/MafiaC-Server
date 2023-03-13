@@ -19,7 +19,18 @@ enum eGameEngineCustom
 enum eGame
 {
 	GAME_UNKNOWN,
-	GAME_MAFIA_ONE = 10, // Let's start at 10 (Since GTAC occupies the first lot to avoid confusion)
+
+	// GTA Connected
+	GAME_GTA_III,
+	GAME_GTA_VC,
+	GAME_GTA_SA,
+	//GAME_GTA_UG,
+	GAME_GTA_IV = 5,
+	GAME_GTA_IV_EFLC,
+	GAME_BULLY,
+
+	// Mafia Connected
+	GAME_MAFIA_ONE = 10, // Start at 10 since GTAC occupies the first lot to avoid confusion
 	GAME_MAFIA_TWO,
 	GAME_MAFIA_THREE,
 	GAME_MAFIA_ONE_DE,

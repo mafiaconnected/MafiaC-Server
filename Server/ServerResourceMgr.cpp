@@ -52,7 +52,7 @@ void CServerResourceMgr::RefreshResourceState(CResource* pResource)
 
 void CServerResourceMgr::RemoveThingsAssociatedWithResource(CResource* pResource)
 {
-	for (size_t i=0; i<m_pServer->m_pManager->m_Objects.GetSize(); i++)
+	for (size_t i = 0; i < m_pServer->m_pManager->m_Objects.GetSize(); i++)
 	{
 		if (m_pServer->m_pManager->m_Objects.IsUsedAt(i))
 		{

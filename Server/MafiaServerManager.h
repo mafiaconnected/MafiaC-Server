@@ -1,7 +1,6 @@
 #pragma once
 
 #include "ServerManager.h"
-#include "Elements/Elements.h"
 #include "Peer2PeerSystem.h"
 
 class CMafiaServerManager;
@@ -21,23 +20,6 @@ public:
 	CMafiaClient(CNetObjectMgr* pServer);
 
 	void SpawnPlayer(const CVector3D& vecPos, float fRotation, const GChar* szSkin);
-};
-
-class CWorld : public CBaseObject
-{
-public:
-	CWorld();
-
-	CMafiaServerManager* m_pManager;
-
-	uint32_t m_LastTicks; 
-	uint64_t m_ulTimer;
-
-	double m_fResyncTimer;
-
-	void Process(double fDeltaTime);
-
-	void SyncClient(CNetMachine* pClient);
 };
 
 class CMafiaServerManager : public CServerManager
@@ -68,10 +50,6 @@ public:
 	Galactic3D::ReflectedClass* m_pServerHumanClass;
 	Galactic3D::ReflectedClass* m_pServerPlayerClass;
 	Galactic3D::ReflectedClass* m_pServerVehicleClass;
-
-	Galactic3D::Weak<CServerVehicle> m_rgpVehicles[128];
-	Galactic3D::Weak<CServerHuman> m_rgpPeds[128];
-	Galactic3D::Weak<CServerPlayer> m_rgpPlayers[128];
 
 	virtual CNetObject* Create(int32_t nType) override;
 

@@ -80,19 +80,22 @@ void CMafiaServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, G
 				if (pPed != nullptr && pPed->GetSyncer() == pClient)
 				{
 					{
-						Packet Packet(MAFIAPACKET_HUMAN_SHOOT);
-						Packet.Write<int32_t>(pPed->GetId());
-						Packet.Write<bool>(state);
-						Packet.Write<CVector3D>(vecShotPosition);
-						m_pManager->SendPacketExcluding(&Packet, pClient);
-
 						// Scripting event
 						CArguments Args(3);
 						Args.AddObject(pPed);
 						Args.AddBoolean(state);
 						Args.AddVector3D(vecShotPosition);
 						bool bPreventDefault = false;
-						m_pManager->m_pOnPedShootEventType->Trigger(Args, bPreventDefault);
+						static_cast<CMafiaServerManager*>(m_pManager)->m_pOnPedShootEventType->Trigger(Args, bPreventDefault);
+
+						if (!bPreventDefault)
+						{
+							Packet Packet(MAFIAPACKET_HUMAN_SHOOT);
+							Packet.Write<int32_t>(pPed->GetId());
+							Packet.Write<bool>(state);
+							Packet.Write<CVector3D>(vecShotPosition);
+							m_pManager->SendPacketExcluding(&Packet, pClient);
+						}
 					}
 				}
 			}
@@ -110,17 +113,19 @@ void CMafiaServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, G
 			if (pPed != nullptr && pPed->GetSyncer() == pClient)
 			{
 				{
-					Packet Packet(MAFIAPACKET_HUMAN_THROWGRENADE);
-					Packet.Write<int32_t>(pPed->GetId());
-					Packet.Write<CVector3D>(vecShotPosition);
-					m_pManager->SendPacketExcluding(&Packet, pClient);
-
 					// Scripting event
 					CArguments Args(2);
 					Args.AddObject(pPed);
 					Args.AddVector3D(vecShotPosition);
 					bool bPreventDefault = false;
-					m_pManager->m_pOnPedThrowGrenadeEventType->Trigger(Args, bPreventDefault);
+					static_cast<CMafiaServerManager*>(m_pManager)->m_pOnPedThrowGrenadeEventType->Trigger(Args, bPreventDefault);
+
+					if (bPreventDefault) {
+						Packet Packet(MAFIAPACKET_HUMAN_THROWGRENADE);
+						Packet.Write<int32_t>(pPed->GetId());
+						Packet.Write<CVector3D>(vecShotPosition);
+						m_pManager->SendPacketExcluding(&Packet, pClient);
+					}
 				}
 			}
 		}
@@ -273,7 +278,7 @@ void CMafiaServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, G
 					Args.AddNumber(fDamage);
 					Args.AddNumber(iBodyPart);
 					bool bPreventDefault = false;
-					m_pManager->m_pOnPedHitEventType->Trigger(Args, bPreventDefault);
+					static_cast<CMafiaServerManager*>(m_pManager)->m_pOnPedHitEventType->Trigger(Args, bPreventDefault);
 				}
 			}
 		}
@@ -313,7 +318,7 @@ void CMafiaServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, G
 							Args.AddNull();
 						}
 						bool bPreventDefault = false;
-						m_pManager->m_pOnPedDeathEventType->Trigger(Args, bPreventDefault);
+						static_cast<CMafiaServerManager*>(m_pManager)->m_pOnPedDeathEventType->Trigger(Args, bPreventDefault);
 					}
 				}
 			}

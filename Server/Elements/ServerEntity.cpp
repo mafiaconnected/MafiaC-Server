@@ -22,6 +22,7 @@ CServerEntity::CServerEntity(CMafiaServerManager* pServerManager) : CNetObject(p
 	//m_szModel = L"";
 	m_nRelativeElement = INVALID_NETWORK_ID;
 	m_nRef = -1;
+	m_ucCreatedBy = ELEMENTCREATEDBY_USER;
 }
 
 void CServerEntity::SetHeading(float fHeading)

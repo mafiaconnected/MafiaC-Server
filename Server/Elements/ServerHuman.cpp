@@ -3,8 +3,7 @@
 #include "MafiaServer.h"
 #include "MafiaServerManager.h"
 #include "ServerHuman.h"
-
-class CServerVehicle;
+#include "ServerVehicle.h"
 
 CServerHuman::CServerHuman(CMafiaServerManager* pServerManager) : CServerEntity(pServerManager)
 {
@@ -134,7 +133,7 @@ bool CServerHuman::ReadSyncPacket(Stream* pStream)
 
 	if (m_nVehicleNetworkIndex == INVALID_NETWORK_ID)
 	{
-		auto pOldVehicle = static_cast<CServerVehicle*>(m_pNetObjectMgr->FromId(nOldVehicleNetworkIndex, ELEMENT_VEHICLE));
+		auto pOldVehicle = static_cast<CServerVehicle*>(m_pNetObjectMgr->FromId(m_nVehicleNetworkIndex, ELEMENT_VEHICLE));
 		if (pOldVehicle != nullptr)
 		{
 			if (nOldSeat > 0 && nOldSeat < ARRAY_COUNT(CServerVehicle::m_pProbableOccupants))
