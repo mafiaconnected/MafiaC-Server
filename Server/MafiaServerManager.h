@@ -12,6 +12,7 @@ enum eMafiaElementType
 	ELEMENT_PED = ELEMENT_ENTITY | 8,
 	ELEMENT_PLAYER = ELEMENT_PED | 16,
 	ELEMENT_VEHICLE = ELEMENT_ENTITY | 32,
+	ELEMENT_DUMMY = ELEMENT_ENTITY | 64,
 };
 
 class CMafiaClient : public CNetMachine
