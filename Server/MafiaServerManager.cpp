@@ -157,12 +157,16 @@ CNetObject* CMafiaServerManager::Create(int32_t nType)
 {
 	switch (nType)
 	{
+	case ELEMENT_ELEMENT:
+		return new CServerEntity(this);
 	case ELEMENT_VEHICLE:
 		return new CServerVehicle(this);
 	case ELEMENT_PLAYER:
 		return new CServerPlayer(this);
 	case ELEMENT_PED:
 		return new CServerHuman(this);
+	case ELEMENT_DUMMY:
+		return new CServerDummy(this);
 	default:
 		break;
 	}
@@ -798,33 +802,6 @@ static bool FunctionPlayerCountdown(IScriptState* pState, int argc, void* pUser)
 	return true;
 }
 
-static bool FunctionCreateDummyElement(IScriptState* pState, int argc, void* pUser)
-{
-	CMafiaServerManager* pServerManager = (CMafiaServerManager*)pUser;
-	CVector3D vecPos;
-	if (!pState->CheckVector3D(0, vecPos))
-		return false;
-
-	auto pDummyElement = Strong<CServerEntity>::New(pServerManager->Create(ELEMENT_ENTITY));
-	if (pDummyElement == nullptr)
-	{
-		pState->Error(_gstr("Failed to create dummy element"));
-		return false;
-	}
-
-	const GChar* sModel = _gstr("");
-
-	pDummyElement->SetModel(sModel);
-	pDummyElement->SetPosition(vecPos);
-	pDummyElement->SetRotation({ 0.0, 0.0, 0.0 });
-	pDummyElement->SetVelocity({ 0.0, 0.0, 0.0 });
-	pDummyElement->SetRotationVelocity({ 0.0, 0.0, 0.0 });
-	pDummyElement->m_pResource = pState->GetResource();
-	pServerManager->RegisterNetObject(pDummyElement);
-	pState->ReturnObject(pDummyElement);
-	return true;
-}
-
 static bool FunctionCreateExplosion(IScriptState* pState, int argc, void* pUser)
 {
 	CMafiaServerManager* pServerManager = (CMafiaServerManager*)pUser;
@@ -863,7 +840,7 @@ static bool FunctionCreateVehicle(IScriptState* pState, int argc, void* pUser)
 	if (argc > 2 && !pState->CheckNumber(2, angle))
 		return false;
 
-	_glogprintf(_gstr("HEADING: %f"), angle);
+	//_glogprintf(_gstr("HEADING: %f"), angle);
 
 	//double twoPi = M_PI * 2.0;
 	//while (angle < -twoPi)
@@ -878,7 +855,7 @@ static bool FunctionCreateVehicle(IScriptState* pState, int argc, void* pUser)
 	//angle = CVecTools::RadToDeg(angle);
 	CVector3D vecRot = CVecTools::ComputeDirEuler(angle);
 
-	_glogprintf(_gstr("ROTATION: %f, %f, %f"), vecRot.x, vecRot.y, vecRot.z);
+	//_glogprintf(_gstr("ROTATION: %f, %f, %f"), vecRot.x, vecRot.y, vecRot.z);
 
 	pServerVehicle->SetModel(sModel);
 	pServerVehicle->SetPosition(vecPos);
@@ -910,6 +887,28 @@ static bool FunctionCreateVehicle(IScriptState* pState, int argc, void* pUser)
 	pServerVehicle->m_pResource = pState->GetResource();
 	pServerManager->RegisterNetObject(pServerVehicle);
 	pState->ReturnObject(pServerVehicle);
+	return true;
+}
+
+static bool FunctionCreateDummyElement(IScriptState* pState, int argc, void* pUser)
+{
+	CMafiaServerManager* pServerManager = (CMafiaServerManager*)pUser;
+	
+	CVector3D vecPos(0.0f, 0.0f, 0.0f);
+	if (argc > 1 && !pState->CheckVector3D(0, vecPos))
+		return false;
+
+	auto pElement = Strong<CServerDummy>::New(pServerManager->Create(ELEMENT_DUMMY));
+	if (pElement == nullptr)
+	{
+		pState->Error(_gstr("Failed to create element"));
+		return false;
+	}
+
+	pElement->SetPosition(vecPos);
+	pElement->m_pResource = pState->GetResource();
+	pServerManager->RegisterNetObject(pElement);
+	pState->ReturnObject(pElement);
 	return true;
 }
 
@@ -1297,11 +1296,11 @@ void CMafiaServerManager::RegisterFunctions(CScripting* pScripting)
 	pGameNamespace->AddProperty(this, _gstr("mapName"), ARGUMENT_STRING, FunctionGameGetLevel);
 	pGameNamespace->RegisterFunction(_gstr("changeMap"), _gstr("s"), FunctionGameSetLevel, this);
 
-	pGameNamespace->RegisterFunction(_gstr("createDummy"), _gstr("v"), FunctionCreateDummyElement, this);
 	pGameNamespace->RegisterFunction(_gstr("createExplosion"), _gstr("vff"), FunctionCreateExplosion, this);
 	pGameNamespace->RegisterFunction(_gstr("createVehicle"), _gstr("sv|f"), FunctionCreateVehicle, this);
 	pGameNamespace->RegisterFunction(_gstr("createPlayer"), _gstr("sv|f"), FunctionCreatePlayer, this);
 	pGameNamespace->RegisterFunction(_gstr("createPed"), _gstr("sv|f"), FunctionCreateHuman, this);
+	pGameNamespace->RegisterFunction(_gstr("createDummyElement"), _gstr("v"), FunctionCreateDummyElement, this);
 	pGameNamespace->RegisterFunction(_gstr("fadeScreen"), _gstr("xbf|i"), FunctionPlayerFadeScreen, this);
 
 	{
@@ -1318,8 +1317,6 @@ void CMafiaServerManager::RegisterFunctions(CScripting* pScripting)
 		pServerNamespace->AddProperty(this, _gstr("duplicateNames"), ARGUMENT_BOOLEAN, FunctionGetServerDuplicateNames);
 		pServerNamespace->AddProperty(this, _gstr("streamInDistance"), ARGUMENT_FLOAT, FunctionGetServerStreamInDistance);
 		pServerNamespace->AddProperty(this, _gstr("streamOutDistance"), ARGUMENT_FLOAT, FunctionGetServerStreamOutDistance);
-		//pServerNamespace->AddProperty(this, _gstr("pickupStreamInDistance"), ARGUMENT_FLOAT, FunctionGetServerPickupStreamInDistance);
-		//pServerNamespace->AddProperty(this, _gstr("pickupStreamOutDistance"), ARGUMENT_FLOAT, FunctionGetServerPickupStreamOutDistance);
 		pServerNamespace->AddProperty(this, _gstr("logPath"), ARGUMENT_STRING, FunctionGetServerLogPath);
 		pServerNamespace->AddProperty(this, _gstr("syncLocalEntities"), ARGUMENT_BOOLEAN, FunctionGetServerSyncLocalEntities);
 
