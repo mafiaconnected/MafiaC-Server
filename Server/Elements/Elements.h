@@ -4,3 +4,4 @@
 #include "ServerHuman.h"
 #include "ServerPlayer.h"
 #include "ServerVehicle.h"
+#include "ServerDummy.h"

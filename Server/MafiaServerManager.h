@@ -51,6 +51,7 @@ public:
 	Galactic3D::ReflectedClass* m_pServerHumanClass;
 	Galactic3D::ReflectedClass* m_pServerPlayerClass;
 	Galactic3D::ReflectedClass* m_pServerVehicleClass;
+	Galactic3D::ReflectedClass* m_pServerDummyClass;
 
 	virtual CNetObject* Create(int32_t nType) override;
 

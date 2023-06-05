@@ -11,6 +11,7 @@
 class CServerVehicle;
 class CServerHuman;
 class CServerPlayer;
+class CServerDummy;
 
 CMafiaClient::CMafiaClient(CNetObjectMgr* pServer) :
 	CNetMachine(pServer)
