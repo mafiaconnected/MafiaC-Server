@@ -173,7 +173,7 @@ static bool FunctionHttpGet(IScriptState* pState, int argc, void* pUser)
 	CHTTPRequestScript* pRequest = new CHTTPRequestScript(&pServer->m_HTTPMgr, pWriteCallback, pCompletedCallback);
 	if (pRequest == nullptr)
 		return pState->Error(_gstr("Out of memory."));
-	pState->ReturnBoolean(pServer->m_HTTPMgr.Download(pszURL, pszPostfields, nullptr, pRequest));
+	pState->ReturnBoolean(pServer->m_HTTPMgr.Download(pszURL,pszPostfields,nullptr,pRequest));
 	return true;
 }
 
@@ -500,534 +500,543 @@ void CBaseServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, St
 
 	switch (PacketID)
 	{
-	case PACKET_INITIAL:
-	{
-		if (pClient != nullptr) // Stop more than one initial packet!
-			return;
-
-		GChar szHost[MAX_IPSTRING] = { 0 };
-		CIPAddress IPAddress;
-		GetPeerIP(Peer.m_Peer, IPAddress);
-		if (!IPAddress.ToString(szHost, ARRAY_COUNT(szHost), false))
-		{
-			DisconnectPeer(Peer.m_Peer, DISCONNECT_FAILED);
-			return;
-		}
-		if (m_BanList.IsBanned(szHost))
-		{
-			_glogwarnprintf(_gstr("CONNECT: %s revoked connection [BANNED]"), szHost);
-			DisconnectPeer(Peer.m_Peer, DISCONNECT_BANNED);
-			return;
-		}
-		uint32_t uiNetVersion = 0;
-		Reader.ReadUInt32(&uiNetVersion, 1);
-		if (uiNetVersion != m_uiNetVersion)
-		{
-			_glogwarnprintf(_gstr("CONNECT: %s (%d) revoked connection [UNSUPPORTED CLIENT]"), szHost, uiNetVersion);
-			DisconnectPeer(Peer.m_Peer, DISCONNECT_UNSUPPORTEDCLIENT);
-			return;
-		}
-
-		uint32_t uiMajorVersion;
-		uint32_t uiMinorVersion;
-		uint32_t uiPatchVersion;
-		uint32_t uiBuildVersion;
-		Reader.ReadUInt32(&uiMajorVersion, 1);
-		Reader.ReadUInt32(&uiMinorVersion, 1);
-		Reader.ReadUInt32(&uiPatchVersion, 1);
-		Reader.ReadUInt32(&uiBuildVersion, 1);
-
-		if (!IsVersionAllowed(uiMajorVersion, uiMinorVersion, uiPatchVersion, uiBuildVersion))
-		{
-			_glogwarnprintf(_gstr("CONNECT: %s revoked connection [UNSUPPORTED CLIENT]"), szHost);
-			DisconnectPeer(Peer.m_Peer, DISCONNECT_UNSUPPORTEDCLIENT);
-			return;
-		}
-
-		{
-			size_t PasswordLength;
-			GChar* pszPassword = Reader.ReadString(&PasswordLength);
-			if (pszPassword == nullptr)
+		case PACKET_INITIAL:
 			{
-				_glogwarnprintf(_gstr("CONNECT: %s revoked connection [WRONG PASSWORD]"), szHost);
-				DisconnectPeer(Peer.m_Peer, DISCONNECT_WRONGPASSWORD);
-				return;
-			}
-			bool bWrongPassword = m_Password.HasPassword() && !m_Password.Verify(pszPassword);
-			GFree(pszPassword);
-			if (bWrongPassword)
-			{
-				_glogwarnprintf(_gstr("CONNECT: %s revoked connection [WRONG PASSWORD]"), szHost);
-				DisconnectPeer(Peer.m_Peer, DISCONNECT_WRONGPASSWORD);
-				return;
-			}
-		}
+				if (pClient != nullptr) // Stop more than one initial packet!
+					return;
 
-		//if (!VerifyGameExecutableHash((eGameVersion)pPkt->m_uiGameVersion,pPkt->m_uiGameHash))
-		//{
-		//	_glogwarnprintf(_gstr("CONNECT: %s:%u revoked connection [UNSUPPORTED EXECUTABLE]"), Host.CString(), pPeer->address.port);
-		//	DisconnectPeer(pPeer,DISCONNECT_UNSUPPORTEDEXECUTABLE);
-		//	return;
-		//}
-		uint16_t usNicknameLength = 0;
-		Reader.ReadUInt16(&usNicknameLength, 1);
-		GChar szName[NETGAME_MAX_NAME_BUFFER] = { 0 };
-		if (usNicknameLength <= 0 || usNicknameLength >= NETGAME_MAX_NAME_BUFFER || usNicknameLength >= NETGAME_MAX_NAME)
-		{
-			_glogwarnprintf(_gstr("CONNECT: %s revoked connection [INVALID NICKNAME]"), szHost);
-			DisconnectPeer(Peer.m_Peer, DISCONNECT_INVALIDNICKNAME);
-			return;
-		}
-		{
-			char szName2[NETGAME_MAX_NAME_BUFFER] = { 0 };
-			pStream->Read(szName2, usNicknameLength);
-			szName2[usNicknameLength] = '\0';
-			CString Name(false, szName2, usNicknameLength);
-			_gstrlcpy(szName, Name, ARRAY_COUNT(szName));
-			if (_gstrlen(szName) == 0)
-			{
-				_glogwarnprintf(_gstr("CONNECT: %s revoked connection [INVALID NICKNAME]"), szHost);
-				DisconnectPeer(Peer.m_Peer, DISCONNECT_INVALIDNICKNAME);
-				return;
-			}
-		}
-		//if (usNicknameLength == 0)
-		//{
-		//	_gsnprintf(szName, ARRAY_COUNT(szName), _gstr("%s"), szHost);
-		//}
-		uint8_t ucGame;
-		Reader.ReadUInt8(&ucGame, 1);
-		if (std::find(m_AllowedGameIds.begin(), m_AllowedGameIds.end(), ucGame) == m_AllowedGameIds.end())
-		{
-			_glogwarnprintf(_gstr("CONNECT: %s revoked connection [WRONG GAME]"), szName);
-			DisconnectPeer(Peer.m_Peer, DISCONNECT_UNSUPPORTEDENGINE);
-			return;
-		}
-		uint8_t ucGameVersion;
-		Reader.ReadUInt8(&ucGameVersion, 1);
-		//if (!bOkayGameVersion)
-		//{
-		//	_glogwarnprintf(_gstr("CONNECT: %s revoked connection [WRONG GAME VERSION]"), szName);
-		//	DisconnectPeer(SystemAddress,DISCONNECT_UNSUPPORTEDENGINE);
-		//	return;
-		//}
-		if (IsNameInUse(szName))
-		{
-			_glogwarnprintf(_gstr("CONNECT: %s revoked connection [NICKNAME IN USE]"), szName);
-			DisconnectPeer(Peer.m_Peer, DISCONNECT_NICKNAMEINUSE);
-			return;
-		}
-		if (m_CurrentClients >= m_MaxClients)
-		{
-			_glogwarnprintf(_gstr("CONNECT: %s revoked connection [SERVER FULL]"), szName);
-			DisconnectPeer(Peer.m_Peer, DISCONNECT_FULL);
-			return;
-		}
+				GChar szHost[MAX_IPSTRING] = { 0 };
+				CIPAddress IPAddress;
+				GetPeerIP(Peer.m_Peer, IPAddress);
+				if (!IPAddress.ToString(szHost, ARRAY_COUNT(szHost), false))
+				{
+					DisconnectPeer(Peer.m_Peer, DISCONNECT_FAILED);
+					return;
+				}
+				if (m_BanList.IsBanned(szHost))
+				{
+					_glogwarnprintf(_gstr("CONNECT: %s revoked connection [BANNED]"), szHost);
+					DisconnectPeer(Peer.m_Peer, DISCONNECT_BANNED);
+					return;
+				}
+				uint32_t uiNetVersion = 0;
+				Reader.ReadUInt32(&uiNetVersion, 1);
+				if (uiNetVersion != m_uiNetVersion)
+				{
+					_glogwarnprintf(_gstr("CONNECT: %s (%d) revoked connection [UNSUPPORTED CLIENT]"), szHost, uiNetVersion);
+					DisconnectPeer(Peer.m_Peer, DISCONNECT_UNSUPPORTEDCLIENT);
+					return;
+				}
 
-		Strong<CNetMachine> pNetMachine;
-		for (size_t i = 0; i < MAX_MACHINES; i++)
-		{
-			if (m_NetMachines.m_rgpMachines[i] == nullptr)
-			{
-				pNetMachine = Strong<CNetMachine>::New(NewMachine(m_pManager));
-				m_NetMachines.m_rgpMachines[i] = pNetMachine;
-				pNetMachine->m_Peer = Peer.m_Peer;
-				const GChar* pszGame = m_pManager->m_Games.GetGameName(ucGame);
-				pNetMachine->m_Game.assign(pszGame);
-				pNetMachine->m_GameId = ucGame;
-				pNetMachine->m_ucGameVersion = ucGameVersion;
-				pNetMachine->m_nIndex = (uint32_t)i;
-				pNetMachine->m_GlobalIdentifier = Peer.m_GlobalPeer;
-				pNetMachine->m_IPAddress = IPAddress;
-				pNetMachine->SetName(szName);
-				pNetMachine->m_bStreaming = false;
-				m_CurrentClients++;
-				m_Announcer.PlayerAdd(pNetMachine);
-				pClient = pNetMachine;
-				break;
-			}
-		}
+				uint32_t uiMajorVersion;
+				uint32_t uiMinorVersion;
+				uint32_t uiPatchVersion;
+				uint32_t uiBuildVersion;
+				Reader.ReadUInt32(&uiMajorVersion, 1);
+				Reader.ReadUInt32(&uiMinorVersion, 1);
+				Reader.ReadUInt32(&uiPatchVersion, 1);
+				Reader.ReadUInt32(&uiBuildVersion, 1);
 
-		if (pNetMachine == nullptr)
-		{
-			_glogwarnprintf(_gstr("CONNECT: %s revoked connection [SERVER FULL]"), szName);
-			DisconnectPeer(Peer.m_Peer, DISCONNECT_FULL);
-			return;
-		}
-		else
-		{
-			{
-				CArguments Args(1);
-				//Args.AddInt32(iLocalIndex);
-				Args.AddObject(pNetMachine);
-				m_pOnPlayerJoinEventType->Trigger(Args);
-			}
-			OnPlayerJoin(pNetMachine);
-			//ChatPrintf("%s joined the game",szName);
-			//CString Name(false, szName);
-			//_glogprintf(_gstr("%s joined the game."), Name.CString());
-			SendCVars(pNetMachine);
-			{
-				Packet Packet(PACKET_RESPONSE);
+				if (!IsVersionAllowed(uiMajorVersion, uiMinorVersion, uiPatchVersion, uiBuildVersion))
+				{
+					_glogwarnprintf(_gstr("CONNECT: %s revoked connection [UNSUPPORTED CLIENT]"), szHost);
+					DisconnectPeer(Peer.m_Peer, DISCONNECT_UNSUPPORTEDCLIENT);
+					return;
+				}
 
-				CBinaryWriter Writer(&Packet);
-				Writer.WriteInt32(pNetMachine->m_nIndex);
-				Writer.WriteUInt16(m_usHTTPPort);
-				Writer.WriteString(m_HTTPUrl.c_str(), m_HTTPUrl.length());
-				Writer.WriteUInt16(m_usSyncInterval);
-				Uint8 ucFlags = 0;
-#if 0
-				if (m_pNetSystem->m_bCompressPackets)
-					ucFlags |= 1;
-#endif
-				Writer.WriteUInt8(ucFlags);
-#if 0
-				if (m_pNetSystem->m_bCompressPackets)
-					Writer.WriteInt32((int32_t)m_pNetSystem->m_CompressionLevel);
-#endif
-				Writer.WriteUInt8((uint8_t)m_SyncMethod);
+				{
+					size_t PasswordLength;
+					GChar* pszPassword = Reader.ReadString(&PasswordLength);
+					if (pszPassword == nullptr)
+					{
+						_glogwarnprintf(_gstr("CONNECT: %s revoked connection [WRONG PASSWORD]"), szHost);
+						DisconnectPeer(Peer.m_Peer, DISCONNECT_WRONGPASSWORD);
+						return;
+					}
+					bool bWrongPassword = m_Password.HasPassword() && !m_Password.Verify(pszPassword);
+					GFree(pszPassword);
+					if (bWrongPassword)
+					{
+						_glogwarnprintf(_gstr("CONNECT: %s revoked connection [WRONG PASSWORD]"), szHost);
+						DisconnectPeer(Peer.m_Peer, DISCONNECT_WRONGPASSWORD);
+						return;
+					}
+				}
 
-				pNetMachine->SendPacket(&Packet);
-			}
+				//if (!VerifyGameExecutableHash((eGameVersion)pPkt->m_uiGameVersion,pPkt->m_uiGameHash))
+				//{
+				//	_glogwarnprintf(_gstr("CONNECT: %s:%u revoked connection [UNSUPPORTED EXECUTABLE]"), Host.CString(), pPeer->address.port);
+				//	DisconnectPeer(pPeer,DISCONNECT_UNSUPPORTEDEXECUTABLE);
+				//	return;
+				//}
+				uint16_t usNicknameLength = 0;
+				Reader.ReadUInt16(&usNicknameLength, 1);
+				GChar szName[NETGAME_MAX_NAME_BUFFER] = { 0 };
+				if (usNicknameLength <= 0 || usNicknameLength >= NETGAME_MAX_NAME_BUFFER || usNicknameLength >= NETGAME_MAX_NAME)
+				{
+					_glogwarnprintf(_gstr("CONNECT: %s revoked connection [INVALID NICKNAME]"), szHost);
+					DisconnectPeer(Peer.m_Peer, DISCONNECT_INVALIDNICKNAME);
+					return;
+				}
+				{
+					char szName2[NETGAME_MAX_NAME_BUFFER] = { 0 };
+					pStream->Read(szName2, usNicknameLength);
+					szName2[usNicknameLength] = '\0';
+					CString Name(false, szName2, usNicknameLength);
+					_gstrlcpy(szName, Name, ARRAY_COUNT(szName));
+					if (_gstrlen(szName) == 0)
+					{
+						_glogwarnprintf(_gstr("CONNECT: %s revoked connection [INVALID NICKNAME]"), szHost);
+						DisconnectPeer(Peer.m_Peer, DISCONNECT_INVALIDNICKNAME);
+						return;
+					}
+				}
+				//if (usNicknameLength == 0)
+				//{
+				//	_gsnprintf(szName, ARRAY_COUNT(szName), _gstr("%s"), szHost);
+				//}
+				uint8_t ucGame;
+				Reader.ReadUInt8(&ucGame, 1);
+				if (std::find(m_AllowedGameIds.begin(), m_AllowedGameIds.end(), ucGame) == m_AllowedGameIds.end())
+				{
+					_glogwarnprintf(_gstr("CONNECT: %s revoked connection [WRONG GAME]"), szName);
+					DisconnectPeer(Peer.m_Peer, DISCONNECT_UNSUPPORTEDENGINE);
+					return;
+				}
+				uint8_t ucGameVersion;
+				Reader.ReadUInt8(&ucGameVersion, 1);
+				//if (!bOkayGameVersion)
+				//{
+				//	_glogwarnprintf(_gstr("CONNECT: %s revoked connection [WRONG GAME VERSION]"), szName);
+				//	DisconnectPeer(SystemAddress,DISCONNECT_UNSUPPORTEDENGINE);
+				//	return;
+				//}
+				if (IsNameInUse(szName))
+				{
+					_glogwarnprintf(_gstr("CONNECT: %s revoked connection [NICKNAME IN USE]"), szName);
+					DisconnectPeer(Peer.m_Peer, DISCONNECT_NICKNAMEINUSE);
+					return;
+				}
+				if (m_CurrentClients >= m_MaxClients)
+				{
+					_glogwarnprintf(_gstr("CONNECT: %s revoked connection [SERVER FULL]"), szName);
+					DisconnectPeer(Peer.m_Peer, DISCONNECT_FULL);
+					return;
+				}
 
-			SendGameMode(pClient);
-			SendServerName(pClient);
-
-			// Inform everyone else we joined
-			// Calculate PeersSize also while we are looping here...
-			size_t PeerCount = 0;
-			{
+				Strong<CNetMachine> pNetMachine;
 				for (size_t i = 0; i < MAX_MACHINES; i++)
 				{
-					if (m_NetMachines.m_rgpMachines[i] != nullptr)
+					if (m_NetMachines.m_rgpMachines[i] == nullptr)
 					{
-						PeerCount++;
+						pNetMachine = Strong<CNetMachine>::New(NewMachine(m_pManager));
+						m_NetMachines.m_rgpMachines[i] = pNetMachine;
+						pNetMachine->m_Peer = Peer.m_Peer;
+						const GChar* pszGame = m_pManager->m_Games.GetGameName(ucGame);
+						pNetMachine->m_Game.assign(pszGame);
+						pNetMachine->m_GameId = ucGame;
+						pNetMachine->m_ucGameVersion = ucGameVersion;
+						pNetMachine->m_nIndex = (uint32_t)i;
+						pNetMachine->m_GlobalIdentifier = Peer.m_GlobalPeer;
+						pNetMachine->m_IPAddress = IPAddress;
+						pNetMachine->SetName(szName);
+						pNetMachine->m_bStreaming = false;
+						m_CurrentClients++;
+						m_Announcer.PlayerAdd(pNetMachine);
+						pClient = pNetMachine;
+						break;
+					}
+				}
 
-						// Don't tell ourself we joined
-						if (m_NetMachines.m_rgpMachines[i] != pClient)
+				if (pNetMachine == nullptr)
+				{
+					_glogwarnprintf(_gstr("CONNECT: %s revoked connection [SERVER FULL]"), szName);
+					DisconnectPeer(Peer.m_Peer, DISCONNECT_FULL);
+					return;
+				}
+				else
+				{
+					{
+						CArguments Args(1);
+						//Args.AddInt32(iLocalIndex);
+						Args.AddObject(pNetMachine);
+						m_pOnPlayerJoinEventType->Trigger(Args);
+					}
+					OnPlayerJoin(pNetMachine);
+					//ChatPrintf("%s joined the game",szName);
+					//CString Name(false, szName);
+					//_glogprintf(_gstr("%s joined the game."), Name.CString());
+					SendCVars(pNetMachine);
+					{
+						Packet Packet(PACKET_RESPONSE);
+
+						CBinaryWriter Writer(&Packet);
+						Writer.WriteInt32(pNetMachine->m_nIndex);
+						Writer.WriteUInt16(m_usHTTPPort);
+						Writer.WriteString(m_HTTPUrl.c_str(), m_HTTPUrl.length());
+						Writer.WriteUInt16(m_usSyncInterval);
+						Uint8 ucFlags = 0;
+#if 0
+						if (m_pNetSystem->m_bCompressPackets)
+							ucFlags |= 1;
+#endif
+						Writer.WriteUInt8(ucFlags);
+#if 0
+						if (m_pNetSystem->m_bCompressPackets)
+							Writer.WriteInt32((int32_t)m_pNetSystem->m_CompressionLevel);
+#endif
+						Writer.WriteUInt8((uint8_t)m_SyncMethod);
+
+						pNetMachine->SendPacket(&Packet);
+					}
+
+					SendGameMode(pClient);
+					SendServerName(pClient);
+
+					// Inform everyone else we joined
+					// Calculate PeersSize also while we are looping here...
+					size_t PeerCount = 0;
+					{
+						for (size_t i = 0; i < MAX_MACHINES; i++)
 						{
-							Packet Packet(PACKET_ADDMACHINE);
+							if (m_NetMachines.m_rgpMachines[i] != nullptr)
+							{
+								PeerCount++;
 
-							Packet.Write<Uint16>(1);
-							Packet.Write<Uint32>(pClient->m_nIndex);
-							if (pClient->Write(&Packet))
-								m_NetMachines.m_rgpMachines[i]->SendPacket(&Packet, PACKETPRIORITY_DEFAULT, PACKETFLAGS_RELIABLE, PACKETORDERINGCHANNEL_NETMACHINES);
+								// Don't tell ourself we joined
+								if (m_NetMachines.m_rgpMachines[i] != pClient)
+								{
+									Packet Packet(PACKET_ADDMACHINE);
+
+									Packet.Write<Uint16>(1);
+									Packet.Write<Uint32>(pClient->m_nIndex);
+									if (pClient->Write(&Packet))
+										m_NetMachines.m_rgpMachines[i]->SendPacket(&Packet, PACKETPRIORITY_DEFAULT, PACKETFLAGS_RELIABLE, PACKETORDERINGCHANNEL_NETMACHINES);
+								}
+							}
 						}
 					}
+
+					// Inform this player who is joined
+					{
+						Packet Packet(PACKET_EXISTINGMACHINES);
+						Packet.Write<Uint16>((Uint16)PeerCount);
+						Packet.Write<Uint16>((Uint16)m_MaxClients);
+						for (size_t i = 0; i < MAX_MACHINES; i++)
+						{
+							if (m_NetMachines.m_rgpMachines[i] != nullptr)
+							{
+								Packet.Write<Uint32>(m_NetMachines.m_rgpMachines[i]->m_nIndex);
+								m_NetMachines.m_rgpMachines[i]->Write(&Packet);
+							}
+						}
+						pClient->SendPacket(&Packet, PACKETPRIORITY_DEFAULT, PACKETFLAGS_RELIABLE, PACKETORDERINGCHANNEL_NETMACHINES);
+					}
+
+					// delay creation until we get some sync...
+					//m_pManager->SendCreatePacket(m_rgpPlayers[iLocalIndex]);
+
+					//{
+					//	CEvent* pEvent2 = new CEvent(m_pOnPlayerJoinedEventType);
+					//	//lua_pushinteger(m_ResourceMgr.m_Scripting.m_pState,iLocalIndex);
+					//	m_rgpPlayers[iLocalIndex]->Push(m_ResourceMgr.m_Scripting.m_pState);
+					//	pEvent2->Trigger(m_ResourceMgr.m_Scripting.m_pState,1);
+					//	lua_pop(m_ResourceMgr.m_Scripting.m_pState,1);
+					//	pEvent2->Release();
+					//}
 				}
 			}
-
-			// Inform this player who is joined
+			break;
+		case PACKET_JOIN:
 			{
-				Packet Packet(PACKET_EXISTINGMACHINES);
-				Packet.Write<Uint16>((Uint16)PeerCount);
-				Packet.Write<Uint16>((Uint16)m_MaxClients);
-				for (size_t i = 0; i < MAX_MACHINES; i++)
+				bool bWasJoined = pClient->m_bJoined;
+				pClient->m_bJoined = true;
+				pClient->m_bStreaming = true;
+
+				m_ResourceMgr.UpdateAllResource(this, Peer.m_Peer);
+
+				OnPlayerJoined(pClient);
+
+				// moved OnPlayerJoined here
 				{
-					if (m_NetMachines.m_rgpMachines[i] != nullptr)
+					CArguments Args(1);
+					//Args.AddInt32(iLocalIndex);
+					Args.AddObject(pClient);
+					m_pOnPlayerJoinedEventType->Trigger(Args);
+				}
+
+				pClient->SendPlayer();
+
+				Packet Packet(PACKET_JOINED);
+				pClient->SendPacket(&Packet);
+			}
+			break;
+		case PACKET_PLAYERSYNC:
+			{
+				uint16_t usCount = 0;
+				Reader.ReadUInt16(&usCount, 1);
+
+				for (size_t i = 0; i < usCount; i++)
+				{
+					uint16_t usSize;
+					Reader.ReadUInt16(&usSize, 1);
+					int32_t Type;
+					Reader.ReadInt32(&Type, 1);
+					int32_t nId;
+					Reader.ReadInt32(&nId, 1);
+					if(usSize >= (sizeof(Type) + sizeof(nId)))
 					{
-						Packet.Write<Uint32>(m_NetMachines.m_rgpMachines[i]->m_nIndex);
-						m_NetMachines.m_rgpMachines[i]->Write(&Packet);
+						usSize -= sizeof(Type) + sizeof(nId);
+					}
+					else
+					{
+						// Malformed packet.
+						// TODO: Flush all of packet PACKET_PLAYERSYNC as packet size is known.
+						return;
+					}
+
+					CNetObject* pServerElement = m_pManager->FromId(nId);
+					if (pServerElement != nullptr)
+					{
+						// Element is now dirty
+						//
+						pServerElement->SetDirty(true);
+
+						auto Pos = (size_t)pStream->Tell();
+						pServerElement->ReadSyncPacket(pStream);
+						size_t Read = ((size_t)pStream->Tell() - Pos);
+						_gassert(Read == usSize); // ReadSyncPacket didn't read all the data
+						pStream->Seek((int64_t)Pos + (int64_t)usSize, SEEK_SET);
+					}
+					else
+						pStream->Seek((int64_t)usSize, SEEK_CUR);
+				}
+
+				if (m_SyncMethod == SYNCMETHOD_REPLAY)
+					SendSync(pClient);
+			}
+			break;
+		case PACKET_NETWORKEVENT:
+			{
+				size_t Length;
+				const GChar* pszName = Reader.ReadString(&Length);
+				if (pszName != nullptr)
+				{
+					CArguments Args;
+					Args.m_pNetObjectMgr = m_pManager;
+					if (Args.Read(pStream))
+					{
+						if (!m_ResourceMgr.m_pNetworkHandlers->Trigger(pClient, pszName, Args))
+						{
+							_glogwarnprintf(_gstr("Network event %s not bound serverside"), pszName);
+						}
+					}
+					else
+					{
+						_glogwarnprintf(_gstr("Failed to read network arguments for network event %s."), pszName);
+					}
+					GFree(pszName);
+				}
+			}
+			break;
+		case PACKET_CHAT:
+			{
+				unsigned int MessageLength;
+				Reader.ReadUInt32(&MessageLength, 1);
+
+				if (MessageLength == 0 || MessageLength > MAX_CHAT_MESSAGE_LENGTH)
+				{
+					// TODO: Flush this packet.
+					return;
+				}
+
+				char* pszMessage = new char[MessageLength + 1];
+				if (!pszMessage)
+				{
+					// TODO: Flush this packet.
+					return;
+				}
+				pStream->Read(pszMessage, MessageLength);
+				pszMessage[MessageLength] = '\0';
+
+				if (strlen(pszMessage) == 0)
+				{
+					// Blank chat message, despite MessageLength being more than zero.
+					return;
+				}
+
+				CString Message(false, pszMessage, MessageLength);
+				UserChat(pClient, Message, Message.GetLength());
+
+				delete[] pszMessage;
+			}
+			break;
+		case PACKET_COMMAND:
+			{
+				unsigned int CommandLength;
+				Reader.ReadUInt32(&CommandLength, 1);
+
+				if (CommandLength == 0 || CommandLength > MAX_COMMAND_LENGTH)
+				{
+					// TODO: Flush this packet.
+					return;
+				}
+
+				char* pszCommand = new char[CommandLength + 1];
+				if (!pszCommand)
+				{
+					// TODO: Flush this packet.
+					return;
+				}
+				pStream->Read(pszCommand, CommandLength);
+				pszCommand[CommandLength] = '\0';
+
+				unsigned int MessageLength;
+				Reader.ReadUInt32(&MessageLength, 1);
+				if (MessageLength > MAX_COMMAND_MESSAGE_LENGTH)
+				{
+					delete[] pszCommand;
+					// TODO: Flush this packet.
+					return;
+				}
+
+				char* pszMessage = new char[MessageLength + 1];
+				if (!pszMessage)
+				{
+					delete[] pszCommand;
+					// TODO: Flush this packet.
+					return;
+				}
+				pStream->Read(pszMessage, MessageLength);
+				pszMessage[MessageLength] = '\0';
+
+				{
+					CArguments Args(3);
+					if (pClient != nullptr)
+						Args.AddObject(pClient);
+					else
+						Args.AddNull();
+					CString Command(false, pszCommand, CommandLength);
+					Args.AddString(Command, Command.GetLength());
+					CString Message(false, pszMessage, MessageLength);
+					Args.AddString(Message, Message.GetLength());
+					bool bPreventDefault = false;
+					m_pOnPlayerCommandEventType->Trigger(Args, bPreventDefault);
+					if (!bPreventDefault)
+						m_ResourceMgr.m_pCommandHandlers->Trigger(Command, Message, pClient, pClient->m_bAdministrator);
+				}
+
+				/*{
+					CEvent* pEvent = new CEvent(m_pOnPlayerCommandEventType);
+					pClient->Push(m_ResourceMgr.m_Scripting.m_pState);
+					lua_pushlstring(m_ResourceMgr.m_Scripting.m_pState,pszCommand,CommandLength);
+					lua_pushlstring(m_ResourceMgr.m_Scripting.m_pState,pszMessage,MessageLength);
+					pEvent->Trigger(m_ResourceMgr.m_Scripting.m_pState,3);
+					bool bPreventDefault = pEvent->m_bPreventDefault;
+					lua_pop(m_ResourceMgr.m_Scripting.m_pState,3);
+					pEvent->Release();
+
+					if (!bPreventDefault)
+					{
+						//String Message;
+						//Message = pClient->m_szName;
+						//Message += ": ";
+						//Message += pszMessage;
+						//SendChat(Message.CString(),Message.GetLength(),1);
+					}
+				}*/
+
+				delete[] pszCommand;
+				delete[] pszMessage;
+			}
+			break;
+		case PACKET_KICK:
+			{
+				unsigned int uiReason = DISCONNECT_GRACEFUL;
+				Reader.ReadUInt32(&uiReason, 1);
+
+				OnPlayerDisconnect(Peer.m_Peer, uiReason);
+
+				DisconnectPeer(Peer.m_Peer, uiReason);
+			}
+			break;
+		case PACKET_KEYEVENT:
+			{
+				uint8_t ucFlags;
+				Reader.ReadUInt8(&ucFlags, 1);
+
+				uint32_t ScanCode;
+				Reader.ReadUInt32(&ScanCode, 1);
+
+				uint32_t KeyCode;
+				Reader.ReadUInt32(&KeyCode, 1);
+
+				uint16_t Mod;
+				Reader.ReadUInt16(&Mod, 1);
+
+				int32_t Repeat;
+				Reader.ReadInt32(&Repeat, 1);
+
+				SDL_Keysym Key = {};
+				Key.scancode = (SDL_Scancode)ScanCode;
+				Key.sym = (SDL_Keycode)KeyCode;
+				Key.mod = Mod;
+				m_ResourceMgr.m_pKeyBinds->Trigger(pClient, Key, Repeat, (ucFlags & 1) != 0);
+			}
+			break;
+		case PACKET_REQUESTSYNCER:
+			{
+				int32_t nId;
+				if (!Reader.ReadInt32(&nId, 1))
+					return;
+
+				CNetObject* pElement = m_pManager->FromId(nId);
+				if (pElement != nullptr && pElement->CanBeSyncer(pClient))
+				{
+					pElement->SetSyncer(pClient);
+				}
+			}
+			break;
+		case PACKET_DELETETHING:
+			{
+				uint16_t usCount = 0;
+				Reader.ReadUInt16(&usCount, 1);
+
+				for (size_t i = 0; i < usCount; i++)
+				{
+					int32_t nId;
+					Reader.ReadInt32(&nId, 1);
+
+					CNetObject* pElement = m_pManager->FromId(nId);
+					if (pElement != nullptr)
+					{
+						bool bSyncer = pElement->GetSyncer() == pClient;
+
+						pElement->SetCreatedFor(pClient, false);
+
+						// If the syncer wants to delete it and we forced it to always exist for the syncer, let it delete it
+						if (bSyncer && pElement->m_Flags.m_bAlwaysExistForSyncer)
+						{
+							m_pManager->DestroyObject(pElement);
+							return;
+						}
+
+						// Inform the peer2peer system that a client deleted this element
+						m_pManager->PossiblyDeleteObject(pElement);
 					}
 				}
-				pClient->SendPacket(&Packet, PACKETPRIORITY_DEFAULT, PACKETFLAGS_RELIABLE, PACKETORDERINGCHANNEL_NETMACHINES);
 			}
-
-			// delay creation until we get some sync...
-			//m_pManager->SendCreatePacket(m_rgpPlayers[iLocalIndex]);
-
-			//{
-			//	CEvent* pEvent2 = new CEvent(m_pOnPlayerJoinedEventType);
-			//	//lua_pushinteger(m_ResourceMgr.m_Scripting.m_pState,iLocalIndex);
-			//	m_rgpPlayers[iLocalIndex]->Push(m_ResourceMgr.m_Scripting.m_pState);
-			//	pEvent2->Trigger(m_ResourceMgr.m_Scripting.m_pState,1);
-			//	lua_pop(m_ResourceMgr.m_Scripting.m_pState,1);
-			//	pEvent2->Release();
-			//}
-		}
-	}
-	break;
-	case PACKET_JOIN:
-	{
-		bool bWasJoined = pClient->m_bJoined;
-		pClient->m_bJoined = true;
-		pClient->m_bStreaming = true;
-
-		m_ResourceMgr.UpdateAllResource(this, Peer.m_Peer);
-
-		OnPlayerJoined(pClient);
-
-		// moved OnPlayerJoined here
-		{
-			CArguments Args(1);
-			//Args.AddInt32(iLocalIndex);
-			Args.AddObject(pClient);
-			m_pOnPlayerJoinedEventType->Trigger(Args);
-		}
-
-		pClient->SendPlayer();
-
-		Packet Packet(PACKET_JOINED);
-		pClient->SendPacket(&Packet);
-	}
-	break;
-	case PACKET_PLAYERSYNC:
-	{
-		uint16_t usCount = 0;
-		Reader.ReadUInt16(&usCount, 1);
-
-		for (size_t i = 0; i < usCount; i++)
-		{
-			uint16_t usSize;
-			Reader.ReadUInt16(&usSize, 1);
-			int32_t Type;
-			Reader.ReadInt32(&Type, 1);
-			int32_t nId;
-			Reader.ReadInt32(&nId, 1);
-			if (usSize >= (sizeof(Type) + sizeof(nId)))
+			break;
+		case PACKET_SETSTREAMING:
 			{
-				usSize -= sizeof(Type) + sizeof(nId);
+				bool bStreaming = false;
+				Reader.ReadBoolean(bStreaming);
+
+				pClient->m_bStreaming = bStreaming;
 			}
-			else
-			{
-				// Malformed packet.
-				// TODO: Flush all of packet PACKET_PLAYERSYNC as packet size is known.
-				return;
-			}
-
-			CNetObject* pServerElement = m_pManager->FromId(nId);
-			if (pServerElement != nullptr)
-			{
-				// Element is now dirty
-				//
-				pServerElement->SetDirty(true);
-
-				auto Pos = (size_t)pStream->Tell();
-				pServerElement->ReadSyncPacket(pStream);
-				size_t Read = ((size_t)pStream->Tell() - Pos);
-				_gassert(Read == usSize); // ReadSyncPacket didn't read all the data
-				pStream->Seek(Pos + usSize, SEEK_SET);
-			}
-			else
-				pStream->Seek(usSize, SEEK_CUR);
-		}
-
-		if (m_SyncMethod == SYNCMETHOD_REPLAY)
-			SendSync(pClient);
-	}
-	break;
-	case PACKET_NETWORKEVENT:
-	{
-		size_t Length;
-		const GChar* pszName = Reader.ReadString(&Length);
-		if (pszName != nullptr)
-		{
-			CArguments Args;
-			Args.m_pNetObjectMgr = m_pManager;
-			if (Args.Read(pStream))
-			{
-				if (!m_ResourceMgr.m_pNetworkHandlers->Trigger(pClient, pszName, Args))
-				{
-					_glogwarnprintf(_gstr("Network event %s not bound serverside"), pszName);
-				}
-			}
-			else
-			{
-				_glogwarnprintf(_gstr("Failed to read network arguments for network event %s."), pszName);
-			}
-			GFree(pszName);
-		}
-	}
-	break;
-	case PACKET_CHAT:
-	{
-		unsigned int MessageLength;
-		Reader.ReadUInt32(&MessageLength, 1);
-
-		if (MessageLength == 0 || MessageLength > MAX_CHAT_MESSAGE_LENGTH)
-		{
-			// TODO: Flush this packet.
-			return;
-		}
-
-		char* pszMessage = new char[MessageLength + 1];
-		if (!pszMessage)
-		{
-			// TODO: Flush this packet.
-			return;
-		}
-		pStream->Read(pszMessage, MessageLength);
-		pszMessage[MessageLength] = '\0';
-
-		if (strlen(pszMessage) == 0)
-		{
-			// Blank chat message, despite MessageLength being more than zero.
-			return;
-		}
-
-		CString Message(false, pszMessage, MessageLength);
-		UserChat(pClient, Message, Message.GetLength());
-
-		delete[] pszMessage;
-	}
-	break;
-	case PACKET_COMMAND:
-	{
-		unsigned int CommandLength;
-		Reader.ReadUInt32(&CommandLength, 1);
-
-		if (CommandLength == 0 || CommandLength > MAX_COMMAND_LENGTH)
-		{
-			// TODO: Flush this packet.
-			return;
-		}
-
-		char* pszCommand = new char[CommandLength + 1];
-		if (!pszCommand)
-		{
-			// TODO: Flush this packet.
-			return;
-		}
-		pStream->Read(pszCommand, CommandLength);
-		pszCommand[CommandLength] = '\0';
-
-		unsigned int MessageLength;
-		Reader.ReadUInt32(&MessageLength, 1);
-		if (MessageLength > MAX_COMMAND_MESSAGE_LENGTH)
-		{
-			delete[] pszCommand;
-			// TODO: Flush this packet.
-			return;
-		}
-
-		char* pszMessage = new char[MessageLength + 1];
-		if (!pszMessage)
-		{
-			delete[] pszCommand;
-			// TODO: Flush this packet.
-			return;
-		}
-		pStream->Read(pszMessage, MessageLength);
-		pszMessage[MessageLength] = '\0';
-
-		{
-			CArguments Args(3);
-			if (pClient != nullptr)
-				Args.AddObject(pClient);
-			else
-				Args.AddNull();
-			CString Command(false, pszCommand, CommandLength);
-			Args.AddString(Command, Command.GetLength());
-			CString Message(false, pszMessage, MessageLength);
-			Args.AddString(Message, Message.GetLength());
-			bool bPreventDefault = false;
-			m_pOnPlayerCommandEventType->Trigger(Args, bPreventDefault);
-			if (!bPreventDefault)
-				m_ResourceMgr.m_pCommandHandlers->Trigger(Command, Message, pClient, pClient->m_bAdministrator);
-		}
-
-		/*{
-			CEvent* pEvent = new CEvent(m_pOnPlayerCommandEventType);
-			pClient->Push(m_ResourceMgr.m_Scripting.m_pState);
-			lua_pushlstring(m_ResourceMgr.m_Scripting.m_pState,pszCommand,CommandLength);
-			lua_pushlstring(m_ResourceMgr.m_Scripting.m_pState,pszMessage,MessageLength);
-			pEvent->Trigger(m_ResourceMgr.m_Scripting.m_pState,3);
-			bool bPreventDefault = pEvent->m_bPreventDefault;
-			lua_pop(m_ResourceMgr.m_Scripting.m_pState,3);
-			pEvent->Release();
-
-			if (!bPreventDefault)
-			{
-				//String Message;
-				//Message = pClient->m_szName;
-				//Message += ": ";
-				//Message += pszMessage;
-				//SendChat(Message.CString(),Message.GetLength(),1);
-			}
-		}*/
-
-		delete[] pszCommand;
-		delete[] pszMessage;
-	}
-	break;
-	case PACKET_KICK:
-	{
-		unsigned int uiReason = DISCONNECT_GRACEFUL;
-		Reader.ReadUInt32(&uiReason, 1);
-
-		OnPlayerDisconnect(Peer.m_Peer, uiReason);
-
-		DisconnectPeer(Peer.m_Peer, uiReason);
-	}
-	break;
-	case PACKET_KEYEVENT:
-	{
-		uint8_t ucFlags;
-		Reader.ReadUInt8(&ucFlags, 1);
-
-		uint32_t ScanCode;
-		Reader.ReadUInt32(&ScanCode, 1);
-
-		uint32_t KeyCode;
-		Reader.ReadUInt32(&KeyCode, 1);
-
-		uint16_t Mod;
-		Reader.ReadUInt16(&Mod, 1);
-
-		int32_t Repeat;
-		Reader.ReadInt32(&Repeat, 1);
-
-		SDL_Keysym Key = {};
-		Key.scancode = (SDL_Scancode)ScanCode;
-		Key.sym = (SDL_Keycode)KeyCode;
-		Key.mod = Mod;
-		m_ResourceMgr.m_pKeyBinds->Trigger(pClient, Key, Repeat, (ucFlags & 1) != 0);
-	}
-	break;
-	case PACKET_REQUESTSYNCER:
-	{
-		int32_t nId;
-		if (!Reader.ReadInt32(&nId, 1))
-			return;
-
-		CNetObject* pElement = m_pManager->FromId(nId);
-		if (pElement != nullptr && pElement->CanBeSyncer(pClient))
-		{
-			pElement->SetSyncer(pClient);
-		}
-	}
-	break;
-	case PACKET_DELETETHING:
-	{
-		uint16_t usCount = 0;
-		Reader.ReadUInt16(&usCount, 1);
-
-		for (size_t i = 0; i < usCount; i++)
-		{
-			int32_t nId;
-			Reader.ReadInt32(&nId, 1);
-
-			CNetObject* pElement = m_pManager->FromId(nId);
-			if (pElement != nullptr)
-			{
-				pElement->SetCreatedFor(pClient, false);
-
-				// Inform the peer2peer system that a client deleted this element
-				m_pManager->PossiblyDeleteObject(pElement);
-			}
-		}
-	}
-	break;
-	case PACKET_SETSTREAMING:
-	{
-		bool bStreaming = false;
-		Reader.ReadBoolean(bStreaming);
-
-		pClient->m_bStreaming = bStreaming;
-	}
-	break;
-	default:
-		break;
+			break;
+		default:
+			break;
 	}
 }
 
@@ -1081,7 +1090,7 @@ void CBaseServer::SendAllSync()
 	}
 
 	// Find a new syncer
-	for (size_t i = 0; i < m_pManager->m_Objects.GetSize(); i++)
+	for (size_t i=0; i<m_pManager->m_Objects.GetSize(); i++)
 	{
 		if (m_pManager->m_Objects.IsUsedAt(i))
 		{
@@ -1133,14 +1142,14 @@ void CBaseServer::SendChat(CNetMachine* pClient, const GChar* pszMessage, size_t
 
 void CBaseServer::UserChat(CNetMachine* pClient, const GChar* pszMessage, size_t MessageLength)
 {
+	if (pClient == nullptr)
+		return;
+
 	CArguments Args(2);
-	if (pClient != nullptr)
-		Args.AddObject(pClient);
-	else
-		Args.AddNull();
-	Args.AddString(pszMessage, MessageLength);
+	Args.AddObject(pClient);
+	Args.AddString(pszMessage,MessageLength);
 	bool bPreventDefault = false;
-	m_pOnPlayerChatEventType->Trigger(Args, bPreventDefault);
+	m_pOnPlayerChatEventType->Trigger(Args,bPreventDefault);
 
 	if (!bPreventDefault)
 	{
@@ -1288,6 +1297,7 @@ bool CBaseServer::ParseConfig(const CServerConfiguration& Config)
 #endif
 
 	m_bDuplicateNames = Config.GetBoolValue(_gstr("duplicatenames"), false);
+	m_bMultiThreaded = Config.GetBoolValue(_gstr("multithreaded"), false);
 
 	{
 		m_uiMinMajorVersion = 1;
@@ -1469,73 +1479,73 @@ void CBaseServer::RegisterConfig()
 		CBaseServer* pServer = (CBaseServer*)pUser;
 		_gstrlcpy(pServer->m_szServerName, pszValue, ARRAY_COUNT(pServer->m_szServerName));
 		return true;
-		});
+	});
 
 	m_ServerConfig.RegisterCallback(_gstr("listen_ip"), this, [](const GChar* pszName, const GChar* pszValue, void* pUser) {
 		CBaseServer* pServer = (CBaseServer*)pUser;
 		_gstrlcpy(pServer->m_szBindIP, pszValue, ARRAY_COUNT(pServer->m_szBindIP));
 		return true;
-		});
+	});
 
 	m_ServerConfig.RegisterCallback(_gstr("listen_port"), this, [](const GChar* pszName, int32_t iValue, void* pUser) {
 		CBaseServer* pServer = (CBaseServer*)pUser;
 		pServer->m_usPort = (uint16_t)iValue;
 		return true;
-		});
+	});
 
 	m_ServerConfig.RegisterCallback(_gstr("max_players"), this, [](const GChar* pszName, int32_t iValue, void* pUser) {
 		CBaseServer* pServer = (CBaseServer*)pUser;
 		pServer->m_MaxClients = (size_t)iValue;
 		return true;
-		});
+	});
 
 	m_ServerConfig.RegisterCallback(_gstr("password"), this, [](const GChar* pszName, const GChar* pszValue, void* pUser) {
 		CBaseServer* pServer = (CBaseServer*)pUser;
 		pServer->m_Password.SetPassword(pszValue);
 		return true;
-		});
+	});
 
 	m_ServerConfig.RegisterCallback(_gstr("owner"), this, [](const GChar* pszName, const GChar* pszValue, void* pUser) {
 		CBaseServer* pServer = (CBaseServer*)pUser;
 		pServer->SetRule(_gstr("Owner"), pszValue);
 		return true;
-		});
+	});
 
 	m_ServerConfig.RegisterCallback(_gstr("website"), this, [](const GChar* pszName, const GChar* pszValue, void* pUser) {
 		CBaseServer* pServer = (CBaseServer*)pUser;
 		pServer->SetRule(_gstr("Website"), pszValue);
 		return true;
-		});
+	});
 
 	m_ServerConfig.RegisterCallback(_gstr("gamemode_name"), this, [](const GChar* pszName, const GChar* pszValue, void* pUser) {
 		CBaseServer* pServer = (CBaseServer*)pUser;
 		_gstrlcpy(pServer->m_szGameMode, pszValue, ARRAY_COUNT(pServer->m_szGameMode));
 		return true;
-		});
+	});
 
 	m_ServerConfig.RegisterCallback(_gstr("map_name"), this, [](const GChar* pszName, const GChar* pszValue, void* pUser) {
 		CBaseServer* pServer = (CBaseServer*)pUser;
 		_gstrlcpy(pServer->m_szMap, pszValue, ARRAY_COUNT(pServer->m_szMap));
 		return true;
-		});
+	});
 
 	m_ServerConfig.RegisterCallback(_gstr("rcon"), this, [](const GChar* pszName, bool bValue, void* pUser) {
 		CBaseServer* pServer = (CBaseServer*)pUser;
 		pServer->m_bRCon = bValue;
 		return true;
-		});
+	});
 
 	m_ServerConfig.RegisterCallback(_gstr("rcon_port"), this, [](const GChar* pszName, int32_t iValue, void* pUser) {
 		CBaseServer* pServer = (CBaseServer*)pUser;
 		pServer->m_usRConPort = (uint16_t)iValue;
 		return true;
-		});
+	});
 
 	m_ServerConfig.RegisterCallback(_gstr("rcon_pass"), this, [](const GChar* pszName, const GChar* pszValue, void* pUser) {
 		CBaseServer* pServer = (CBaseServer*)pUser;
 		pServer->m_RCon.m_Password.SetPassword(pszValue);
 		return true;
-		});
+	});
 }
 
 bool CBaseServer::StartInitialResources()
@@ -1573,9 +1583,9 @@ bool CBaseServer::StartServer()
 {
 	_glogprintf(_gstr("Server is starting..."));
 
-	m_TimeManager.Initialise(60.0, 16.0);
+	m_TimeManager.Initialise(60.0,16.0);
 
-	if (!InitAsServer(m_usPort, m_szBindIP))
+	if (!InitAsServer(m_usPort, m_szBindIP, m_bMultiThreaded))
 	{
 		_glogerrorprintf(_gstr("Failed to start the server!"));
 		return false;
@@ -1647,7 +1657,7 @@ void CBaseServer::StartInputThread()
 		CThreadCB* pThread = new CThreadCB("InputThread", [](Thread* pThread, void* pUser) {
 			((CBaseServer*)pUser)->InputThread();
 			return 0;
-			}, this);
+		}, this);
 		if (pThread->Start())
 			m_pInputThread = pThread;
 		else
@@ -1688,7 +1698,7 @@ bool CBaseServer::OnFrame()
 		m_Announcer.Pulse((float)pTime->m_fDeltaTime);
 	}
 	{
-		for (size_t i = 0; i < MAX_MACHINES; i++)
+		for (size_t i=0; i<MAX_MACHINES; i++)
 		{
 			if (m_NetMachines.m_rgpMachines[i] != nullptr && m_NetMachines.m_rgpMachines[i]->m_bJoined)
 			{
@@ -1817,7 +1827,7 @@ bool CBaseServer::IsNameInUse(const GChar* pszName)
 {
 	if (m_bDuplicateNames)
 		return false;
-	for (size_t i = 0; i < MAX_MACHINES; i++)
+	for (size_t i = 0; i<MAX_MACHINES; i++)
 	{
 		if (m_NetMachines.m_rgpMachines[i] != NULL)
 		{

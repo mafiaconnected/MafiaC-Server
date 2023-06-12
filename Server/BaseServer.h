@@ -65,6 +65,7 @@ public:
 	uint16_t m_usSyncInterval;
 	eSyncMethod m_SyncMethod;
 	bool m_bDuplicateNames;
+	bool m_bMultiThreaded;
 	uint32_t m_uiMinMajorVersion;
 	uint32_t m_uiMinMinorVersion;
 	uint32_t m_uiMinPatchVersion;
@@ -125,7 +126,7 @@ public:
 	void SetGame(const GChar* pszName);
 	void AddGame(const GChar* pszName);
 	void SendSync(CNetMachine* pNetMachine);
-	void ManageElements(CNetMachine* pNetMachine);
+	virtual void ManageElements(CNetMachine* pNetMachine);
 	void SendAllSync();
 	void SendChat(CNetMachine* pNetMachine, const GChar* pszMessage, size_t MessageLength, unsigned int uiColour);
 	void SendChatExcept(CNetMachine* pNetMachine, const GChar* pszMessage, size_t MessageLength, unsigned int uiColour);
