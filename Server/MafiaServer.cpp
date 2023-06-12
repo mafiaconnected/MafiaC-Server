@@ -617,6 +617,8 @@ bool CMafiaServer::ParseConfig(const CServerConfiguration& Config)
 	if (!CBaseServer::ParseConfig(Config))
 		return false;
 
+	_gstrlcpy(m_szMap, Config.GetStringValue(_gstr("mapname"), _gstr("")), ARRAY_COUNT(m_szMap));
+
 	return true;
 }
 
@@ -628,13 +630,13 @@ void CMafiaServer::OnProcess(const FrameTimeInfo* pTime)
 void CMafiaServer::OnPlayerJoin(CNetMachine* pNetMachine)
 {
 	CBaseServer::OnPlayerJoin(pNetMachine);
+	SendMapName(pNetMachine);
 }
 
 void CMafiaServer::OnPlayerJoined(CNetMachine* pNetMachine)
 {
 	CBaseServer::OnPlayerJoined(pNetMachine);
 }
-
 
 void CMafiaServer::SendMapName(CNetMachine* pClient)
 {
