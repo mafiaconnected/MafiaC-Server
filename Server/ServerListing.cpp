@@ -8,6 +8,7 @@ CMasterlistAnnouncer::CMasterlistAnnouncer(CBaseServer* pServer)
 	: m_pServer(pServer)
 {
 	m_State = MASTERLIST_NONE;
+	m_OldState = MASTERLIST_NONE;
 	m_fRetryTime = 0.0f;
 }
 
