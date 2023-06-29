@@ -12,6 +12,7 @@ class CServerVehicle;
 class CServerHuman;
 class CServerPlayer;
 class CServerDummy;
+class CServerObject;
 
 CMafiaClient::CMafiaClient(CNetObjectMgr* pServer) :
 	CNetMachine(pServer)
@@ -168,6 +169,8 @@ CNetObject* CMafiaServerManager::Create(int32_t nType)
 		return new CServerHuman(this);
 	case ELEMENT_DUMMY:
 		return new CServerDummy(this);
+	case ELEMENT_OBJECT:
+		return new CServerObject(this);
 	default:
 		break;
 	}
@@ -902,11 +905,43 @@ static bool FunctionCreateDummyElement(IScriptState* pState, int argc, void* pUs
 	auto pElement = Strong<CServerDummy>::New(pServerManager->Create(ELEMENT_DUMMY));
 	if (pElement == nullptr)
 	{
-		pState->Error(_gstr("Failed to create element"));
+		pState->Error(_gstr("Failed to create dummy element"));
 		return false;
 	}
 
 	pElement->SetPosition(vecPos);
+	pElement->m_pResource = pState->GetResource();
+	pServerManager->RegisterNetObject(pElement);
+	pState->ReturnObject(pElement);
+	return true;
+}
+
+static bool FunctionCreateObject(IScriptState* pState, int argc, void* pUser)
+{
+	CMafiaServerManager* pServerManager = (CMafiaServerManager*)pUser;
+
+	const GChar* sModel = pState->CheckString(0);
+	if (!sModel)
+		return false;
+
+	CVector3D vecPos(0.0f, 0.0f, 0.0f);
+	if (!pState->CheckVector3D(1, vecPos))
+		return false;
+
+	CVector3D vecRot(0.0f, 0.0f, 0.0f);
+	if (!pState->CheckVector3D(2, vecRot))
+		return false;
+
+	auto pElement = Strong<CServerObject>::New(pServerManager->Create(ELEMENT_OBJECT));
+	if (pElement == nullptr)
+	{
+		pState->Error(_gstr("Failed to create object"));
+		return false;
+	}
+
+	pElement->SetModel(sModel);
+	pElement->SetPosition(vecPos);
+	pElement->SetPosition(vecRot);
 	pElement->m_pResource = pState->GetResource();
 	pServerManager->RegisterNetObject(pElement);
 	pState->ReturnObject(pElement);
@@ -1302,6 +1337,7 @@ void CMafiaServerManager::RegisterFunctions(CScripting* pScripting)
 	pGameNamespace->RegisterFunction(_gstr("createPlayer"), _gstr("sv|f"), FunctionCreatePlayer, this);
 	pGameNamespace->RegisterFunction(_gstr("createPed"), _gstr("sv|f"), FunctionCreateHuman, this);
 	pGameNamespace->RegisterFunction(_gstr("createDummyElement"), _gstr("v"), FunctionCreateDummyElement, this);
+	pGameNamespace->RegisterFunction(_gstr("createObject"), _gstr("svv"), FunctionCreateObject, this);
 	pGameNamespace->RegisterFunction(_gstr("fadeScreen"), _gstr("xbf|i"), FunctionPlayerFadeScreen, this);
 
 	{
