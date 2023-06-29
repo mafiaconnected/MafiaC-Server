@@ -13,6 +13,7 @@ enum eMafiaElementType
 	ELEMENT_PLAYER = ELEMENT_PED | 16,
 	ELEMENT_VEHICLE = ELEMENT_ENTITY | 32,
 	ELEMENT_DUMMY = ELEMENT_ENTITY | 64,
+	ELEMENT_OBJECT = ELEMENT_ENTITY | 128,
 };
 
 class CMafiaClient : public CNetMachine
@@ -52,6 +53,7 @@ public:
 	Galactic3D::ReflectedClass* m_pServerPlayerClass;
 	Galactic3D::ReflectedClass* m_pServerVehicleClass;
 	Galactic3D::ReflectedClass* m_pServerDummyClass;
+	Galactic3D::ReflectedClass* m_pServerObjectClass;
 
 	virtual CNetObject* Create(int32_t nType) override;
 

@@ -5,3 +5,4 @@
 #include "ServerPlayer.h"
 #include "ServerVehicle.h"
 #include "ServerDummy.h"
+#include "ServerObject.h"
