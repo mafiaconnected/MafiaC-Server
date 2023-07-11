@@ -1346,7 +1346,7 @@ void CMafiaServerManager::RegisterFunctions(CScripting* pScripting)
 		m_pServerVehicleClass->RegisterFunction(_gstr("getOccupant"), _gstr("ti"), FunctionVehicleGetOccupant, this);
 		m_pServerVehicleClass->RegisterFunction(_gstr("getOccupants"), _gstr("t"), FunctionVehicleGetOccupants, this);
 		m_pServerVehicleClass->RegisterFunction(_gstr("setEngineState"), _gstr("tbb"), FunctionVehicleSetEngineDetailed, this);
-		m_pServerEntityClass->AddProperty(this, _gstr("gear"), ARGUMENT_INTEGER, FunctionVehicleGetGear, FunctionVehicleSetGear);
+		m_pServerVehicleClass->AddProperty(this, _gstr("gear"), ARGUMENT_INTEGER, FunctionVehicleGetGear, FunctionVehicleSetGear);
 	}
 
 	{
