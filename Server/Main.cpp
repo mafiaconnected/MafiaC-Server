@@ -143,7 +143,7 @@ int main(int argc, char* argv[])
 
 		CSignalHandlers::Install([]() {
 			g_pServer->m_ExitSignal.Signal();
-		});
+			});
 
 		bool bDumpDoc = false;
 		bool bExpectConfig = false;
@@ -152,6 +152,8 @@ int main(int argc, char* argv[])
 		bool* pbFlag;
 		int32_t* piNumber;
 		bool bNoInput = false;
+		bool bAllowAdmin = false;
+		Optional<bool> bMultithreaded;
 		GString Config = _gstr("server.xml");
 		Optional<int32_t> iPort;
 		Optional<int32_t> iHttpPort;
@@ -185,6 +187,18 @@ int main(int argc, char* argv[])
 				bExpectConfig = true;
 			else if (_gstrcasecmp(Arg, _gstr("-noinput")) == 0)
 				bNoInput = true;
+			else if (_gstrcasecmp(Arg, _gstr("-allowadmin")) == 0)
+				bAllowAdmin = true;
+			else if (_gstrcasecmp(Arg, _gstr("-multithreaded")) == 0)
+			{
+				bMultithreaded.m_bData = true;
+				bMultithreaded.m_Data = true;
+			}
+			else if (_gstrcasecmp(Arg, _gstr("-disablemultithreaded")) == 0)
+			{
+				bMultithreaded.m_bData = true;
+				bMultithreaded.m_Data = false;
+			}
 			else if (_gstrcasecmp(Arg, _gstr("-port")) == 0)
 			{
 				pbFlag = &iPort.m_bData;
@@ -215,6 +229,27 @@ int main(int argc, char* argv[])
 			}
 		}
 
+#ifdef _WIN32
+		if (!bAllowAdmin)
+		{
+			bool bRunningAsAdmin;
+			if (!WinUtil::IsRunningInWine() && WinUtil::IsRunningAsAdmin(&bRunningAsAdmin) && bRunningAsAdmin)
+			{
+				_glogwarnprintf(_gstr("*** The server is running as administrator! ***"));
+				_glogwarnprintf(_gstr("*** This could allow possible exploits to take over your pc ***"));
+				_glogwarnprintf(_gstr("*** Start with -allowadmin to ignore this warning ***"));
+
+				_gprintf(_gstr("Would you like to continue startup? (Y/[N])"));
+				int iResult = getch();
+				bool bContinue = iResult == 'Y' || iResult == 'y';
+				_gprintf(_gstr("\n"));
+
+				if (!bContinue)
+					return EXIT_FAILURE;
+			}
+		}
+#endif
+
 		bool bSuccess = Server.LoadConfig(Config.c_str());
 
 		if (bSuccess)
@@ -242,6 +277,11 @@ int main(int argc, char* argv[])
 			if (BindIP.m_bData)
 			{
 				_gstrcpy_s(Server.m_szBindIP, ARRAY_COUNT(Server.m_szBindIP), BindIP.m_Data.c_str());
+			}
+
+			if (bMultithreaded.m_bData)
+			{
+				Server.m_bMultiThreaded = bMultithreaded;
 			}
 
 			bSuccess = Server.StartServer();
