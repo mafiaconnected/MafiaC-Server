@@ -66,7 +66,7 @@ CMafiaServerManager::CMafiaServerManager(Context* pContext, CMafiaServer* pServe
 	m_pOnPedShootEventType = m_pServer->m_ResourceMgr.m_pEventHandlers->CreateEventType(_gstr("OnPedShoot"), _gstr("Called when a ped shoots."), 3, true);
 	m_pOnPedThrowGrenadeEventType = m_pServer->m_ResourceMgr.m_pEventHandlers->CreateEventType(_gstr("OnPedThrowGrenade"), _gstr("Called when a ped throws a grenade."), 2, true);
 
-	m_pOnReceivePacketEventType = m_pServer->m_ResourceMgr.m_pEventHandlers->CreateEventType(_gstr("OnReceivePacket"), _gstr("Called when a packet is received"), 2, true);
+	//m_pOnReceivePacketEventType = m_pServer->m_ResourceMgr.m_pEventHandlers->CreateEventType(_gstr("OnReceivePacket"), _gstr("Called when a packet is received"), 2, true);
 
 	auto pMafia = m_pServer->m_ResourceMgr.m_pScripting->m_Global.AddNamespace(_gstr("mafia"));
 	pMafia->SetAlias(_gstr("game"));
