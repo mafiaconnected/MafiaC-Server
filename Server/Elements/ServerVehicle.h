@@ -58,7 +58,7 @@ public:
 	void SetLocked(bool bLocked);
 
 	bool GetEngine() { return m_Engine; }
-	void SetEngine(bool bEngine);
+	void SetEngine(bool bEngine, bool bInstant);
 
 	bool GetSiren() { return m_Siren; }
 	void SetSiren(bool bSiren);

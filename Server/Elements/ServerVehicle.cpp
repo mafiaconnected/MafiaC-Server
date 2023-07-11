@@ -247,7 +247,7 @@ void CServerVehicle::SetLocked(bool bLocked)
 	}
 }
 
-void CServerVehicle::SetEngine(bool bEngine)
+void CServerVehicle::SetEngine(bool bEngine, bool bInstant)
 {
 	if (m_Engine != bEngine)
 	{
@@ -256,6 +256,7 @@ void CServerVehicle::SetEngine(bool bEngine)
 		Packet Packet(MAFIAPACKET_VEHICLE_SETENGINE);
 		Packet.Write<int32_t>(GetId());
 		Packet.Write<uint8_t>(bEngine);
+		Packet.Write<uint8_t>(bInstant);
 		m_pNetObjectMgr->SendObjectRelatedPacket(&Packet, this);
 	}
 }

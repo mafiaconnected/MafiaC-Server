@@ -374,7 +374,24 @@ static bool FunctionVehicleSetEngine(IScriptState* pState, int argc, void* pUser
 	bool bEngine;
 	if (!pState->CheckBoolean(0, bEngine))
 		return false;
-	pServerVehicle->SetEngine(bEngine);
+	pServerVehicle->SetEngine(bEngine, true);
+	return true;
+}
+
+
+static bool FunctionVehicleSetEngineDetailed(IScriptState* pState, int argc, void* pUser)
+{
+	CMafiaServerManager* pServerManager = (CMafiaServerManager*)pUser;
+	CServerVehicle* pServerVehicle;
+	if (!pState->GetThis(pServerManager->m_pServerVehicleClass, &pServerVehicle))
+		return false;
+	bool bEngine;
+	if (!pState->CheckBoolean(0, bEngine))
+		return false;
+	bool bInstant = 1;
+	if (!pState->CheckBoolean(1, bInstant))
+		return false;
+	pServerVehicle->SetEngine(bEngine, bInstant);
 	return true;
 }
 
@@ -1328,6 +1345,7 @@ void CMafiaServerManager::RegisterFunctions(CScripting* pScripting)
 		m_pServerVehicleClass->RegisterFunction(_gstr("fix"), _gstr("t"), FunctionVehicleFix, this);
 		m_pServerVehicleClass->RegisterFunction(_gstr("getOccupant"), _gstr("ti"), FunctionVehicleGetOccupant, this);
 		m_pServerVehicleClass->RegisterFunction(_gstr("getOccupants"), _gstr("t"), FunctionVehicleGetOccupants, this);
+		m_pServerVehicleClass->RegisterFunction(_gstr("setEngineState"), _gstr("tbb"), FunctionVehicleSetEngineDetailed, this);
 		m_pServerEntityClass->AddProperty(this, _gstr("gear"), ARGUMENT_INTEGER, FunctionVehicleGetGear, FunctionVehicleSetGear);
 	}
 
