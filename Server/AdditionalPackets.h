@@ -81,12 +81,14 @@ enum eMafiaPacket : unsigned int
 	MAFIAPACKET_VEHICLE_SETENGINERPM,
 	MAFIAPACKET_VEHICLE_SETWHEELANGLE,
 	MAFIAPACKET_VEHICLE_SETENGINEHEALTH,
+	MAFIAPACKET_VEHICLE_SETGEAR,
 	MAFIAPACKET_ELEMENT_UPDATE_ID,
 	MAFIAPACKET_ELEMENT_REMOVE,
 	MAFIAPACKET_PLAYER_SETPOSITION,
 	MAFIAPACKET_PEER_CREATECAR,
 	MAFIAPACKET_PEER_CREATECIVILIAN,
 	MAFIAPACKET_PEER_IDENTIFY,
+	
 };
 
 struct tEntityCreatePacket
@@ -154,7 +156,7 @@ struct tVehicleCreatePacket
 	bool horn;
 	bool siren;
 	bool lights;
-	int32_t gear;
+	uint32_t gear;
 	float rpm;
 	float accel;
 	float brake;
@@ -180,7 +182,7 @@ struct tVehicleSyncPacket
 	bool horn;
 	bool siren;
 	bool lights;
-	int32_t gear;
+	uint32_t gear;
 	float rpm;
 	float accel;
 	float brake;

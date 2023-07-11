@@ -364,6 +364,19 @@ void CServerVehicle::SetEngineHealth(float fEngineHealth)
 	}
 }
 
+void CServerVehicle::SetGear(uint32_t iGear)
+{
+	if (m_Gear != iGear)
+	{
+		m_Gear = iGear;
+
+		Packet Packet(MAFIAPACKET_VEHICLE_SETGEAR);
+		Packet.Write<int32_t>(GetId());
+		Packet.Write<uint32_t>(iGear);
+		m_pNetObjectMgr->SendObjectRelatedPacket(&Packet, this);
+	}
+}
+
 CServerHuman* CServerVehicle::GetOccupant(int8_t Index)
 {
 	if (Index >= ARRAY_COUNT(m_pProbableOccupants))

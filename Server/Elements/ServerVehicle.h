@@ -84,6 +84,10 @@ public:
 	float GetEngineHealth() { return m_EngineHealth; }
 	void SetEngineHealth(float fEngineHealth);
 
+	uint32_t GetGear() { return m_Gear; }
+	void SetGear(uint32_t iGear);
+	
+
 	//float GetSpeed() { return m_Speed; }
 	//void SetSpeed(float fSpeed);
 

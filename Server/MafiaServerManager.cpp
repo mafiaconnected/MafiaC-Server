@@ -256,6 +256,32 @@ static bool FunctionEntitySetRotationVelocity(IScriptState* pState, int argc, vo
 	return true;
 }
 
+static bool FunctionVehicleGetGear(IScriptState* pState, int argc, void* pUser)
+{
+	CMafiaServerManager* pServerManager = (CMafiaServerManager*)pUser;
+	CServerVehicle* pServerVehicle;
+	if (!pState->GetThis(pServerManager->m_pServerVehicleClass, &pServerVehicle))
+		return false;
+
+	pState->ReturnNumber(pServerVehicle->m_Gear);
+	return true;
+}
+
+static bool FunctionVehicleSetGear(IScriptState* pState, int argc, void* pUser)
+{
+	CMafiaServerManager* pServerManager = (CMafiaServerManager*)pUser;
+	CServerVehicle* pServerVehicle;
+	if (!pState->GetThis(pServerManager->m_pServerVehicleClass, &pServerVehicle))
+		return false;
+
+	uint32_t iGear;
+	if (!pState->CheckNumber(0, iGear))
+		return false;
+
+	pServerVehicle->SetGear(iGear);
+	return true;
+}
+
 static bool FunctionEntityGetModel(IScriptState* pState, int argc, void* pUser)
 {
 	CMafiaServerManager* pServerManager = (CMafiaServerManager*)pUser;
@@ -1281,8 +1307,8 @@ void CMafiaServerManager::RegisterFunctions(CScripting* pScripting)
 		m_pServerEntityClass->AddProperty(this, _gstr("model"), ARGUMENT_STRING, FunctionEntityGetModel, FunctionEntitySetModel);
 		m_pServerEntityClass->AddProperty(this, _gstr("modelIndex"), ARGUMENT_STRING, FunctionEntityGetModel, FunctionEntitySetModel); // For GTAC compatibility
 		m_pServerEntityClass->AddProperty(this, _gstr("velocity"), ARGUMENT_VECTOR3D, FunctionEntityGetVelocity, FunctionEntitySetVelocity);
-		m_pServerEntityClass->AddProperty(this, _gstr("turnVelocity"), ARGUMENT_VECTOR3D, FunctionEntityGetRotationVelocity, FunctionEntityGetRotationVelocity); // For GTAC compatibility
-		m_pServerEntityClass->AddProperty(this, _gstr("rotationVelocity"), ARGUMENT_VECTOR3D, FunctionEntityGetRotationVelocity, FunctionEntityGetRotationVelocity);
+		m_pServerEntityClass->AddProperty(this, _gstr("turnVelocity"), ARGUMENT_VECTOR3D, FunctionEntityGetRotationVelocity, FunctionEntitySetRotationVelocity); // For GTAC compatibility
+		m_pServerEntityClass->AddProperty(this, _gstr("rotationVelocity"), ARGUMENT_VECTOR3D, FunctionEntityGetRotationVelocity, FunctionEntitySetRotationVelocity);
 	}
 
 	{
@@ -1302,6 +1328,7 @@ void CMafiaServerManager::RegisterFunctions(CScripting* pScripting)
 		m_pServerVehicleClass->RegisterFunction(_gstr("fix"), _gstr("t"), FunctionVehicleFix, this);
 		m_pServerVehicleClass->RegisterFunction(_gstr("getOccupant"), _gstr("ti"), FunctionVehicleGetOccupant, this);
 		m_pServerVehicleClass->RegisterFunction(_gstr("getOccupants"), _gstr("t"), FunctionVehicleGetOccupants, this);
+		m_pServerEntityClass->AddProperty(this, _gstr("gear"), ARGUMENT_INTEGER, FunctionVehicleGetGear, FunctionVehicleSetGear);
 	}
 
 	{
@@ -1315,8 +1342,7 @@ void CMafiaServerManager::RegisterFunctions(CScripting* pScripting)
 		//m_pServerPedClass->AddProperty(this, _gstr("weaponState"), ARGUMENT_INTEGER, FunctionPedGetWeaponState);
 		m_pServerHumanClass->AddProperty(this, _gstr("isEnteringVehicle"), ARGUMENT_BOOLEAN, FunctionPedIsEnteringExitingVehicle);
 		m_pServerHumanClass->AddProperty(this, _gstr("isExitingVehicle"), ARGUMENT_BOOLEAN, FunctionPedIsEnteringExitingVehicle);
-
-		m_pServerHumanClass->RegisterFunction(_gstr("giveWeapon"), _gstr("ti|ii"), FunctionHumanGiveWeapon, this);
+		m_pServerHumanClass->RegisterFunction(_gstr("giveWeapon"), _gstr("tiii"), FunctionHumanGiveWeapon, this);
 	}
 
 	{
@@ -1356,10 +1382,9 @@ void CMafiaServerManager::RegisterFunctions(CScripting* pScripting)
 		pServerNamespace->AddProperty(this, _gstr("streamOutDistance"), ARGUMENT_FLOAT, FunctionGetServerStreamOutDistance);
 		pServerNamespace->AddProperty(this, _gstr("logPath"), ARGUMENT_STRING, FunctionGetServerLogPath);
 		pServerNamespace->AddProperty(this, _gstr("syncLocalEntities"), ARGUMENT_BOOLEAN, FunctionGetServerSyncLocalEntities);
-
+		pServerNamespace->AddProperty(this, _gstr("bindIP"), ARGUMENT_STRING, FunctionGetServerBindIP);
 		pServerNamespace->RegisterFunction(_gstr("getCVar"), _gstr("s"), FunctionGetServerCVar, this);
 		pServerNamespace->RegisterFunction(_gstr("setPassword"), _gstr("s"), FunctionSetServerPassword, this);
-
-		pServerNamespace->AddProperty(this, _gstr("bindIP"), ARGUMENT_STRING, FunctionGetServerBindIP);
+		
 	}
 }
