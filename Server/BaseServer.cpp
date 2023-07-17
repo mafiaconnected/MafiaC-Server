@@ -692,7 +692,7 @@ void CBaseServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, St
 
 					SendGameMode(pClient);
 					SendServerName(pClient);
-
+					
 					// Inform everyone else we joined
 					// Calculate PeersSize also while we are looping here...
 					size_t PeerCount = 0;
