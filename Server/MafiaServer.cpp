@@ -29,17 +29,6 @@ void CMafiaServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, G
 	CMafiaClient* pClient = static_cast<CMafiaClient*>(m_NetMachines.GetMachineFromPeer(Peer.m_Peer));
 	auto pMafiaManager = static_cast<CMafiaServerManager*>(m_pManager);
 
-	{
-		CArguments Args(2);
-		Args.AddNumber(PacketID);
-		Args.AddObject(pClient);
-
-		bool bPreventDefault = false;
-		pMafiaManager->m_pOnReceivePacketEventType->Trigger(Args, bPreventDefault);
-		if (bPreventDefault)
-			return;
-	}
-
 	if (PacketID == PACKET_INITIAL)
 	{
 		// Prevent first packet if first packet already received.
@@ -48,8 +37,6 @@ void CMafiaServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, G
 			// TODO: Disconnect. Because it is likely that trailing data was sent with the PACKET_INITIAL opcode.
 			return;
 		}
-
-		SendMapName(pClient);
 	}
 	else
 	{
@@ -64,6 +51,12 @@ void CMafiaServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, G
 
 	switch (PacketID)
 	{
+		case PACKET_RESPONSE:
+			{
+				SendMapName(pClient);
+			}
+			break;
+
 		case MAFIAPACKET_HUMAN_SHOOT:
 			{
 				int32_t nId;
