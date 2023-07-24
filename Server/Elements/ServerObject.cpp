@@ -10,8 +10,8 @@ CServerObject::CServerObject(CMafiaServerManager* pServerManager) : CServerEntit
 {
 	m_Type = ELEMENT_OBJECT;
 
-	m_Flags.m_bFindSyncer = true;
-	m_Flags.m_bSendSync = true;
+	//m_Flags.m_bFindSyncer = true;
+	//m_Flags.m_bSendSync = true;
 	m_Flags.m_bDistanceStreaming = true;
 
 	m_fStreamInDistance = pServerManager->m_pServer->m_fStreamInDistance;

@@ -75,6 +75,8 @@ CMafiaServerManager::CMafiaServerManager(Context* pContext, CMafiaServer* pServe
 	m_pServerHumanClass = pMafia->NewClass(_gstr("Ped"), m_pServerEntityClass);
 	m_pServerPlayerClass = pMafia->NewClass(_gstr("Player"), m_pServerHumanClass);
 	m_pServerVehicleClass = pMafia->NewClass(_gstr("Vehicle"), m_pServerEntityClass);
+	m_pServerDummyClass = pMafia->NewClass(_gstr("Dummy"), m_pServerEntityClass);
+	m_pServerObjectClass = pMafia->NewClass(_gstr("Object"), m_pServerEntityClass);
 
 	auto pDefineHandlers = m_pServer->m_ResourceMgr.m_pDefineHandlers;
 
@@ -100,6 +102,8 @@ CMafiaServerManager::CMafiaServerManager(Context* pContext, CMafiaServer* pServe
 	pDefineHandlers->Define(_gstr("ELEMENT_PED"), ELEMENT_PED);
 	pDefineHandlers->Define(_gstr("ELEMENT_PLAYER"), ELEMENT_PLAYER);
 	pDefineHandlers->Define(_gstr("ELEMENT_VEHICLE"), ELEMENT_VEHICLE);
+	pDefineHandlers->Define(_gstr("ELEMENT_DUMMY"), ELEMENT_DUMMY);
+	pDefineHandlers->Define(_gstr("ELEMENT_OBJECT"), ELEMENT_OBJECT);
 
 	RegisterFunctions(m_pServer->m_ResourceMgr.m_pScripting);
 }
@@ -112,7 +116,7 @@ CNetObject* CMafiaServerManager::Create(int32_t nType)
 	CServerPlayer* player;
 
 	switch (nType)
-	{
+	{A
 		case ELEMENT_VEHICLE:
 			vehicle = new CServerVehicle(this);
 			for (int i = 0; i < 128; i++)
@@ -942,7 +946,7 @@ static bool FunctionCreateDummyElement(IScriptState* pState, int argc, void* pUs
 	CMafiaServerManager* pServerManager = (CMafiaServerManager*)pUser;
 	
 	CVector3D vecPos(0.0f, 0.0f, 0.0f);
-	if (argc > 1 && !pState->CheckVector3D(0, vecPos))
+	if (!pState->CheckVector3D(0, vecPos))
 		return false;
 
 	auto pElement = Strong<CServerDummy>::New(pServerManager->Create(ELEMENT_DUMMY));
@@ -984,7 +988,7 @@ static bool FunctionCreateObject(IScriptState* pState, int argc, void* pUser)
 
 	pElement->SetModel(sModel);
 	pElement->SetPosition(vecPos);
-	pElement->SetPosition(vecRot);
+	pElement->SetRotation(vecRot);
 	pElement->m_pResource = pState->GetResource();
 	pServerManager->RegisterNetObject(pElement);
 	pState->ReturnObject(pElement);

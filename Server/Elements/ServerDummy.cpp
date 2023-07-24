@@ -10,8 +10,8 @@ CServerDummy::CServerDummy(CMafiaServerManager* pServerManager) : CServerEntity(
 {
 	m_Type = ELEMENT_DUMMY;
 
-	m_Flags.m_bFindSyncer = true;
-	m_Flags.m_bSendSync = true;
+	//m_Flags.m_bFindSyncer = true;
+	//m_Flags.m_bSendSync = true;
 	m_Flags.m_bDistanceStreaming = true;
 
 	m_fStreamInDistance = pServerManager->m_pServer->m_fStreamInDistance;
