@@ -6,12 +6,12 @@
 
 #include "Utils/VectorTools.h"
 
-CServerDummy::CServerDummy(CMafiaServerManager* pServerManager) : CServerEntity(pServerManager)
+CServerDummy::CServerDummy(CMafiaServerManager* pServerManager) : CNetObject(pServerManager)
 {
 	m_Type = ELEMENT_DUMMY;
 
-	//m_Flags.m_bFindSyncer = true;
-	//m_Flags.m_bSendSync = true;
+	m_Flags.m_bFindSyncer = false;
+	m_Flags.m_bSendSync = false;
 	m_Flags.m_bDistanceStreaming = true;
 
 	m_fStreamInDistance = pServerManager->m_pServer->m_fStreamInDistance;
@@ -21,4 +21,18 @@ CServerDummy::CServerDummy(CMafiaServerManager* pServerManager) : CServerEntity(
 ReflectedClass* CServerDummy::GetReflectedClass()
 {
 	return static_cast<CMafiaServerManager*>(m_pNetObjectMgr)->m_pServerDummyClass;
+}
+
+bool CServerDummy::SetPosition(const CVector3D& vecPos)
+{
+	m_Position = vecPos;
+
+	return true;
+}
+
+bool CServerDummy::GetPosition(CVector3D& vecPos)
+{
+	vecPos = m_Position;
+
+	return true;
 }

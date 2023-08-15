@@ -75,7 +75,7 @@ CMafiaServerManager::CMafiaServerManager(Context* pContext, CMafiaServer* pServe
 	m_pServerHumanClass = pMafia->NewClass(_gstr("Ped"), m_pServerEntityClass);
 	m_pServerPlayerClass = pMafia->NewClass(_gstr("Player"), m_pServerHumanClass);
 	m_pServerVehicleClass = pMafia->NewClass(_gstr("Vehicle"), m_pServerEntityClass);
-	m_pServerDummyClass = pMafia->NewClass(_gstr("Dummy"), m_pServerEntityClass);
+	m_pServerDummyClass = pMafia->NewClass(_gstr("Dummy"), m_pNetObjectClass);
 	m_pServerObjectClass = pMafia->NewClass(_gstr("Object"), m_pServerEntityClass);
 
 	auto pDefineHandlers = m_pServer->m_ResourceMgr.m_pDefineHandlers;
