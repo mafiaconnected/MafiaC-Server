@@ -26,8 +26,7 @@ enum eGame
 	GAME_GTA_SA,
 	//GAME_GTA_UG,
 	GAME_GTA_IV = 5,
-	GAME_GTA_IV_EFLC,
-	GAME_BULLY,
+	GAME_BULLY = 7,
 
 	// Mafia Connected
 	GAME_MAFIA_ONE = 10, // Start at 10 since GTAC occupies the first lot to avoid confusion
@@ -88,7 +87,7 @@ enum eMafiaPacket : unsigned int
 	MAFIAPACKET_PEER_CREATECAR,
 	MAFIAPACKET_PEER_CREATECIVILIAN,
 	MAFIAPACKET_PEER_IDENTIFY,
-	
+
 };
 
 struct tEntityCreatePacket
