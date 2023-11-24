@@ -603,14 +603,6 @@ void CBaseServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, St
 					DisconnectPeer(Peer.m_Peer, DISCONNECT_UNSUPPORTEDENGINE);
 					return;
 				}
-				uint8_t ucGameVersion;
-				Reader.ReadUInt8(&ucGameVersion, 1);
-				//if (!bOkayGameVersion)
-				//{
-				//	_glogwarnprintf(_gstr("CONNECT: %s revoked connection [WRONG GAME VERSION]"), szName);
-				//	DisconnectPeer(SystemAddress,DISCONNECT_UNSUPPORTEDENGINE);
-				//	return;
-				//}
 				if (IsNameInUse(szName))
 				{
 					_glogwarnprintf(_gstr("CONNECT: %s revoked connection [NICKNAME IN USE]"), szName);
@@ -635,7 +627,6 @@ void CBaseServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, St
 						const GChar* pszGame = m_pManager->m_Games.GetGameName(ucGame);
 						pNetMachine->m_Game.assign(pszGame);
 						pNetMachine->m_GameId = ucGame;
-						pNetMachine->m_ucGameVersion = ucGameVersion;
 						pNetMachine->m_nIndex = (uint32_t)i;
 						pNetMachine->m_GlobalIdentifier = Peer.m_GlobalPeer;
 						pNetMachine->m_IPAddress = IPAddress;
@@ -692,7 +683,7 @@ void CBaseServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, St
 
 					SendGameMode(pClient);
 					SendServerName(pClient);
-					
+
 					// Inform everyone else we joined
 					// Calculate PeersSize also while we are looping here...
 					size_t PeerCount = 0;
@@ -1444,8 +1435,6 @@ bool CBaseServer::ParseConfig(const CServerConfiguration& Config)
 		//	m_Games.push_back(GAME_GTA_UG);
 		//if (pGamesElement->FirstChildElement("gta:iv") != NULL)
 		//	m_Games.push_back(GAME_GTA_IV);
-		//if (pGamesElement->FirstChildElement("gta:iv_eflc") != NULL)
-		//	m_Games.push_back(GAME_GTA_IV_EFLC);
 	}
 
 	m_fStreamInDistance = Config.GetFloatValue(_gstr("streamindistance"), 100.0f);
@@ -1583,6 +1572,11 @@ bool CBaseServer::StartServer()
 {
 	_glogprintf(_gstr("Server is starting..."));
 
+	if (m_bMultiThreaded)
+		_glogprintf(_gstr("Multithreading: enabled"));
+	else
+		_glogprintf(_gstr("Multithreading: disabled"));
+
 	m_TimeManager.Initialise(60.0,16.0);
 
 	if (!InitAsServer(m_usPort, m_szBindIP, m_bMultiThreaded))
@@ -1623,7 +1617,6 @@ bool CBaseServer::StartServer()
 		m_pConsole = Strong<CNetMachine>::New(NewMachine(m_pManager));
 		m_pConsole->m_Game = m_Game;
 		m_pConsole->m_GameId = m_GameId;
-		m_pConsole->m_ucGameVersion = 0;
 		m_pConsole->m_nIndex = 255;
 		m_pConsole->m_bAdministrator = true;
 		m_pConsole->m_bConsole = true;
