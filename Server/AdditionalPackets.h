@@ -155,7 +155,7 @@ struct tVehicleCreatePacket
 	bool horn;
 	bool siren;
 	bool lights;
-	uint32_t gear;
+	int32_t gear;
 	float rpm;
 	float accel;
 	float brake;
@@ -181,7 +181,7 @@ struct tVehicleSyncPacket
 	bool horn;
 	bool siren;
 	bool lights;
-	uint32_t gear;
+	int32_t gear;
 	float rpm;
 	float accel;
 	float brake;
