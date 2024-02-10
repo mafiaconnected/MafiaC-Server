@@ -5,16 +5,8 @@
 #include "ServerVersion.h"
 
 #define NETGAME_CURRENT_VERSION 3
-#define NETGAME_CURRENT_VERSION_STRING "3"
 
 #include <Multiplayer/Packets.h>
-
-enum eGameEngineCustom
-{
-	GAMEENGINE_MAFIA1=GAMEENGINE_CUSTOM,
-	GAMEENGINE_MAFIA2,
-	GAMEENGINE_MAFIA_DE_AND_3
-};
 
 enum eGame
 {
@@ -88,7 +80,7 @@ enum eMafiaPacket : unsigned int
 	MAFIAPACKET_PEER_CREATECAR,
 	MAFIAPACKET_PEER_CREATECIVILIAN,
 	MAFIAPACKET_PEER_IDENTIFY,
-	
+
 };
 
 struct tEntityCreatePacket
