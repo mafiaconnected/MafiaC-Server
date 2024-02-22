@@ -26,6 +26,15 @@ endif()
 
 new_library_executable(Server "${SOURCES}" "")
 
+if(WIN32)
+	set_target_properties(Server PROPERTIES LINK_FLAGS "/MANIFEST:NO")
+endif()
+
+if(MSVC AND NOT SUPPORT_XP)
+	# Require Windows 7
+	target_link_options(Server PRIVATE "/SUBSYSTEM:CONSOLE,6.1")
+endif()
+
 target_link_libraries(Server
 	PRIVATE
 	Multiplayer_static
@@ -72,6 +81,7 @@ target_link_libraries(Server
 	enet_static
 	mongoose6_static
 	libssl.a libcrypto.a zlib_static png_static tinyxml_static dl pthread libcurl.a
+	SDL2
 	squirrel_static
 	sqstdlib_static
 	lua53_static)
@@ -98,8 +108,6 @@ target_link_libraries(Server
 endif()
 
 if(MSVC)
-	#add_custom_command(TARGET Server POST_BUILD COMMAND copy \"${SPIDERMONKEY_LIBS}\\$<$<CONFIG:Debug>:Debug>$<$<NOT:$<CONFIG:Debug>>:Release>\\*.dll\" \"$<TARGET_FILE_DIR:Server>\" WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
-
 	install_spidermonkey_to("")
 
 	#copy_dependency("${DEPENDENCIES_LIBS}" SDL2 dll)
