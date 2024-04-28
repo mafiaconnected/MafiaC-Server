@@ -23,7 +23,7 @@ void CServerResourceMgr::UpdateAResource(CNetCompatibilityShim* pNetGame, CResou
 	Packet.Write<Uint32>(1); // Count
 	pResource->WriteClientInfo(&Packet);
 
-	pNetGame->SendEveryonePacket(&Packet, PACKETPRIORITY_LOW, PACKETFLAGS_RELIABLE, PACKETORDERINGCHANNEL_RESOURCES);
+	pNetGame->SendEveryonePacket(&Packet, PACKETPRIORITY_LOW, PACKETFLAGS_RELIABLE);
 }
 
 void CServerResourceMgr::UpdateAllResource(CNetCompatibilityShim* pNetGame, const Peer_t Peer)
@@ -32,7 +32,7 @@ void CServerResourceMgr::UpdateAllResource(CNetCompatibilityShim* pNetGame, cons
 
 	WriteClientInfo(&Packet);
 
-	pNetGame->SendPacket(Peer, &Packet, PACKETPRIORITY_LOW, PACKETFLAGS_RELIABLE, PACKETORDERINGCHANNEL_RESOURCES);
+	pNetGame->SendPacket(Peer, &Packet, PACKETPRIORITY_LOW, PACKETFLAGS_RELIABLE);
 }
 
 void CServerResourceMgr::RefreshResourceState(CResource* pResource)
@@ -46,13 +46,13 @@ void CServerResourceMgr::RefreshResourceState(CResource* pResource)
 		uint32_t uiHash = CRC32Hash::GetHash(pResource->m_Name.c_str(), pResource->m_Name.size(), true);
 		Packet.Write<uint32_t>(uiHash);
 
-		m_pServer->SendEveryonePacket(&Packet, PACKETPRIORITY_LOW, PACKETFLAGS_RELIABLE, PACKETORDERINGCHANNEL_RESOURCES);
+		m_pServer->SendEveryonePacket(&Packet, PACKETPRIORITY_LOW, PACKETFLAGS_RELIABLE);
 	}
 }
 
 void CServerResourceMgr::RemoveThingsAssociatedWithResource(CResource* pResource)
 {
-	for (size_t i = 0; i < m_pServer->m_pManager->m_Objects.GetSize(); i++)
+	for (size_t i=0; i<m_pServer->m_pManager->m_Objects.GetSize(); i++)
 	{
 		if (m_pServer->m_pManager->m_Objects.IsUsedAt(i))
 		{

@@ -452,7 +452,7 @@ void CBaseServer::OnPlayerDisconnect(const Peer_t Peer, unsigned int uiReason)
 
 			Packet.Write<Uint16>(1);
 			Packet.Write<Uint32>(nPlayerIndex);
-			SendEveryonePacket(&Packet, PACKETPRIORITY_DEFAULT, PACKETFLAGS_RELIABLE, PACKETORDERINGCHANNEL_NETMACHINES);
+			SendEveryonePacket(&Packet);
 		}
 	}
 	//for (unsigned int i=0; i<ARRAY_COUNT(m_rgPlayers); i++)
@@ -701,7 +701,7 @@ void CBaseServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, St
 									Packet.Write<Uint16>(1);
 									Packet.Write<Uint32>(pClient->m_nIndex);
 									if (pClient->Write(&Packet))
-										m_NetMachines.m_rgpMachines[i]->SendPacket(&Packet, PACKETPRIORITY_DEFAULT, PACKETFLAGS_RELIABLE, PACKETORDERINGCHANNEL_NETMACHINES);
+										m_NetMachines.m_rgpMachines[i]->SendPacket(&Packet);
 								}
 							}
 						}
@@ -720,7 +720,7 @@ void CBaseServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, St
 								m_NetMachines.m_rgpMachines[i]->Write(&Packet);
 							}
 						}
-						pClient->SendPacket(&Packet, PACKETPRIORITY_DEFAULT, PACKETFLAGS_RELIABLE, PACKETORDERINGCHANNEL_NETMACHINES);
+						pClient->SendPacket(&Packet);
 					}
 
 					// delay creation until we get some sync...
@@ -1123,7 +1123,7 @@ void CBaseServer::SendChatExcept(CNetMachine* pClient, const GChar* pszMessage, 
 	Packet.Write<Uint32>((Uint32)Message.GetLength());
 	Packet.Write<Uint32>(uiColour);
 	Packet.Write(Message.CString(), Message.GetLength());
-	m_pManager->SendPacketExcluding(&Packet, pClient, PACKETPRIORITY_DEFAULT, PACKETFLAGS_RELIABLE, PACKETORDERINGCHANNEL_CHAT);
+	m_pManager->SendPacketExcluding(&Packet, pClient);
 }
 
 void CBaseServer::SendChat(CNetMachine* pClient, const GChar* pszMessage, size_t MessageLength, unsigned int uiColour)
@@ -1134,9 +1134,9 @@ void CBaseServer::SendChat(CNetMachine* pClient, const GChar* pszMessage, size_t
 	Packet.Write<Uint32>(uiColour);
 	Packet.Write(Message.CString(), Message.GetLength());
 	if (pClient == nullptr)
-		SendEveryonePacket(&Packet, PACKETPRIORITY_DEFAULT, PACKETFLAGS_RELIABLE, PACKETORDERINGCHANNEL_CHAT);
+		SendEveryonePacket(&Packet);
 	else
-		pClient->SendPacket(&Packet, PACKETPRIORITY_DEFAULT, PACKETFLAGS_RELIABLE, PACKETORDERINGCHANNEL_CHAT);
+		pClient->SendPacket(&Packet);
 }
 
 void CBaseServer::UserChat(CNetMachine* pClient, const GChar* pszMessage, size_t MessageLength)
@@ -1189,7 +1189,7 @@ bool CBaseServer::ParseConfig(const CServerConfiguration& Config)
 
 	_gstrlcpy(m_szServerListing, Config.GetStringValue(_gstr("serverlistingurl"), _gstr("")), ARRAY_COUNT(m_szServerListing));
 	if (m_szServerListing[0] == '\0')
-		_gstrcpy_s(m_szServerListing, ARRAY_COUNT(m_szServerListing), _gstr("serverlisting.gtaconnected.com"));
+		_gstrcpy_s(m_szServerListing, ARRAY_COUNT(m_szServerListing), _gstr("serverlisting.mafiaconnected.com"));
 
 #ifdef _DEBUG
 	m_uiFakeNetVersion = Config.GetInt32Value(_gstr("fakenetversion"), 0);
@@ -1428,7 +1428,7 @@ bool CBaseServer::ParseConfig(const CServerConfiguration& Config)
 		}
 	}
 
-	SetGame(Config.GetStringValue(_gstr("game"), _gstr("gta:iii")));
+	SetGame(Config.GetStringValue(_gstr("game"), _gstr("mafia:one")));
 
 	const CElementChunk* pGamesElement = Config.m_pConfig->FirstChildElement(_gstr("games"));
 	if (pGamesElement != nullptr)
@@ -1788,9 +1788,9 @@ void CBaseServer::SendGameMode(CNetMachine* pClient)
 	CBinaryWriter Writer(&Packet);
 	Writer.WriteString(m_szGameMode);
 	if (pClient == nullptr)
-		SendEveryonePacket(&Packet, PACKETPRIORITY_DEFAULT, PACKETFLAGS_RELIABLE, PACKETORDERINGCHANNEL_INFO);
+		SendEveryonePacket(&Packet);
 	else
-		pClient->SendPacket(&Packet, PACKETPRIORITY_DEFAULT, PACKETFLAGS_RELIABLE, PACKETORDERINGCHANNEL_INFO);
+		pClient->SendPacket(&Packet);
 }
 
 void CBaseServer::SetServerName(const GChar* pszName)
@@ -1807,9 +1807,9 @@ void CBaseServer::SendServerName(CNetMachine* pClient)
 	CBinaryWriter Writer(&Packet);
 	Writer.WriteString(m_szServerName);
 	if (pClient == nullptr)
-		SendEveryonePacket(&Packet, PACKETPRIORITY_DEFAULT, PACKETFLAGS_RELIABLE, PACKETORDERINGCHANNEL_INFO);
+		SendEveryonePacket(&Packet);
 	else
-		pClient->SendPacket(&Packet, PACKETPRIORITY_DEFAULT, PACKETFLAGS_RELIABLE, PACKETORDERINGCHANNEL_INFO);
+		pClient->SendPacket(&Packet);
 }
 
 void CBaseServer::SendCVars(CNetMachine* pClient)
@@ -1817,9 +1817,9 @@ void CBaseServer::SendCVars(CNetMachine* pClient)
 	Packet Packet(PACKET_SETCLIENTVAR);
 	m_CVars.Serialise(&Packet);
 	if (pClient == nullptr)
-		SendEveryonePacket(&Packet, PACKETPRIORITY_DEFAULT, PACKETFLAGS_RELIABLE, PACKETORDERINGCHANNEL_INFO);
+		SendEveryonePacket(&Packet);
 	else
-		pClient->SendPacket(&Packet, PACKETPRIORITY_DEFAULT, PACKETFLAGS_RELIABLE, PACKETORDERINGCHANNEL_INFO);
+		pClient->SendPacket(&Packet);
 }
 
 void CBaseServer::OnProcess(const FrameTimeInfo* pTime)
