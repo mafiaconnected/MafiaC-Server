@@ -638,9 +638,9 @@ void CMafiaServer::SendMapName(CNetMachine* pClient)
 	Writer.WriteString(m_szMap);
 
 	if (pClient == nullptr)
-		SendEveryonePacket(&Packet, PACKETPRIORITY_DEFAULT, PACKETFLAGS_RELIABLE, PACKETORDERINGCHANNEL_INFO);
+		SendEveryonePacket(&Packet);
 	else
-		pClient->SendPacket(&Packet, PACKETPRIORITY_DEFAULT, PACKETFLAGS_RELIABLE, PACKETORDERINGCHANNEL_INFO);
+		pClient->SendPacket(&Packet);
 }
 
 void CMafiaServer::SetMapName(const GChar* pszName)
