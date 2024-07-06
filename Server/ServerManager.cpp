@@ -39,9 +39,9 @@ static bool FunctionTriggerNetworkEvent(IScriptState* pState, int argc, void* pU
 	Args.Write(&Packet);
 
 	if (pNetMachine == nullptr)
-		pServerManager->m_pServer->SendEveryonePacket(&Packet, PACKETPRIORITY_DEFAULT, PACKETFLAGS_RELIABLE, PACKETORDERINGCHANNEL_EVENTS);
+		pServerManager->m_pServer->SendEveryonePacket(&Packet);
 	else
-		pNetMachine->SendPacket(&Packet, PACKETPRIORITY_DEFAULT, PACKETFLAGS_RELIABLE, PACKETORDERINGCHANNEL_EVENTS);
+		pNetMachine->SendPacket(&Packet);
 
 	return true;
 }

@@ -4,17 +4,9 @@
 
 #include "ServerVersion.h"
 
-#define NETGAME_CURRENT_VERSION 3
-#define NETGAME_CURRENT_VERSION_STRING "3"
+#define NETGAME_CURRENT_VERSION 4
 
 #include <Multiplayer/Packets.h>
-
-enum eGameEngineCustom
-{
-	GAMEENGINE_MAFIA1,
-	GAMEENGINE_MAFIA2,
-	GAMEENGINE_MAFIA_DE_AND_3
-};
 
 enum eGame
 {

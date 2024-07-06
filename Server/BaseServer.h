@@ -62,7 +62,7 @@ public:
 	uint16_t m_usHTTPPort;
 	GString m_HTTPUrl;
 	uint16_t m_usRConPort;
-	uint16_t m_usSyncInterval;
+	uint16_t m_usSyncInterval = 30;
 	eSyncMethod m_SyncMethod;
 	bool m_bDuplicateNames;
 	bool m_bMultiThreaded;
@@ -111,6 +111,10 @@ public:
 	float m_fStreamInDistance;
 	float m_fStreamOutDistance;
 
+	uint32_t m_uiNextSendSyncTicks = 0;
+	uint32_t m_uiNextStreamTicks = 0;
+	uint16_t m_usStreamInterval = 1000;
+
 protected:
 	void RegisterFunctions(CScripting* pScripting);
 
@@ -127,6 +131,7 @@ public:
 	void AddGame(const GChar* pszName);
 	void SendSync(CNetMachine* pNetMachine);
 	virtual void ManageElements(CNetMachine* pNetMachine);
+	void UpdateStreaming();
 	void SendAllSync();
 	void SendChat(CNetMachine* pNetMachine, const GChar* pszMessage, size_t MessageLength, unsigned int uiColour);
 	void SendChatExcept(CNetMachine* pNetMachine, const GChar* pszMessage, size_t MessageLength, unsigned int uiColour);

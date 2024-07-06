@@ -98,7 +98,6 @@ CBaseServer::CBaseServer(Galactic3D::Context* pContext) :
 	m_usPort = 22000;
 	m_usHTTPPort = 22000;
 	m_usRConPort = 22000;
-	m_usSyncInterval = 30;
 	m_szLogPath[0] = '\0';
 	m_szLogTimeStamp[0] = '\0';
 	m_CurrentClients = 0;
@@ -453,7 +452,7 @@ void CBaseServer::OnPlayerDisconnect(const Peer_t Peer, unsigned int uiReason)
 
 			Packet.Write<Uint16>(1);
 			Packet.Write<Uint32>(nPlayerIndex);
-			SendEveryonePacket(&Packet, PACKETPRIORITY_DEFAULT, PACKETFLAGS_RELIABLE, PACKETORDERINGCHANNEL_NETMACHINES);
+			SendEveryonePacket(&Packet);
 		}
 	}
 	//for (unsigned int i=0; i<ARRAY_COUNT(m_rgPlayers); i++)
@@ -702,7 +701,7 @@ void CBaseServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, St
 									Packet.Write<Uint16>(1);
 									Packet.Write<Uint32>(pClient->m_nIndex);
 									if (pClient->Write(&Packet))
-										m_NetMachines.m_rgpMachines[i]->SendPacket(&Packet, PACKETPRIORITY_DEFAULT, PACKETFLAGS_RELIABLE, PACKETORDERINGCHANNEL_NETMACHINES);
+										m_NetMachines.m_rgpMachines[i]->SendPacket(&Packet);
 								}
 							}
 						}
@@ -721,7 +720,7 @@ void CBaseServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, St
 								m_NetMachines.m_rgpMachines[i]->Write(&Packet);
 							}
 						}
-						pClient->SendPacket(&Packet, PACKETPRIORITY_DEFAULT, PACKETFLAGS_RELIABLE, PACKETORDERINGCHANNEL_NETMACHINES);
+						pClient->SendPacket(&Packet);
 					}
 
 					// delay creation until we get some sync...
@@ -1055,7 +1054,7 @@ void CBaseServer::SendSync(CNetMachine* pClient)
 {
 	//m_pManager->CreateElementsAsNeeded(pClient,ELEMENT_ELEMENT);
 	//m_pManager->DeleteFarAwayStuff(pClient,ELEMENT_ELEMENT);
-	m_pManager->SendSync(pClient, m_SyncPacketPriority, m_SyncPacketFlags, true);
+	m_pManager->SendSync(pClient, m_SyncPacketPriority, m_SyncPacketFlags, false);
 }
 
 void CBaseServer::ManageElements(CNetMachine* pClient)
@@ -1067,21 +1066,18 @@ void CBaseServer::ManageElements(CNetMachine* pClient)
 	m_pManager->DeleteFarAwayStuff(pClient);
 }
 
-void CBaseServer::SendAllSync()
+void CBaseServer::UpdateStreaming()
 {
-	if (m_SyncMethod == SYNCMETHOD_INTERVAL)
+	for (size_t i = 0; i < MAX_MACHINES; i++)
 	{
-		for (size_t i = 0; i < MAX_MACHINES; i++)
+		if (m_NetMachines.m_rgpMachines[i] != nullptr && m_NetMachines.m_rgpMachines[i]->m_bJoined)
 		{
-			if (m_NetMachines.m_rgpMachines[i] != nullptr && m_NetMachines.m_rgpMachines[i]->m_bJoined)
-			{
-				SendSync(m_NetMachines.m_rgpMachines[i]);
-			}
+			ManageElements(m_NetMachines.m_rgpMachines[i]);
 		}
 	}
 
 	// Find a new syncer
-	for (size_t i=0; i<m_pManager->m_Objects.GetSize(); i++)
+	for (size_t i = 0; i < m_pManager->m_Objects.GetSize(); i++)
 	{
 		if (m_pManager->m_Objects.IsUsedAt(i))
 		{
@@ -1090,20 +1086,32 @@ void CBaseServer::SendAllSync()
 			{
 				if (pServerElement->GetSyncer() == nullptr && !pServerElement->m_Flags.m_bForcedSyncer)
 				{
-					for (size_t x = 0; x < MAX_MACHINES; x++)
-					{
-						auto pNetMachine = m_NetMachines.GetMachine(x);
-						if (pNetMachine != nullptr)
-						{
-							if (pServerElement->IsCreatedFor(pNetMachine))
-							{
-								pServerElement->SetSyncer(pNetMachine);
-								break;
-							}
-						}
-					}
+					auto pSyncer = pServerElement->GetLowestMachineCreatedFor();
+					if (pSyncer != nullptr)
+						pServerElement->SetSyncer(pSyncer);
 				}
 			}
+		}
+	}
+}
+
+void CBaseServer::SendAllSync()
+{
+	if (m_SyncMethod == SYNCMETHOD_INTERVAL)
+	{
+		uint32_t uiTicks = OS::GetTicks();
+
+		if (uiTicks > m_uiNextSendSyncTicks)
+		{
+			for (size_t i = 0; i < MAX_MACHINES; i++)
+			{
+				if (m_NetMachines.m_rgpMachines[i] != nullptr && m_NetMachines.m_rgpMachines[i]->m_bJoined)
+				{
+					SendSync(m_NetMachines.m_rgpMachines[i]);
+				}
+			}
+
+			m_uiNextSendSyncTicks = uiTicks + m_usSyncInterval;
 		}
 	}
 }
@@ -1115,7 +1123,7 @@ void CBaseServer::SendChatExcept(CNetMachine* pClient, const GChar* pszMessage, 
 	Packet.Write<Uint32>((Uint32)Message.GetLength());
 	Packet.Write<Uint32>(uiColour);
 	Packet.Write(Message.CString(), Message.GetLength());
-	m_pManager->SendPacketExcluding(&Packet, pClient, PACKETPRIORITY_DEFAULT, PACKETFLAGS_RELIABLE, PACKETORDERINGCHANNEL_CHAT);
+	m_pManager->SendPacketExcluding(&Packet, pClient);
 }
 
 void CBaseServer::SendChat(CNetMachine* pClient, const GChar* pszMessage, size_t MessageLength, unsigned int uiColour)
@@ -1126,9 +1134,9 @@ void CBaseServer::SendChat(CNetMachine* pClient, const GChar* pszMessage, size_t
 	Packet.Write<Uint32>(uiColour);
 	Packet.Write(Message.CString(), Message.GetLength());
 	if (pClient == nullptr)
-		SendEveryonePacket(&Packet, PACKETPRIORITY_DEFAULT, PACKETFLAGS_RELIABLE, PACKETORDERINGCHANNEL_CHAT);
+		SendEveryonePacket(&Packet);
 	else
-		pClient->SendPacket(&Packet, PACKETPRIORITY_DEFAULT, PACKETFLAGS_RELIABLE, PACKETORDERINGCHANNEL_CHAT);
+		pClient->SendPacket(&Packet);
 }
 
 void CBaseServer::UserChat(CNetMachine* pClient, const GChar* pszMessage, size_t MessageLength)
@@ -1181,7 +1189,7 @@ bool CBaseServer::ParseConfig(const CServerConfiguration& Config)
 
 	_gstrlcpy(m_szServerListing, Config.GetStringValue(_gstr("serverlistingurl"), _gstr("")), ARRAY_COUNT(m_szServerListing));
 	if (m_szServerListing[0] == '\0')
-		_gstrcpy_s(m_szServerListing, ARRAY_COUNT(m_szServerListing), _gstr("serverlisting.gtaconnected.com"));
+		_gstrcpy_s(m_szServerListing, ARRAY_COUNT(m_szServerListing), _gstr("serverlisting.mafiaconnected.com"));
 
 #ifdef _DEBUG
 	m_uiFakeNetVersion = Config.GetInt32Value(_gstr("fakenetversion"), 0);
@@ -1420,7 +1428,7 @@ bool CBaseServer::ParseConfig(const CServerConfiguration& Config)
 		}
 	}
 
-	SetGame(Config.GetStringValue(_gstr("game"), _gstr("gta:iii")));
+	SetGame(Config.GetStringValue(_gstr("game"), _gstr("mafia:one")));
 
 	const CElementChunk* pGamesElement = Config.m_pConfig->FirstChildElement(_gstr("games"));
 	if (pGamesElement != nullptr)
@@ -1439,6 +1447,14 @@ bool CBaseServer::ParseConfig(const CServerConfiguration& Config)
 
 	m_fStreamInDistance = Config.GetFloatValue(_gstr("streamindistance"), 100.0f);
 	m_fStreamOutDistance = Config.GetFloatValue(_gstr("streamoutdistance"), 200.0f);
+
+	m_usStreamInterval = (uint16_t)Config.GetInt32Value(_gstr("streaminterval"), 1000);
+
+	if (m_usStreamInterval < 500 || m_usStreamInterval > 5000)
+	{
+		_glogerrorprintf(_gstr("The streaminterval must be greater than or equal to 500 and less than or equal to 5000!"));
+		return false;
+	}
 
 	return true;
 }
@@ -1679,6 +1695,8 @@ bool CBaseServer::OnFrame()
 
 	const FrameTimeInfo* pTime = m_TimeManager.Process();
 
+	uint32_t uiTicks = OS::GetTicks();
+
 	m_ResourceMgr.Process(pTime->m_fDeltaTime);
 	m_HTTPMgr.Process();
 	if (m_bRCon)
@@ -1690,16 +1708,16 @@ bool CBaseServer::OnFrame()
 	{
 		m_Announcer.Pulse((float)pTime->m_fDeltaTime);
 	}
+	if (m_CurrentClients > 0)
 	{
-		for (size_t i=0; i<MAX_MACHINES; i++)
+		if (uiTicks > m_uiNextStreamTicks)
 		{
-			if (m_NetMachines.m_rgpMachines[i] != nullptr && m_NetMachines.m_rgpMachines[i]->m_bJoined)
-			{
-				ManageElements(m_NetMachines.m_rgpMachines[i]);
-			}
+			m_uiNextStreamTicks = uiTicks + m_usStreamInterval;
+
+			UpdateStreaming();
 		}
+		SendAllSync();
 	}
-	SendAllSync();
 	OnProcess(pTime);
 	m_UGP.UpdateResponse();
 	return true;
@@ -1716,7 +1734,10 @@ void CBaseServer::MainLoop()
 
 		m_InputEvent.Flush();
 
-		OS::Delay(5);
+		if (m_CurrentClients > 0)
+			OS::Delay(5);
+		else
+			OS::Delay(50);
 	}
 }
 
@@ -1725,21 +1746,31 @@ void CBaseServer::InputThread()
 	while (!m_ExitSignal.IsSignalled())
 	{
 #ifdef _WIN32
-		wchar_t szBuffer[1024];
+		wchar_t szBuffer[4096];
 		DWORD dwNumberOfCharsRead;
 		if (ReadConsoleW(GetStdHandle(STD_INPUT_HANDLE), szBuffer, ARRAY_COUNT(szBuffer) - 1, &dwNumberOfCharsRead, nullptr))
 		{
 			szBuffer[dwNumberOfCharsRead] = '\0';
 
 			ProcessConsoleInput(CString(false, szBuffer, dwNumberOfCharsRead));
+
+			OS::Delay(100);
+
+			continue;
 		}
 #else
-		GChar szInput[256];
+		GChar szInput[4096];
 		if (_gfgets(szInput, ARRAY_COUNT(szInput), stdin) != nullptr)
+		{
 			ProcessConsoleInput(szInput);
+
+			OS::Delay(100);
+
+			continue;
+		}
 #endif
 
-		OS::Delay(50);
+		OS::Delay(1000);
 	}
 }
 
@@ -1757,9 +1788,9 @@ void CBaseServer::SendGameMode(CNetMachine* pClient)
 	CBinaryWriter Writer(&Packet);
 	Writer.WriteString(m_szGameMode);
 	if (pClient == nullptr)
-		SendEveryonePacket(&Packet, PACKETPRIORITY_DEFAULT, PACKETFLAGS_RELIABLE, PACKETORDERINGCHANNEL_INFO);
+		SendEveryonePacket(&Packet);
 	else
-		pClient->SendPacket(&Packet, PACKETPRIORITY_DEFAULT, PACKETFLAGS_RELIABLE, PACKETORDERINGCHANNEL_INFO);
+		pClient->SendPacket(&Packet);
 }
 
 void CBaseServer::SetServerName(const GChar* pszName)
@@ -1776,9 +1807,9 @@ void CBaseServer::SendServerName(CNetMachine* pClient)
 	CBinaryWriter Writer(&Packet);
 	Writer.WriteString(m_szServerName);
 	if (pClient == nullptr)
-		SendEveryonePacket(&Packet, PACKETPRIORITY_DEFAULT, PACKETFLAGS_RELIABLE, PACKETORDERINGCHANNEL_INFO);
+		SendEveryonePacket(&Packet);
 	else
-		pClient->SendPacket(&Packet, PACKETPRIORITY_DEFAULT, PACKETFLAGS_RELIABLE, PACKETORDERINGCHANNEL_INFO);
+		pClient->SendPacket(&Packet);
 }
 
 void CBaseServer::SendCVars(CNetMachine* pClient)
@@ -1786,9 +1817,9 @@ void CBaseServer::SendCVars(CNetMachine* pClient)
 	Packet Packet(PACKET_SETCLIENTVAR);
 	m_CVars.Serialise(&Packet);
 	if (pClient == nullptr)
-		SendEveryonePacket(&Packet, PACKETPRIORITY_DEFAULT, PACKETFLAGS_RELIABLE, PACKETORDERINGCHANNEL_INFO);
+		SendEveryonePacket(&Packet);
 	else
-		pClient->SendPacket(&Packet, PACKETPRIORITY_DEFAULT, PACKETFLAGS_RELIABLE, PACKETORDERINGCHANNEL_INFO);
+		pClient->SendPacket(&Packet);
 }
 
 void CBaseServer::OnProcess(const FrameTimeInfo* pTime)
