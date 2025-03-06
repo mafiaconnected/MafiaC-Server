@@ -74,7 +74,7 @@ CBaseServer::CBaseServer(Galactic3D::Context* pContext) :
 	m_iWaitEventTimeout(5),
 	m_UGP(this),
 	m_RCon(this),
-	m_NetRPC(m_pNetSystem),
+	m_NetRPC(m_pNetServer),
 	m_InputEvent(FinaliseInputEvent)
 {
 	m_MaxClients = 32;
@@ -488,11 +488,11 @@ bool CBaseServer::IsVersionAllowed(uint32_t Major, uint32_t Minor, uint32_t Patc
 	return false;
 }
 
-void CBaseServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, Stream* pStream)
+void CBaseServer::ProcessPacket(Peer_t Peer, unsigned int PacketID, Stream* pStream)
 {
 	CBinaryReader Reader(pStream);
 
-	auto pClient = m_NetMachines.GetMachineFromPeer(Peer.m_Peer);
+	auto pClient = m_NetMachines.GetMachineFromPeer(Peer);
 
 	if (pClient == nullptr && PacketID != PACKET_INITIAL)
 		return;
@@ -506,16 +506,16 @@ void CBaseServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, St
 
 				GChar szHost[MAX_IPSTRING] = { 0 };
 				CIPAddress IPAddress;
-				GetPeerIP(Peer.m_Peer, IPAddress);
+				GetPeerIP(Peer, IPAddress);
 				if (!IPAddress.ToString(szHost, ARRAY_COUNT(szHost), false))
 				{
-					DisconnectPeer(Peer.m_Peer, DISCONNECT_FAILED);
+					DisconnectPeer(Peer, DISCONNECT_FAILED);
 					return;
 				}
 				if (m_BanList.IsBanned(szHost))
 				{
 					_glogwarnprintf(_gstr("CONNECT: %s revoked connection [BANNED]"), szHost);
-					DisconnectPeer(Peer.m_Peer, DISCONNECT_BANNED);
+					DisconnectPeer(Peer, DISCONNECT_BANNED);
 					return;
 				}
 				uint32_t uiNetVersion = 0;
@@ -523,7 +523,7 @@ void CBaseServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, St
 				if (uiNetVersion != m_uiNetVersion)
 				{
 					_glogwarnprintf(_gstr("CONNECT: %s (%d) revoked connection [UNSUPPORTED CLIENT]"), szHost, uiNetVersion);
-					DisconnectPeer(Peer.m_Peer, DISCONNECT_UNSUPPORTEDCLIENT);
+					DisconnectPeer(Peer, DISCONNECT_UNSUPPORTEDCLIENT);
 					return;
 				}
 
@@ -539,7 +539,7 @@ void CBaseServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, St
 				if (!IsVersionAllowed(uiMajorVersion, uiMinorVersion, uiPatchVersion, uiBuildVersion))
 				{
 					_glogwarnprintf(_gstr("CONNECT: %s revoked connection [UNSUPPORTED CLIENT]"), szHost);
-					DisconnectPeer(Peer.m_Peer, DISCONNECT_UNSUPPORTEDCLIENT);
+					DisconnectPeer(Peer, DISCONNECT_UNSUPPORTEDCLIENT);
 					return;
 				}
 
@@ -549,7 +549,7 @@ void CBaseServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, St
 					if (pszPassword == nullptr)
 					{
 						_glogwarnprintf(_gstr("CONNECT: %s revoked connection [WRONG PASSWORD]"), szHost);
-						DisconnectPeer(Peer.m_Peer, DISCONNECT_WRONGPASSWORD);
+						DisconnectPeer(Peer, DISCONNECT_WRONGPASSWORD);
 						return;
 					}
 					bool bWrongPassword = m_Password.HasPassword() && !m_Password.Verify(pszPassword);
@@ -557,7 +557,7 @@ void CBaseServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, St
 					if (bWrongPassword)
 					{
 						_glogwarnprintf(_gstr("CONNECT: %s revoked connection [WRONG PASSWORD]"), szHost);
-						DisconnectPeer(Peer.m_Peer, DISCONNECT_WRONGPASSWORD);
+						DisconnectPeer(Peer, DISCONNECT_WRONGPASSWORD);
 						return;
 					}
 				}
@@ -574,7 +574,7 @@ void CBaseServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, St
 				if (usNicknameLength <= 0 || usNicknameLength >= NETGAME_MAX_NAME_BUFFER || usNicknameLength >= NETGAME_MAX_NAME)
 				{
 					_glogwarnprintf(_gstr("CONNECT: %s revoked connection [INVALID NICKNAME]"), szHost);
-					DisconnectPeer(Peer.m_Peer, DISCONNECT_INVALIDNICKNAME);
+					DisconnectPeer(Peer, DISCONNECT_INVALIDNICKNAME);
 					return;
 				}
 				{
@@ -586,7 +586,7 @@ void CBaseServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, St
 					if (_gstrlen(szName) == 0)
 					{
 						_glogwarnprintf(_gstr("CONNECT: %s revoked connection [INVALID NICKNAME]"), szHost);
-						DisconnectPeer(Peer.m_Peer, DISCONNECT_INVALIDNICKNAME);
+						DisconnectPeer(Peer, DISCONNECT_INVALIDNICKNAME);
 						return;
 					}
 				}
@@ -599,19 +599,19 @@ void CBaseServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, St
 				if (std::find(m_AllowedGameIds.begin(), m_AllowedGameIds.end(), ucGame) == m_AllowedGameIds.end())
 				{
 					_glogwarnprintf(_gstr("CONNECT: %s revoked connection [WRONG GAME]"), szName);
-					DisconnectPeer(Peer.m_Peer, DISCONNECT_UNSUPPORTEDENGINE);
+					DisconnectPeer(Peer, DISCONNECT_UNSUPPORTEDENGINE);
 					return;
 				}
 				if (IsNameInUse(szName))
 				{
 					_glogwarnprintf(_gstr("CONNECT: %s revoked connection [NICKNAME IN USE]"), szName);
-					DisconnectPeer(Peer.m_Peer, DISCONNECT_NICKNAMEINUSE);
+					DisconnectPeer(Peer, DISCONNECT_NICKNAMEINUSE);
 					return;
 				}
 				if (m_CurrentClients >= m_MaxClients)
 				{
 					_glogwarnprintf(_gstr("CONNECT: %s revoked connection [SERVER FULL]"), szName);
-					DisconnectPeer(Peer.m_Peer, DISCONNECT_FULL);
+					DisconnectPeer(Peer, DISCONNECT_FULL);
 					return;
 				}
 
@@ -622,12 +622,11 @@ void CBaseServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, St
 					{
 						pNetMachine = Strong<CNetMachine>::New(NewMachine(m_pManager));
 						m_NetMachines.m_rgpMachines[i] = pNetMachine;
-						pNetMachine->m_Peer = Peer.m_Peer;
+						pNetMachine->m_Peer = Peer;
 						const GChar* pszGame = m_pManager->m_Games.GetGameName(ucGame);
 						pNetMachine->m_Game.assign(pszGame);
 						pNetMachine->m_GameId = ucGame;
 						pNetMachine->m_nIndex = (uint32_t)i;
-						pNetMachine->m_GlobalIdentifier = Peer.m_GlobalPeer;
 						pNetMachine->m_IPAddress = IPAddress;
 						pNetMachine->SetName(szName);
 						pNetMachine->m_bStreaming = false;
@@ -641,7 +640,7 @@ void CBaseServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, St
 				if (pNetMachine == nullptr)
 				{
 					_glogwarnprintf(_gstr("CONNECT: %s revoked connection [SERVER FULL]"), szName);
-					DisconnectPeer(Peer.m_Peer, DISCONNECT_FULL);
+					DisconnectPeer(Peer, DISCONNECT_FULL);
 					return;
 				}
 				else
@@ -743,7 +742,7 @@ void CBaseServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, St
 				pClient->m_bJoined = true;
 				pClient->m_bStreaming = true;
 
-				m_ResourceMgr.UpdateAllResource(this, Peer.m_Peer);
+				m_ResourceMgr.UpdateAllResource(this, Peer);
 
 				OnPlayerJoined(pClient);
 
@@ -945,9 +944,9 @@ void CBaseServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, St
 				unsigned int uiReason = DISCONNECT_GRACEFUL;
 				Reader.ReadUInt32(&uiReason, 1);
 
-				OnPlayerDisconnect(Peer.m_Peer, uiReason);
+				OnPlayerDisconnect(Peer, uiReason);
 
-				DisconnectPeer(Peer.m_Peer, uiReason);
+				DisconnectPeer(Peer, uiReason);
 			}
 			break;
 		case PACKET_KEYEVENT:
@@ -1030,7 +1029,7 @@ void CBaseServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, St
 	}
 }
 
-bool CBaseServer::ReceiveDatagram(CNetSocket* pNetSocket)
+bool CBaseServer::ReceiveDatagram(INetSocket* pNetSocket)
 {
 	return m_UGP.ReceiveDatagram(pNetSocket);
 }
@@ -1296,7 +1295,7 @@ bool CBaseServer::ParseConfig(const CServerConfiguration& Config)
 #endif
 
 	m_bDuplicateNames = Config.GetBoolValue(_gstr("duplicatenames"), false);
-	m_bMultiThreaded = Config.GetBoolValue(_gstr("multithreaded"), false);
+	m_bMultiThreaded = Config.GetBoolValue(_gstr("multithreaded"), true);
 
 	{
 		m_uiMinMajorVersion = 1;

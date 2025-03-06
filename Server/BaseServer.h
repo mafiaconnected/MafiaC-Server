@@ -23,7 +23,7 @@ public:
 	virtual void Execute(const GChar* pszCommandName, const GChar* pszArguments, CBaseObject* pClient) override;
 };
 
-class CBaseServer : public CNetCompatibilityShim
+class CBaseServer : public CNetServerCompatibilityShim
 {
 public:
 	CBaseServer(Galactic3D::Context* pContext);
@@ -105,7 +105,7 @@ private:
 public:
 	CHttpServer m_HttpServer;
 	CNetMachines m_NetMachines;
-	CNetRPC m_NetRPC;
+	CNetRPCServer m_NetRPC;
 	CConfig m_ServerConfig;
 
 	float m_fStreamInDistance;
@@ -124,8 +124,8 @@ public:
 	virtual CNetMachine* NewMachine(CServerManager* pServerManager);
 	virtual bool OnPlayerConnect(const Peer_t Peer) override;
 	virtual void OnPlayerDisconnect(const Peer_t Peer, unsigned int uiReason) override;
-	virtual void ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, Galactic3D::Stream* pStream) override;
-	virtual bool ReceiveDatagram(CNetSocket* pNetSocket) override;
+	virtual void ProcessPacket(Peer_t Peer, unsigned int PacketID, Galactic3D::Stream* pStream) override;
+	virtual bool ReceiveDatagram(INetSocket* pNetSocket) override;
 
 	void SetGame(const GChar* pszName);
 	void AddGame(const GChar* pszName);
