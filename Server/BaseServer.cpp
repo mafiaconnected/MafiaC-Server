@@ -1736,7 +1736,7 @@ void CBaseServer::MainLoop()
 		if (m_CurrentClients > 0)
 			OS::Delay(5);
 		else
-			OS::Delay(50);
+			OS::Delay(100);
 	}
 }
 
