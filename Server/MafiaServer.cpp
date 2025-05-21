@@ -531,6 +531,42 @@ void CMafiaServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, G
 		}
 		break;
 
+		case MAFIAPACKET_HUMAN_USINGACTOR:
+		{
+			int32_t nPedId;
+			Reader.ReadInt32(&nPedId, 1);
+
+			size_t size = 0;
+			GChar* szName = Reader.ReadString(&size);
+
+			int32_t nUnk1;
+			Reader.ReadInt8(&nUnk1, 1);
+
+			int32_t nUnk2;
+			Reader.ReadInt32(&nUnk2, 1);
+
+			int32_t nUnk3;
+			Reader.ReadInt32(&nUnk3, 1);
+
+			CNetObject* pPed = m_pManager->FromId(nPedId);
+
+			if (pPed == nullptr || pClient != pPed->GetSyncer())
+			{
+				break;
+			}
+
+			{
+				Packet Packet(MAFIAPACKET_HUMAN_USINGACTOR);
+				Packet.Write<int32_t>(pPed->GetId());
+				Packet.Write<GChar*>(szName);
+				Packet.Write<int32_t>(nUnk1);
+				Packet.Write<int32_t>(nUnk2);
+				Packet.Write<int32_t>(nUnk3);
+				m_pManager->SendPacketExcluding(&Packet, pClient);
+			}
+		}
+		break;
+
 		case MAFIAPACKET_VEHICLE_CREATE:
 		{
 			uint64_t nLocalVehicleId = 0;
