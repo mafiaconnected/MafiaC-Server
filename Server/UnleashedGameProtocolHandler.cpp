@@ -66,7 +66,7 @@ void CUnleashedGameProtocolHandler::UpdateResponse()
 	m_pResponse->m_RulesCount = RulesCount;
 }
 
-bool CUnleashedGameProtocolHandler::ReceiveDatagram(CNetSocket* pNetSocket)
+bool CUnleashedGameProtocolHandler::ReceiveDatagram(INetSocket* pNetSocket)
 {
 	size_t Length;
 	void* pData = pNetSocket->GetData(Length);

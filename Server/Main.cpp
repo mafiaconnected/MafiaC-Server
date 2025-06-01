@@ -13,6 +13,7 @@
 #include <termios.h>
 #endif
 #include <Engine/SignalHandlers.h>
+#include <Network/OpenSSLUtil.h>
 #ifdef _WIN32
 #include "resource.h"
 #else
@@ -108,9 +109,7 @@ int main(int argc, char* argv[])
 	enet_initialize();
 	atexit(curl_global_cleanup);
 	atexit(enet_deinitialize);
-#ifdef _WIN32 // HACK
-	atexit(CRYPTO_cleanup_all_ex_data);
-#endif
+	atexit(ossl_cleanup);
 
 	try
 	{
@@ -143,7 +142,7 @@ int main(int argc, char* argv[])
 
 		CSignalHandlers::Install([]() {
 			g_pServer->m_ExitSignal.Signal();
-			});
+		});
 
 		bool bDumpDoc = false;
 		bool bExpectConfig = false;

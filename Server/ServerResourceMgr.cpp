@@ -16,7 +16,7 @@ CServerResourceMgr::CServerResourceMgr(Galactic3D::Context* pContext, CBaseServe
 	m_pKeyBinds->m_bClientThere = true;
 }
 
-void CServerResourceMgr::UpdateAResource(CNetCompatibilityShim* pNetGame, CResource* pResource)
+void CServerResourceMgr::UpdateAResource(CNetServerCompatibilityShim* pNetGame, CResource* pResource)
 {
 	Packet Packet(PACKET_RESOURCES);
 
@@ -26,7 +26,7 @@ void CServerResourceMgr::UpdateAResource(CNetCompatibilityShim* pNetGame, CResou
 	pNetGame->SendEveryonePacket(&Packet, PACKETPRIORITY_LOW, PACKETFLAGS_RELIABLE);
 }
 
-void CServerResourceMgr::UpdateAllResource(CNetCompatibilityShim* pNetGame, const Peer_t Peer)
+void CServerResourceMgr::UpdateAllResource(CNetServerCompatibilityShim* pNetGame, const Peer_t Peer)
 {
 	Packet Packet(PACKET_RESOURCES);
 

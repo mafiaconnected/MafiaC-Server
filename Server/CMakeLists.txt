@@ -53,7 +53,7 @@ target_link_libraries(Server
 	PRIVATE
 	sqstdlib_static
 	squirrel_static
-	#RakNet_static
+	RakNet_static
 	enet_static
 	mongoose6_static
 	tinyxml_static
@@ -77,7 +77,7 @@ target_link_libraries(Server
 	#js_static
 	sqstdlib_static
 	squirrel_static
-	#RakNet_static
+	RakNet_static
 	enet_static
 	mongoose6_static
 	libssl.a libcrypto.a zlib_static png_static tinyxml_static dl pthread libcurl.a

@@ -870,7 +870,7 @@ static bool FunctionCreateExplosion(IScriptState* pState, int argc, void* pUser)
 	Packet.Write<float>(radius);
 	Packet.Write<float>(force);
 
-	pServerManager->m_pServer->m_pNetSystem->SendEveryonePacket(&Packet);
+	pServerManager->m_pServer->m_pNetServer->SendEveryonePacket(&Packet);
 
 	return true;
 }

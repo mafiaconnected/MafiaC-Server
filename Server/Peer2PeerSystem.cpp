@@ -10,14 +10,14 @@ CPeer2PeerSystem::CPeer2PeerSystem(CMafiaServerManager* pManager) :
 {
 }
 
-void CPeer2PeerSystem::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, Galactic3D::Stream* pStream)
+void CPeer2PeerSystem::ProcessPacket(Peer_t Peer, unsigned int PacketID, Galactic3D::Stream* pStream)
 {
 	Galactic3D::CBinaryReader Reader(pStream);
 
 	if (!m_pManager->m_pMafiaServer->m_bSyncLocalEntities)
 		return;
 
-	auto pClient = static_cast<CMafiaClient*>(m_pManager->m_pNetMachines->GetMachineFromPeer(Peer.m_Peer));
+	auto pClient = static_cast<CMafiaClient*>(m_pManager->m_pNetMachines->GetMachineFromPeer(Peer));
 
 	switch (PacketID)
 	{
