@@ -1162,6 +1162,32 @@ static bool FunctionGetServerCVar(IScriptState* pState, int argc, void* pUser)
 	return true;
 }
 
+static bool FunctionSetServerCVar(IScriptState* pState, int argc, void* pUser)
+{
+	CMafiaServerManager* pServerManager = (CMafiaServerManager*)pUser;
+	const GChar* pszName = pState->CheckString(0);
+	if (!pszName)
+		return false;
+
+	const GChar* pszValue = pState->CheckString(1);
+	if (!pszName)
+		return false;
+
+	auto pVar = pServerManager->m_pServer->m_CVars.Find(pszName);
+	if (pVar != nullptr)
+	{
+		if (pVar->GetReadOnly())
+		{
+			return pState->Error(_gstr("CVar %s is read-only"), pszName);
+		}
+	}
+
+	pServerManager->m_pServer->m_CVars.Set(pszName, pszValue, true);
+	pServerManager->m_pServer->m_CVars.Find(pszName)->SetReadOnly(false);
+	pServerManager->m_pServer->SendCVars(nullptr);
+	return true;
+}
+
 static bool FunctionSetServerPassword(IScriptState* pState, int argc, void* pUser)
 {
 	CMafiaServerManager* pServerManager = (CMafiaServerManager*)pUser;
@@ -1406,6 +1432,7 @@ void CMafiaServerManager::RegisterFunctions(CScripting* pScripting)
 		pServerNamespace->AddProperty(this, _gstr("syncLocalEntities"), ARGUMENT_BOOLEAN, FunctionGetServerSyncLocalEntities);
 		pServerNamespace->AddProperty(this, _gstr("bindIP"), ARGUMENT_STRING, FunctionGetServerBindIP);
 		pServerNamespace->RegisterFunction(_gstr("getCVar"), _gstr("s"), FunctionGetServerCVar, this);
+		pServerNamespace->RegisterFunction(_gstr("setCVar"), _gstr("s*"), FunctionSetServerCVar, this);
 		pServerNamespace->RegisterFunction(_gstr("setPassword"), _gstr("s"), FunctionSetServerPassword, this);
 		
 	}

@@ -80,7 +80,6 @@ enum eMafiaPacket : unsigned int
 	MAFIAPACKET_PEER_CREATECAR,
 	MAFIAPACKET_PEER_CREATECIVILIAN,
 	MAFIAPACKET_PEER_IDENTIFY,
-
 };
 
 struct tEntityCreatePacket

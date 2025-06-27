@@ -1403,6 +1403,7 @@ bool CBaseServer::ParseConfig(const CServerConfiguration& Config)
 				_glogerrorprintf(_gstr("Unknown CVar %s!"), pszName);
 				continue;
 			}
+			m_CVars.Find(pszName)->SetReadOnly(true);
 		}
 	}
 
