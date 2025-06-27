@@ -13,8 +13,8 @@ public:
 	CBaseServer* m_pServer;
 	//CResource* EnsureLoadedResource(const GChar* pszName, const GChar* pszPath);
 	//void UpdateResources(const GPlatformChar* pszFolder);
-	void UpdateAResource(CNetCompatibilityShim* pNetGame, CResource* pResource);
-	void UpdateAllResource(CNetCompatibilityShim* pNetGame, const Peer_t Peer);
+	void UpdateAResource(CNetServerCompatibilityShim* pNetGame, CResource* pResource);
+	void UpdateAllResource(CNetServerCompatibilityShim* pNetGame, const Peer_t Peer);
 	virtual void RefreshResourceState(CResource* pResource) override;
 	virtual void RemoveThingsAssociatedWithResource(CResource* pResource) override;
 };

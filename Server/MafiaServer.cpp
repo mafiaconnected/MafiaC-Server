@@ -22,11 +22,11 @@ CNetMachine* CMafiaServer::NewMachine(CServerManager* pServerManager)
 	return new CMafiaClient(pServerManager);
 }
 
-void CMafiaServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, Galactic3D::Stream* pStream)
+void CMafiaServer::ProcessPacket(Peer_t Peer, unsigned int PacketID, Galactic3D::Stream* pStream)
 {
 	CBinaryReader Reader(pStream);
 
-	CMafiaClient* pClient = static_cast<CMafiaClient*>(m_NetMachines.GetMachineFromPeer(Peer.m_Peer));
+	CMafiaClient* pClient = static_cast<CMafiaClient*>(m_NetMachines.GetMachineFromPeer(Peer));
 	auto pMafiaManager = static_cast<CMafiaServerManager*>(m_pManager);
 
 	if (PacketID == PACKET_INITIAL)
@@ -540,7 +540,7 @@ void CMafiaServer::ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, G
 			GChar* szName = Reader.ReadString(&size);
 
 			int32_t nUnk1;
-			Reader.ReadInt8(&nUnk1, 1);
+			Reader.ReadInt32(&nUnk1, 1);
 
 			int32_t nUnk2;
 			Reader.ReadInt32(&nUnk2, 1);

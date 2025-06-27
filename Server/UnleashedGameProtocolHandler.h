@@ -16,5 +16,5 @@ public:
 	CUGPResponse* m_pResponse;
 
 	void UpdateResponse();
-	bool ReceiveDatagram(CNetSocket* pNetSocket);
+	bool ReceiveDatagram(INetSocket* pNetSocket);
 };

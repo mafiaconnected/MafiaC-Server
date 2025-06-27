@@ -10,5 +10,5 @@ public:
 
 	CMafiaServerManager* m_pManager;
 
-	void ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, Galactic3D::Stream* pStream);
+	void ProcessPacket(Peer_t Peer, unsigned int PacketID, Galactic3D::Stream* pStream);
 };

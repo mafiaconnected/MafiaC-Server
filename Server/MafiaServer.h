@@ -13,7 +13,7 @@ public:
 	GChar m_szMap[64];
 
 	virtual CNetMachine* NewMachine(CServerManager* pServerManager) override;
-	virtual void ProcessPacket(const tPeerInfo& Peer, unsigned int PacketID, Galactic3D::Stream* pStream) override;
+	virtual void ProcessPacket(Peer_t Peer, unsigned int PacketID, Galactic3D::Stream* pStream) override;
 
 	virtual bool ParseConfig(const CServerConfiguration& Config) override;
 
