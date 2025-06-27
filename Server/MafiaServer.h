@@ -10,8 +10,6 @@ public:
 
 	bool m_bSyncLocalEntities;
 
-	GChar m_szMap[64];
-
 	virtual CNetMachine* NewMachine(CServerManager* pServerManager) override;
 	virtual void ProcessPacket(Peer_t Peer, unsigned int PacketID, Galactic3D::Stream* pStream) override;
 
