@@ -792,6 +792,24 @@ static bool FunctionPlayerFadeScreen(IScriptState* pState, int argc, void* pUser
 	return true;
 }
 
+static bool FunctionPlayerChangeMap(IScriptState* pState, int argc, void* pUser)
+{
+	CMafiaServerManager* pServerManager = (CMafiaServerManager*)pUser;
+	CMafiaClient* pClient;
+	if (!pState->CheckClass(pServerManager->m_pServer->m_pManager->m_pNetMachineClass, 0, false, &pClient))
+		return false;
+
+	const GChar* szMapName = pState->CheckString(1);
+	if (!szMapName) return false;
+
+	Packet Packet(MAFIAPACKET_CHANGEMAP);
+	Packet.Write<GChar*>((GChar*)szMapName);
+
+	pClient->SendPacket(&Packet, PACKETPRIORITY_DEFAULT);
+
+	return true;
+}
+
 static bool FunctionPlayerEnableMap(IScriptState* pState, int argc, void* pUser)
 {
 	CMafiaServerManager* pServerManager = (CMafiaServerManager*)pUser;
@@ -1413,6 +1431,7 @@ void CMafiaServerManager::RegisterFunctions(CScripting* pScripting)
 	pGameNamespace->RegisterFunction(_gstr("createDummyElement"), _gstr("v"), FunctionCreateDummyElement, this);
 	pGameNamespace->RegisterFunction(_gstr("createObject"), _gstr("svv"), FunctionCreateObject, this);
 	pGameNamespace->RegisterFunction(_gstr("fadeScreen"), _gstr("xbf|i"), FunctionPlayerFadeScreen, this);
+	pGameNamespace->RegisterFunction(_gstr("changePlayerMap"), _gstr("xs"), FunctionPlayerChangeMap, this);
 
 	{
 		Galactic3D::ReflectedNamespace* pServerNamespace = pScripting->m_Global.AddNamespace(_gstr("server"));
