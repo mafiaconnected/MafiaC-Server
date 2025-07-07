@@ -105,12 +105,13 @@ bool CServerEntity::ReadCreatePacket(Stream* pStream)
 	if (!CNetObject::ReadCreatePacket(pStream))
 		return false;
 
-	tEntityCreatePacket Packet;
+	CBinaryReader Reader(pStream);
+	AutoFree<const GChar> mdl = Reader.ReadString(nullptr);
+	_gstrcpy_s(m_szModel, ARRAY_COUNT(m_szModel), mdl);
 
+	tEntityCreatePacket Packet;
 	if (pStream->Read(&Packet, sizeof(Packet)) != sizeof(Packet))
 		return false;
-
-	_gstrcpy_s(m_szModel, ARRAY_COUNT(m_szModel), Packet.model);
 
 	// Check for NaN. Mafia sometimes has them. Once synced, it streams the element out for players (even a driver's own vehicle disappears)
 	if (Packet.position.x != NAN && Packet.position.y != NAN && Packet.position.z != NAN) {
@@ -167,9 +168,10 @@ bool CServerEntity::WriteCreatePacket(Stream* pStream)
 	if (!CNetObject::WriteCreatePacket(pStream))
 		return false;
 
-	tEntityCreatePacket Packet;
+	CBinaryWriter Writer(pStream);
+	Writer.WriteString(m_szModel);
 
-	_gstrcpy_s(Packet.model, ARRAY_COUNT(Packet.model), m_szModel);
+	tEntityCreatePacket Packet;
 
 	Packet.position = m_Position;
 	Packet.positionRel = m_RelPosition;

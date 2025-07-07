@@ -84,7 +84,6 @@ enum eMafiaPacket : unsigned int
 
 struct tEntityCreatePacket
 {
-	GChar model[64];
 	CVector3D position;
 	CVector3D positionRel;
 	CVector3D rotation;

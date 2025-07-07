@@ -572,9 +572,6 @@ void CMafiaServer::ProcessPacket(Peer_t Peer, unsigned int PacketID, Galactic3D:
 			uint64_t nLocalVehicleId = 0;
 			Reader.ReadUInt64(&nLocalVehicleId, 1);
 
-			//CNetObject* pServerElement = m_pManager->FromId(nLocalVehicleId);
-			//if (pServerElement == nullptr)
-
 			Strong<CServerVehicle> pServerVehicle;
 
 			{
@@ -585,9 +582,6 @@ void CMafiaServer::ProcessPacket(Peer_t Peer, unsigned int PacketID, Galactic3D:
 
 				pServerVehicle->m_pResource = nullptr;
 				pServerVehicle->ReadCreatePacket(pStream);
-
-				//if(!m_pManager->RegisterObject(pServerVehicle))
-				//	return;
 
 				pServerVehicle->SetCreatedFor(pClient, true);
 				pServerVehicle->SetSyncer(pClient, true);
