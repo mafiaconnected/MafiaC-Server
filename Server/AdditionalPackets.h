@@ -4,7 +4,7 @@
 
 #include "ServerVersion.h"
 
-#define NETGAME_CURRENT_VERSION 4
+#define NETGAME_CURRENT_VERSION 5
 
 #include <Multiplayer/Packets.h>
 
