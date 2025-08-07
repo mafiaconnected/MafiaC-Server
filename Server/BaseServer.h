@@ -89,6 +89,7 @@ public:
 	GString m_Game;
 	int32_t m_GameId;
 	std::vector<int32_t> m_AllowedGameIds;
+	time_t m_tServerStartTime;
 private:
 	std::vector<GString> m_InitialResources;
 	CThreadCB* m_pInputThread;

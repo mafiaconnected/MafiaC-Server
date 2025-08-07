@@ -1296,6 +1296,13 @@ static bool FunctionGetServerBindIP(IScriptState* pState, int argc, void* pUser)
 	return true;
 }
 
+static bool FunctionGetServerUpTime(IScriptState* pState, int argc, void* pUser)
+{
+	CMafiaServerManager* pServerManager = (CMafiaServerManager*)pUser;
+	pState->ReturnNumber(time(nullptr) - pServerManager->m_pServer->m_tServerStartTime);
+	return true;
+}
+
 template <int type>
 static bool FunctionGetElements(IScriptState* pState, int argc, void* pUser)
 {
@@ -1453,6 +1460,7 @@ void CMafiaServerManager::RegisterFunctions(CScripting* pScripting)
 		pServerNamespace->RegisterFunction(_gstr("getCVar"), _gstr("s"), FunctionGetServerCVar, this);
 		pServerNamespace->RegisterFunction(_gstr("setCVar"), _gstr("s*"), FunctionSetServerCVar, this);
 		pServerNamespace->RegisterFunction(_gstr("setPassword"), _gstr("s"), FunctionSetServerPassword, this);
+		pServerNamespace->AddProperty(this, _gstr("upTime"), ARGUMENT_INTEGER, FunctionGetServerUptime);
 		
 	}
 }

@@ -135,6 +135,8 @@ CBaseServer::CBaseServer(Galactic3D::Context* pContext) :
 	RegisterSqVM(m_ResourceMgr.m_pScripting);
 
 	RegisterConfig();
+
+	m_tServerStartTime = time(nullptr);
 }
 
 CBaseServer::~CBaseServer()
