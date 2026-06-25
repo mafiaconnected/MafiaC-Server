@@ -40,6 +40,7 @@ public:
 	Galactic3D::EventHandlers::CEventType* m_pOnPedExitedVehicleEventType;
 	Galactic3D::EventHandlers::CEventType* m_pOnPedExitingVehicleEventType;
 	Galactic3D::EventHandlers::CEventType* m_pOnPedDeathEventType;
+	Galactic3D::EventHandlers::CEventType* m_pOnPedUseActorEventType;
 	Galactic3D::EventHandlers::CEventType* m_pOnPedSpawnEventType;
 	Galactic3D::EventHandlers::CEventType* m_pOnPedFallEventType;
 	Galactic3D::EventHandlers::CEventType* m_pOnPedHitEventType;

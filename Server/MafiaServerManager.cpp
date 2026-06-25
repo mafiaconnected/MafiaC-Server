@@ -64,7 +64,8 @@ CMafiaServerManager::CMafiaServerManager(Context* pContext, CMafiaServer* pServe
 	m_pOnPedFallEventType = m_pServer->m_ResourceMgr.m_pEventHandlers->CreateEventType(_gstr("OnPedFall"), _gstr("Called when a ped falls."), 1, true);
 	m_pOnPedHitEventType = m_pServer->m_ResourceMgr.m_pEventHandlers->CreateEventType(_gstr("OnPedHit"), _gstr("Called when a ped is hit."), 7, true);
 	m_pOnPedShootEventType = m_pServer->m_ResourceMgr.m_pEventHandlers->CreateEventType(_gstr("OnPedShoot"), _gstr("Called when a ped shoots."), 3, true);
-	m_pOnPedThrowGrenadeEventType = m_pServer->m_ResourceMgr.m_pEventHandlers->CreateEventType(_gstr("OnPedThrowGrenade"), _gstr("Called when a ped throws a grenade."), 2, true);
+	//m_pOnPedThrowGrenadeEventType = m_pServer->m_ResourceMgr.m_pEventHandlers->CreateEventType(_gstr("OnPedThrowGrenade"), _gstr("Called when a ped throws a grenade."), 2, true);
+	m_pOnPedUseActorEventType = m_pServer->m_ResourceMgr.m_pEventHandlers->CreateEventType(_gstr("OnPedUseActor"), _gstr("Called when a ped uses an actor."), 5, true);
 
 	//m_pOnReceivePacketEventType = m_pServer->m_ResourceMgr.m_pEventHandlers->CreateEventType(_gstr("OnReceivePacket"), _gstr("Called when a packet is received"), 2, true);
 
@@ -1460,7 +1461,6 @@ void CMafiaServerManager::RegisterFunctions(CScripting* pScripting)
 		pServerNamespace->RegisterFunction(_gstr("getCVar"), _gstr("s"), FunctionGetServerCVar, this);
 		pServerNamespace->RegisterFunction(_gstr("setCVar"), _gstr("s*"), FunctionSetServerCVar, this);
 		pServerNamespace->RegisterFunction(_gstr("setPassword"), _gstr("s"), FunctionSetServerPassword, this);
-		pServerNamespace->AddProperty(this, _gstr("upTime"), ARGUMENT_INTEGER, FunctionGetServerUptime);
-		
+		pServerNamespace->AddProperty(this, _gstr("upTime"), ARGUMENT_INTEGER, FunctionGetServerUpTime);
 	}
 }
