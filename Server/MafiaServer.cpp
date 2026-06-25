@@ -113,7 +113,7 @@ void CMafiaServer::ProcessPacket(Peer_t Peer, unsigned int PacketID, Galactic3D:
 					bool bPreventDefault = false;
 					static_cast<CMafiaServerManager*>(m_pManager)->m_pOnPedThrowGrenadeEventType->Trigger(Args, bPreventDefault);
 
-					if (bPreventDefault) {
+					if (!bPreventDefault) {
 						Packet Packet(MAFIAPACKET_HUMAN_THROWGRENADE);
 						Packet.Write<int32_t>(pPed->GetId());
 						Packet.Write<CVector3D>(vecShotPosition);
@@ -206,9 +206,9 @@ void CMafiaServer::ProcessPacket(Peer_t Peer, unsigned int PacketID, Galactic3D:
 			if (!Reader.ReadInt32(&nTargetId, 1))
 				return;
 
-			//int32_t nAttackerId;
-			//if (!Reader.ReadInt32(&nAttackerId, 1))
-			//	return;
+			int32_t nAttackerId;
+			if (!Reader.ReadInt32(&nAttackerId, 1))
+				return;
 
 			CVector3D vecPosition1;
 			if (!Reader.ReadVector3D(&vecPosition1, 1))
@@ -334,7 +334,7 @@ void CMafiaServer::ProcessPacket(Peer_t Peer, unsigned int PacketID, Galactic3D:
 			uint32_t nHopSeatsBool;
 			Reader.ReadUInt32(&nHopSeatsBool, 1);
 
-			CNetObject* pPed = m_pManager->FromId(nPedId);
+			CServerHuman* pPed = (CServerHuman*)m_pManager->FromId(nPedId);
 			CNetObject* pVehicle = m_pManager->FromId(nVehicleId);
 
 			if (pPed == nullptr
@@ -345,6 +345,8 @@ void CMafiaServer::ProcessPacket(Peer_t Peer, unsigned int PacketID, Galactic3D:
 			{
 				break;
 			}
+
+			pPed->m_EnteringExitingVehicle = true;
 
 			{
 				Packet Packet(MAFIAPACKET_HUMAN_ENTERINGVEHICLE);
@@ -381,7 +383,7 @@ void CMafiaServer::ProcessPacket(Peer_t Peer, unsigned int PacketID, Galactic3D:
 			uint32_t nUnknown;
 			Reader.ReadUInt32(&nUnknown, 1);
 
-			CNetObject* pPed = m_pManager->FromId(nPedId);
+			CServerHuman* pPed = (CServerHuman*)m_pManager->FromId(nPedId);
 			CNetObject* pVehicle = m_pManager->FromId(nVehicleId);
 
 			if (pPed == nullptr
@@ -392,6 +394,8 @@ void CMafiaServer::ProcessPacket(Peer_t Peer, unsigned int PacketID, Galactic3D:
 			{
 				break;
 			}
+
+			pPed->m_EnteringExitingVehicle = true;
 
 			{
 				Packet Packet(MAFIAPACKET_HUMAN_EXITINGVEHICLE);
@@ -416,13 +420,7 @@ void CMafiaServer::ProcessPacket(Peer_t Peer, unsigned int PacketID, Galactic3D:
 			int8_t nSeat;
 			Reader.ReadInt8(&nSeat, 1);
 
-			uint32_t nAction;
-			Reader.ReadUInt32(&nAction, 1);
-
-			uint32_t nUnknown;
-			Reader.ReadUInt32(&nUnknown, 1);
-
-			CNetObject* pPed = m_pManager->FromId(nPedId);
+			CServerHuman* pPed = (CServerHuman*)m_pManager->FromId(nPedId);
 			CNetObject* pVehicle = m_pManager->FromId(nVehicleId);
 
 			if (pPed == nullptr
@@ -434,13 +432,13 @@ void CMafiaServer::ProcessPacket(Peer_t Peer, unsigned int PacketID, Galactic3D:
 				break;
 			}
 
+			pPed->m_EnteringExitingVehicle = false;
+
 			{
 				Packet Packet(MAFIAPACKET_HUMAN_EXITEDVEHICLE);
 				Packet.Write<int32_t>(pPed->GetId());
 				Packet.Write<int32_t>(pVehicle->GetId());
 				Packet.Write<int8_t>(nSeat);
-				Packet.Write<uint32_t>(nAction);
-				Packet.Write<uint32_t>(nUnknown);
 				m_pManager->SendPacketExcluding(&Packet, pClient);
 			}
 		}
@@ -457,13 +455,7 @@ void CMafiaServer::ProcessPacket(Peer_t Peer, unsigned int PacketID, Galactic3D:
 			int8_t nSeat;
 			Reader.ReadInt8(&nSeat, 1);
 
-			uint32_t nAction;
-			Reader.ReadUInt32(&nAction, 1);
-
-			uint32_t nUnknown;
-			Reader.ReadUInt32(&nUnknown, 1);
-
-			CNetObject* pPed = m_pManager->FromId(nPedId);
+			CServerHuman* pPed = (CServerHuman*)m_pManager->FromId(nPedId);
 			CNetObject* pVehicle = m_pManager->FromId(nVehicleId);
 
 			if (pPed == nullptr
@@ -475,13 +467,13 @@ void CMafiaServer::ProcessPacket(Peer_t Peer, unsigned int PacketID, Galactic3D:
 				break;
 			}
 
+			pPed->m_EnteringExitingVehicle = false;
+
 			{
 				Packet Packet(MAFIAPACKET_HUMAN_ENTEREDVEHICLE);
 				Packet.Write<int32_t>(pPed->GetId());
 				Packet.Write<int32_t>(pVehicle->GetId());
 				Packet.Write<int8_t>(nSeat);
-				Packet.Write<uint32_t>(nAction);
-				Packet.Write<uint32_t>(nUnknown);
 				m_pManager->SendPacketExcluding(&Packet, pClient);
 			}
 
@@ -538,15 +530,15 @@ void CMafiaServer::ProcessPacket(Peer_t Peer, unsigned int PacketID, Galactic3D:
 
 			size_t size = 0;
 			GChar* szName = Reader.ReadString(&size);
+			 
+			uint32_t iUnknown1;
+			Reader.ReadUInt32(&iUnknown1, 1);
 
-			uint32_t nUnk1;
-			Reader.ReadUInt32(&nUnk1, 1);
+			uint32_t iUnknown2;
+			Reader.ReadUInt32(&iUnknown2, 1);
 
-			uint32_t nUnk2;
-			Reader.ReadUInt32(&nUnk2, 1);
-
-			uint32_t nUnk3;
-			Reader.ReadUInt32(&nUnk3, 1);
+			uint32_t iUnknown3;
+			Reader.ReadUInt32(&iUnknown3, 1);
 
 			CNetObject* pPed = m_pManager->FromId(nPedId);
 
@@ -555,14 +547,27 @@ void CMafiaServer::ProcessPacket(Peer_t Peer, unsigned int PacketID, Galactic3D:
 				break;
 			}
 
-			{
+			_glogprintf(_gstr("[CMafiaServer::ProcessPacket] (MAFIAPACKET_HUMAN_USINGACTOR) Human: %d, Actor: %s, iUnknown1: %d, iUnknown2: %d, iUnknown3: %d"), pPed->GetId(), szName, iUnknown1, iUnknown2, iUnknown3);
+
+			// Scripting event
+			CArguments Args(5);
+			Args.AddObject(pPed);
+			Args.AddString(szName);
+			Args.AddNumber(iUnknown1);
+			Args.AddNumber(iUnknown2);
+			Args.AddNumber(iUnknown3);
+			bool bPreventDefault = false;
+			static_cast<CMafiaServerManager*>(m_pManager)->m_pOnPedUseActorEventType->Trigger(Args, bPreventDefault);
+
+			if (!bPreventDefault) {
 				Packet Packet(MAFIAPACKET_HUMAN_USINGACTOR);
-				Packet.Write<int32_t>(pPed->GetId());
-				Packet.Write<GChar*>(szName);
-				Packet.Write<uint32_t>(nUnk1);
-				Packet.Write<uint32_t>(nUnk2);
-				Packet.Write<uint32_t>(nUnk3);
-				m_pManager->SendPacketExcluding(&Packet, pClient);
+				CBinaryWriter Writer(&Packet);
+				Writer.WriteInt32(pPed->GetId());
+				Writer.WriteString(szName);
+				Writer.WriteUInt32(iUnknown1);
+				Writer.WriteUInt32(iUnknown2);
+				Writer.WriteUInt32(iUnknown3);
+				m_pManager->SendPacketExcluding(&Packet, pClient);				
 			}
 		}
 		break;
