@@ -558,7 +558,8 @@ void CMafiaServer::ProcessPacket(Peer_t Peer, unsigned int PacketID, Galactic3D:
 			{
 				Packet Packet(MAFIAPACKET_HUMAN_USINGACTOR);
 				Packet.Write<int32_t>(pPed->GetId());
-				Packet.Write<GChar*>(szName);
+				CBinaryWriter Writer(&Packet);
+				Writer.WriteString(szName);
 				Packet.Write<uint32_t>(nUnk1);
 				Packet.Write<uint32_t>(nUnk2);
 				Packet.Write<uint32_t>(nUnk3);

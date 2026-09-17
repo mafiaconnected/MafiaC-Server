@@ -99,6 +99,54 @@ void CPeer2PeerSystem::ProcessPacket(Peer_t Peer, unsigned int PacketID, Galacti
 			}
 			break;
 
+		case MAFIAPACKET_PEER_CREATEACTOR:
+			{
+				uint64_t Guid;
+				Reader.ReadUInt64(&Guid, 1);
+
+				size_t NameLength = 0;
+				AutoFree<GChar> pszName = Reader.ReadString(&NameLength);
+
+				if (pszName == nullptr || NameLength == 0)
+					break;
+
+				// Every client independently discovers and reports the same actor (same map, same names for
+				// everyone) - FromName is what dedupes them down to a single server-side element instead of
+				// one per reporting client.
+				auto pExisting = m_pManager->FromName(pszName, ELEMENT_ACTOR);
+
+				int32_t nAssignedId = INVALID_NETWORK_ID;
+
+				if (pExisting != nullptr)
+				{
+					// This client just lost the race - let it know the id that's already registered.
+					// Deliberately does NOT call ReadCreatePacket/ReadSyncPacket here: that would re-run
+					// CNetObject::SetName() on the existing object (harmless, same name) but would also
+					// stomp its already-correct syncer/dimension with this reporter's possibly-stale view.
+					pExisting->SetCreatedFor(pClient, true);
+					nAssignedId = pExisting->GetId();
+				}
+				else
+				{
+					auto pActor = Strong<CServerActor>::New(m_pManager->Create(ELEMENT_ACTOR));
+					pActor->ReadCreatePacket(pStream);
+					pActor->ReadSyncPacket(pStream);
+
+					if (m_pManager->RegisterNetObject(pActor))
+					{
+						pActor->SetCreatedFor(pClient, true);
+						pActor->SetSyncer(pClient, false);
+						nAssignedId = pActor->GetId();
+					}
+				}
+
+				Packet Packet(MAFIAPACKET_ELEMENT_UPDATE_ID);
+				Packet.Write<uint64_t>(Guid);
+				Packet.Write<int32_t>(nAssignedId);
+				pClient->SendPacket(&Packet);
+			}
+			break;
+
 #if 0
 		case MAFIAPACKET_PEER_REMOVEREFS:
 			{
