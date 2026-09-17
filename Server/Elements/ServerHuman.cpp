@@ -118,7 +118,7 @@ bool CServerHuman::ReadSyncPacket(Stream* pStream)
 
 	m_fHealth = Packet.health;
 	m_nVehicleNetworkIndex = Packet.vehicleNetworkIndex;
-	m_nSeat = Packet.seat;
+	m_nSeat = (Packet.seat >= 0 && Packet.seat < ARRAY_COUNT(CServerVehicle::m_pProbableOccupants)) ? Packet.seat : -1;
 	m_IsCrouching = Packet.isCrouching;
 	m_IsAiming = Packet.isAiming;
 	m_IsShooting = Packet.isShooting;
@@ -136,7 +136,7 @@ bool CServerHuman::ReadSyncPacket(Stream* pStream)
 		auto pOldVehicle = static_cast<CServerVehicle*>(m_pNetObjectMgr->FromId(m_nVehicleNetworkIndex, ELEMENT_VEHICLE));
 		if (pOldVehicle != nullptr)
 		{
-			if (nOldSeat > 0 && nOldSeat < ARRAY_COUNT(CServerVehicle::m_pProbableOccupants))
+			if (nOldSeat >= 0 && nOldSeat < ARRAY_COUNT(CServerVehicle::m_pProbableOccupants))
 			{
 				pOldVehicle->m_pProbableOccupants[nOldSeat] = nullptr;
 			}
@@ -151,19 +151,19 @@ bool CServerHuman::ReadSyncPacket(Stream* pStream)
 		{
 			if (pOldVehicle == nullptr)
 			{
-				if (m_nSeat > 0 && m_nSeat < ARRAY_COUNT(CServerVehicle::m_pProbableOccupants))
+				if (m_nSeat >= 0 && m_nSeat < ARRAY_COUNT(CServerVehicle::m_pProbableOccupants))
 				{
 					pNewVehicle->m_pProbableOccupants[m_nSeat] = this;
 				}
 			}
 			else if (pOldVehicle != pNewVehicle)
 			{
-				if (nOldSeat > 0 && nOldSeat < ARRAY_COUNT(CServerVehicle::m_pProbableOccupants))
+				if (nOldSeat >= 0 && nOldSeat < ARRAY_COUNT(CServerVehicle::m_pProbableOccupants))
 				{
 					pOldVehicle->m_pProbableOccupants[nOldSeat] = nullptr;
 				}
 
-				if (m_nSeat > 0 && m_nSeat < ARRAY_COUNT(CServerVehicle::m_pProbableOccupants))
+				if (m_nSeat >= 0 && m_nSeat < ARRAY_COUNT(CServerVehicle::m_pProbableOccupants))
 				{
 					pNewVehicle->m_pProbableOccupants[m_nSeat] = this;
 				}

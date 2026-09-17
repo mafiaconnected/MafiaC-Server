@@ -380,7 +380,7 @@ void CServerVehicle::SetGear(uint32_t iGear)
 
 CServerHuman* CServerVehicle::GetOccupant(int8_t Index)
 {
-	if (Index >= ARRAY_COUNT(m_pProbableOccupants))
+	if (Index < 0 || Index >= ARRAY_COUNT(m_pProbableOccupants))
 		return nullptr;
 	auto pProbableOccupant = m_pProbableOccupants[Index];
 	if (pProbableOccupant != nullptr && pProbableOccupant->m_nVehicleNetworkIndex == GetId() && pProbableOccupant->m_nSeat == Index)
