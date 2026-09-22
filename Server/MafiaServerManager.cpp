@@ -1500,7 +1500,7 @@ void CMafiaServerManager::RegisterFunctions(CScripting* pScripting)
 		pServerNamespace->RegisterFunction(_gstr("getCVar"), _gstr("s"), FunctionGetServerCVar, this);
 		pServerNamespace->RegisterFunction(_gstr("setCVar"), _gstr("s*"), FunctionSetServerCVar, this);
 		pServerNamespace->RegisterFunction(_gstr("setPassword"), _gstr("s"), FunctionSetServerPassword, this);
-		pServerNamespace->AddProperty(this, _gstr("upTime"), ARGUMENT_INTEGER, FunctionGetServerUptime);
+		pServerNamespace->AddProperty(this, _gstr("upTime"), ARGUMENT_INTEGER, FunctionGetServerUpTime);
 		
 	}
 }

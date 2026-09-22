@@ -113,7 +113,7 @@ void CMafiaServer::ProcessPacket(Peer_t Peer, unsigned int PacketID, Galactic3D:
 					bool bPreventDefault = false;
 					static_cast<CMafiaServerManager*>(m_pManager)->m_pOnPedThrowGrenadeEventType->Trigger(Args, bPreventDefault);
 
-					if (bPreventDefault) {
+					if (!bPreventDefault) {
 						Packet Packet(MAFIAPACKET_HUMAN_THROWGRENADE);
 						Packet.Write<int32_t>(pPed->GetId());
 						Packet.Write<CVector3D>(vecShotPosition);
@@ -316,6 +316,100 @@ void CMafiaServer::ProcessPacket(Peer_t Peer, unsigned int PacketID, Galactic3D:
 				}
 			}
 			break;
+
+		// A ped's syncer asking to enter/exit a vehicle. Its game holds the enter/exit back until we answer, so
+		// nothing starts anywhere until this has been checked; the answer (MAFIAPACKET_HUMAN_USEVEHICLE) goes to
+		// everyone, the asker included, so all of them start it together. Mafia 2 keeps using the old relays below.
+		case MAFIAPACKET_HUMAN_USEVEHICLE_REQUEST:
+		{
+			int32_t nPedId;
+			Reader.ReadInt32(&nPedId, 1);
+
+			int32_t nVehicleId;
+			Reader.ReadInt32(&nVehicleId, 1);
+
+			int8_t nDoor;
+			Reader.ReadInt8(&nDoor, 1);
+
+			uint32_t nAction;
+			Reader.ReadUInt32(&nAction, 1);
+
+			uint32_t nHopSeatsBool;
+			Reader.ReadUInt32(&nHopSeatsBool, 1);
+
+			auto pPed = static_cast<CServerHuman*>(m_pManager->FromId(nPedId, ELEMENT_PED));
+			auto pVehicle = static_cast<CServerVehicle*>(m_pManager->FromId(nVehicleId, ELEMENT_VEHICLE));
+
+			if (pPed == nullptr
+				|| pVehicle == nullptr
+				|| pClient != pPed->GetSyncer()
+				|| nDoor < 0
+				|| nDoor > 20)
+			{
+				_glogprintf(_gstr("USEVEHICLE_REQUEST rejected: bad request (ped %d %s, vehicle %d %s, from the ped's syncer: %d, door %d)"), nPedId, pPed != nullptr ? _gstr("found") : _gstr("missing"), nVehicleId, pVehicle != nullptr ? _gstr("found") : _gstr("missing"), (pPed != nullptr && pClient == pPed->GetSyncer()) ? 1 : 0, (int)nDoor);
+				break;
+			}
+
+			const bool bExit = (nAction == 2);
+
+			// Going in by the passenger door with hop-seats set ends up in the driver's seat. Leaving is from the seat
+			// the ped is recorded in, whatever the game passed.
+			int8_t nSeat = (nHopSeatsBool == 1 && nDoor == 1) ? 0 : nDoor;
+			if (bExit && pPed->m_nVehicleNetworkIndex == pVehicle->GetId() && pPed->m_nSeat >= 0)
+				nSeat = pPed->m_nSeat;
+
+			if (!bExit && (nSeat < 0 || nSeat >= ARRAY_COUNT(CServerVehicle::m_pProbableOccupants)))
+			{
+				_glogprintf(_gstr("USEVEHICLE_REQUEST rejected: ped %d, vehicle %d, seat %d out of range (door %d, hop-seats %u)"), pPed->GetId(), pVehicle->GetId(), (int)nSeat, (int)nDoor, nHopSeatsBool);
+				break;
+			}
+
+			// A locked vehicle can't be gone into
+			if (!bExit && pVehicle->GetLocked())
+			{
+				_glogprintf(_gstr("USEVEHICLE_REQUEST rejected: ped %d, vehicle %d is locked"), pPed->GetId(), pVehicle->GetId());
+				break;
+			}
+
+			{
+				CArguments Args(3);
+				Args.AddObject(pPed);
+				Args.AddObject(pVehicle);
+				Args.AddNumber(nSeat);
+				bool bPreventDefault = false;
+				(bExit ? pMafiaManager->m_pOnPedExitingVehicleEventType : pMafiaManager->m_pOnPedEnteringVehicleEventType)->Trigger(Args, bPreventDefault);
+				if (bPreventDefault)
+				{
+					_glogprintf(_gstr("USEVEHICLE_REQUEST rejected: ped %d, vehicle %d, seat %d vetoed by a script"), pPed->GetId(), pVehicle->GetId(), (int)nSeat);
+					break;
+				}
+			}
+
+			_glogprintf(_gstr("USEVEHICLE_REQUEST approved: ped %d %s vehicle %d (door %d, seat %d)"), pPed->GetId(), bExit ? _gstr("exits") : _gstr("enters"), pVehicle->GetId(), (int)nDoor, (int)nSeat);
+
+			if (bExit)
+				pPed->LeaveVehicleSeat();
+			else
+				pPed->EnterVehicleSeat(pVehicle, nSeat);
+
+			{
+				Packet Packet(MAFIAPACKET_HUMAN_USEVEHICLE);
+				Packet.Write<int32_t>(pPed->GetId());
+				Packet.Write<int32_t>(pVehicle->GetId());
+				Packet.Write<int8_t>(nDoor);
+				Packet.Write<int8_t>(nSeat);
+				Packet.Write<uint32_t>(nAction);
+				Packet.Write<uint32_t>(nHopSeatsBool);
+				m_pManager->SendPacketExcluding(&Packet, nullptr);
+			}
+
+			if (!bExit && nSeat == 0 && pVehicle->CanBeSyncer(pClient))
+			{
+				_glogprintf(_gstr("Setting vehicle %d syncer to %d"), pVehicle->GetId(), pClient->m_nIndex);
+				pVehicle->SetSyncer(pClient, true);
+			}
+		}
+		break;
 
 		case MAFIAPACKET_HUMAN_ENTERINGVEHICLE:
 		{

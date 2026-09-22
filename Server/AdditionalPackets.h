@@ -4,7 +4,7 @@
 
 #include "ServerVersion.h"
 
-#define NETGAME_CURRENT_VERSION 5
+#define NETGAME_CURRENT_VERSION 6
 
 #include <Multiplayer/Packets.h>
 
@@ -81,6 +81,12 @@ enum eMafiaPacket : unsigned int
 	MAFIAPACKET_PEER_CREATECIVILIAN,
 	MAFIAPACKET_PEER_IDENTIFY,
 	MAFIAPACKET_PEER_CREATEACTOR,
+
+	// Mafia 1 vehicle enter/exit round trip. The syncer of a ped asks (REQUEST) instead of just doing it; the server
+	// checks it, records the seat and answers everyone, the requester included, with USEVEHICLE. Every client
+	// (requester too) starts the enter/exit from that, so they all run it at the same point in the same order.
+	MAFIAPACKET_HUMAN_USEVEHICLE_REQUEST,
+	MAFIAPACKET_HUMAN_USEVEHICLE,
 };
 
 struct tEntityCreatePacket
@@ -132,6 +138,9 @@ struct tHumanSyncPacket
 	int32_t animStopTime;
 	int16_t weaponId;
 	CVector3D camera;
+	// Where the human is aiming/firing at (the target Do_Shoot was last given). With inCarRotation (the aim within
+	// the vehicle) it is what the game needs to replay in-vehicle aiming and shooting on the other clients.
+	CVector3D aimVector;
 };
 
 struct tVehicleCreatePacket

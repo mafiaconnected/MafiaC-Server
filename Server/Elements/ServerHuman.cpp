@@ -10,6 +10,7 @@ CServerHuman::CServerHuman(CMafiaServerManager* pServerManager) : CServerEntity(
 	m_Type = ELEMENT_PED;
 
 	m_Camera = CVector3D(0.0f, 0.0f, 0.0f);
+	m_AimVector = CVector3D(0.0f, 0.0f, 0.0f);
 
 	m_AnimationStateLocal = 0;
 	m_IsInAnimWithCarLocal = false;
@@ -94,6 +95,7 @@ bool CServerHuman::ReadCreatePacket(Stream* pStream)
 	m_IsInAnimWithCarLocal = Packet.isInAnimWithCarLocal;
 	m_AnimationState = Packet.animationState;
 	m_IsInAnimWithCar = Packet.isInAnimWithCar;
+	m_fInCarRotation = Packet.inCarRotation;
 	m_iAnimStopTime = Packet.animStopTime;
 	m_WeaponId = Packet.weaponId;
 
@@ -117,8 +119,13 @@ bool CServerHuman::ReadSyncPacket(Stream* pStream)
 	int8_t nOldSeat = m_nSeat;
 
 	m_fHealth = Packet.health;
-	m_nVehicleNetworkIndex = Packet.vehicleNetworkIndex;
-	m_nSeat = (Packet.seat >= 0 && Packet.seat < ARRAY_COUNT(CServerVehicle::m_pProbableOccupants)) ? Packet.seat : -1;
+	// Just after an approved enter/exit the server's record stands. Otherwise (a ped that got out or in some way that
+	// never went through a request) what the syncer reports is what corrects it.
+	if (!IsVehicleStateAuthoritative())
+	{
+		m_nVehicleNetworkIndex = Packet.vehicleNetworkIndex;
+		m_nSeat = (Packet.seat >= 0 && Packet.seat < ARRAY_COUNT(CServerVehicle::m_pProbableOccupants)) ? Packet.seat : -1;
+	}
 	m_IsCrouching = Packet.isCrouching;
 	m_IsAiming = Packet.isAiming;
 	m_IsShooting = Packet.isShooting;
@@ -130,10 +137,11 @@ bool CServerHuman::ReadSyncPacket(Stream* pStream)
 	m_iAnimStopTime = Packet.animStopTime;
 	m_WeaponId = Packet.weaponId;
 	m_Camera = Packet.camera;
+	m_AimVector = Packet.aimVector;
 
 	if (m_nVehicleNetworkIndex == INVALID_NETWORK_ID)
 	{
-		auto pOldVehicle = static_cast<CServerVehicle*>(m_pNetObjectMgr->FromId(m_nVehicleNetworkIndex, ELEMENT_VEHICLE));
+		auto pOldVehicle = static_cast<CServerVehicle*>(m_pNetObjectMgr->FromId(nOldVehicleNetworkIndex, ELEMENT_VEHICLE));
 		if (pOldVehicle != nullptr)
 		{
 			if (nOldSeat >= 0 && nOldSeat < ARRAY_COUNT(CServerVehicle::m_pProbableOccupants))
@@ -201,6 +209,7 @@ bool CServerHuman::WriteCreatePacket(Stream* pStream)
 	Packet.isInAnimWithCarLocal = m_IsInAnimWithCarLocal;
 	Packet.animationState = m_AnimationState;
 	Packet.isInAnimWithCar = m_IsInAnimWithCar;
+	Packet.inCarRotation = m_fInCarRotation;
 	Packet.animStopTime = m_iAnimStopTime;
 	Packet.weaponId = m_WeaponId;
 
@@ -231,6 +240,7 @@ bool CServerHuman::WriteSyncPacket(Stream* pStream)
 	Packet.animStopTime = m_iAnimStopTime;
 	Packet.weaponId = m_WeaponId;
 	Packet.camera = m_Camera;
+	Packet.aimVector = m_AimVector;
 
 	if (pStream->Write(&Packet, sizeof(Packet)) != sizeof(Packet))
 		return false;
@@ -387,6 +397,7 @@ void CServerHuman::Kill()
 {
 	Packet Packet(MAFIAPACKET_HUMAN_DIE);
 	Packet.Write<int32_t>(GetId());
+	Packet.Write<int32_t>(INVALID_NETWORK_ID); // Attacker, same layout as the relayed packet in MafiaServer.cpp
 	m_pNetObjectMgr->SendObjectRelatedPacket(&Packet, this);
 
 	CArguments Arguments(3);
@@ -441,4 +452,51 @@ bool CServerHuman::CanExitVehicle(void)
 void CServerHuman::WarpIntoVehicle(CServerVehicle* pVehicle, int8_t iSeat)
 {
 
+}
+
+bool CServerHuman::IsVehicleStateAuthoritative()
+{
+	return m_bVehicleStateSet && (OS::GetTicks() - m_uiVehicleStateSetTicks) < VEHICLE_STATE_AUTHORITY_MS;
+}
+
+void CServerHuman::LeaveVehicleSeat()
+{
+	auto pOldVehicle = static_cast<CServerVehicle*>(m_pNetObjectMgr->FromId(m_nVehicleNetworkIndex, ELEMENT_VEHICLE));
+	if (pOldVehicle != nullptr && m_nSeat >= 0 && m_nSeat < ARRAY_COUNT(CServerVehicle::m_pProbableOccupants))
+	{
+		if (pOldVehicle->m_pProbableOccupants[m_nSeat].GetPointer() == this)
+			pOldVehicle->m_pProbableOccupants[m_nSeat] = nullptr;
+	}
+
+	m_nVehicleNetworkIndex = INVALID_NETWORK_ID;
+	m_nSeat = -1;
+
+	m_bVehicleStateSet = true;
+	m_uiVehicleStateSetTicks = OS::GetTicks();
+}
+
+void CServerHuman::EnterVehicleSeat(CServerVehicle* pVehicle, int8_t iSeat)
+{
+	// Out of wherever it was first
+	LeaveVehicleSeat();
+
+	if (iSeat < 0 || iSeat >= ARRAY_COUNT(CServerVehicle::m_pProbableOccupants))
+		return;
+
+	// Whoever was in the seat has been thrown out of it (or was already gone)
+	CServerHuman* pDisplaced = pVehicle->m_pProbableOccupants[iSeat].GetPointer();
+	if (pDisplaced != nullptr && pDisplaced != this)
+	{
+		if (pDisplaced->m_nVehicleNetworkIndex == pVehicle->GetId() && pDisplaced->m_nSeat == iSeat)
+		{
+			pDisplaced->m_nVehicleNetworkIndex = INVALID_NETWORK_ID;
+			pDisplaced->m_nSeat = -1;
+			pDisplaced->m_bVehicleStateSet = true;
+			pDisplaced->m_uiVehicleStateSetTicks = OS::GetTicks();
+		}
+	}
+
+	pVehicle->m_pProbableOccupants[iSeat] = this;
+	m_nVehicleNetworkIndex = pVehicle->GetId();
+	m_nSeat = iSeat;
 }
