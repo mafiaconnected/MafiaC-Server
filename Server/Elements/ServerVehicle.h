@@ -20,7 +20,7 @@ public:
 	bool m_Engine;
 	bool m_Horn;
 	bool m_Siren;
-	bool m_Locked;
+	bool m_Locked = false;
 	bool m_Roof;
 	bool m_Lights;
 	int m_Gear;

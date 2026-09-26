@@ -30,6 +30,7 @@ public:
 	int32_t m_iAnimStopTime;
 	int16_t m_WeaponId;
 	CVector3D m_Camera;
+	CVector3D m_AimVector;
 
 	float m_fCurrentRotation;
 	float m_fHealth;
@@ -61,6 +62,18 @@ public:
 	virtual bool CanExitVehicle();
 
 	virtual void WarpIntoVehicle(CServerVehicle* pVehicle, int8_t iSeat);
+
+	// Where the server itself has put this ped: set when an enter/exit was approved (MAFIAPACKET_HUMAN_USEVEHICLE).
+	// The ped's own sync packets report it too, but one that was already in flight when the enter/exit was decided
+	// would put back the old answer, so for a moment after this the server's word stands over the sync's.
+	static const uint32_t VEHICLE_STATE_AUTHORITY_MS = 2000;
+	uint32_t m_uiVehicleStateSetTicks = 0;
+	bool m_bVehicleStateSet = false;
+
+	bool IsVehicleStateAuthoritative();
+	// Records the ped in the seat, taking whoever was in it out of it and the ped out of any vehicle it was in
+	void EnterVehicleSeat(CServerVehicle* pVehicle, int8_t iSeat);
+	void LeaveVehicleSeat();
 
 	virtual bool CanExistForMachine(CNetMachine* pClient) override;
 

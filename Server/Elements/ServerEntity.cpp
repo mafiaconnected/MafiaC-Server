@@ -6,6 +6,14 @@
 
 #include "Utils/VectorTools.h"
 
+#include <cmath>
+
+// Mafia sometimes has NaNs. Once synced, it streams the element out for players (even a driver's own vehicle disappears)
+static bool IsValidVector(const CVector3D& vec)
+{
+	return !std::isnan(vec.x) && !std::isnan(vec.y) && !std::isnan(vec.z);
+}
+
 CServerEntity::CServerEntity(CMafiaServerManager* pServerManager) : CNetObject(pServerManager)
 {
 	m_Type = ELEMENT_ENTITY;
@@ -113,22 +121,17 @@ bool CServerEntity::ReadCreatePacket(Stream* pStream)
 	if (pStream->Read(&Packet, sizeof(Packet)) != sizeof(Packet))
 		return false;
 
-	// Check for NaN. Mafia sometimes has them. Once synced, it streams the element out for players (even a driver's own vehicle disappears)
-	if (Packet.position.x != NAN && Packet.position.y != NAN && Packet.position.z != NAN) {
+	if (IsValidVector(Packet.position))
 		m_Position = Packet.position;
-	}
 
-	if (Packet.positionRel.x != NAN && Packet.positionRel.y != NAN && Packet.positionRel.z != NAN) {
+	if (IsValidVector(Packet.positionRel))
 		m_RelPosition = Packet.positionRel;
-	}
 
-	if (Packet.rotation.x != NAN && Packet.rotation.y != NAN && Packet.rotation.z != NAN) {
+	if (IsValidVector(Packet.rotation))
 		m_Rotation = Packet.rotation;
-	}
 
-	if (Packet.rotationRel.x != NAN && Packet.rotationRel.y != NAN && Packet.rotationRel.z != NAN) {
+	if (IsValidVector(Packet.rotationRel))
 		m_RelRotation = Packet.rotationRel;
-	}
 
 	return true;
 }
@@ -143,22 +146,17 @@ bool CServerEntity::ReadSyncPacket(Stream* pStream)
 	if (pStream->Read(&Packet, sizeof(Packet)) != sizeof(Packet))
 		return false;
 
-	// Check for NaN. Mafia sometimes has them. Once synced, it streams the element out for players (even a driver's own vehicle disappears)
-	if (Packet.position.x != NAN && Packet.position.y != NAN && Packet.position.z != NAN) {
+	if (IsValidVector(Packet.position))
 		m_Position = Packet.position;
-	}
 
-	if (Packet.positionRel.x != NAN && Packet.positionRel.y != NAN && Packet.positionRel.z != NAN) {
+	if (IsValidVector(Packet.positionRel))
 		m_RelPosition = Packet.positionRel;
-	}
 
-	if (Packet.rotation.x != NAN && Packet.rotation.y != NAN && Packet.rotation.z != NAN) {
+	if (IsValidVector(Packet.rotation))
 		m_Rotation = Packet.rotation;
-	}
 
-	if (Packet.rotationRel.x != NAN && Packet.rotationRel.y != NAN && Packet.rotationRel.z != NAN) {
+	if (IsValidVector(Packet.rotationRel))
 		m_RelRotation = Packet.rotationRel;
-	}
 
 	return true;
 }

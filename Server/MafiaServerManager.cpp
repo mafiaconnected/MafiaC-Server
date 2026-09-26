@@ -78,6 +78,7 @@ CMafiaServerManager::CMafiaServerManager(Context* pContext, CMafiaServer* pServe
 	m_pServerVehicleClass = pMafia->NewClass(_gstr("Vehicle"), m_pServerEntityClass);
 	m_pServerDummyClass = pMafia->NewClass(_gstr("Dummy"), m_pServerEntityClass);
 	m_pServerObjectClass = pMafia->NewClass(_gstr("Object"), m_pServerEntityClass);
+	m_pServerActorClass = pMafia->NewClass(_gstr("Actor"), m_pServerEntityClass);
 
 	auto pDefineHandlers = m_pServer->m_ResourceMgr.m_pDefineHandlers;
 
@@ -105,6 +106,7 @@ CMafiaServerManager::CMafiaServerManager(Context* pContext, CMafiaServer* pServe
 	pDefineHandlers->Define(_gstr("ELEMENT_VEHICLE"), ELEMENT_VEHICLE);
 	pDefineHandlers->Define(_gstr("ELEMENT_DUMMY"), ELEMENT_DUMMY);
 	pDefineHandlers->Define(_gstr("ELEMENT_OBJECT"), ELEMENT_OBJECT);
+	pDefineHandlers->Define(_gstr("ELEMENT_ACTOR"), ELEMENT_ACTOR);
 
 	RegisterFunctions(m_pServer->m_ResourceMgr.m_pScripting);
 }
@@ -176,6 +178,8 @@ CNetObject* CMafiaServerManager::Create(int32_t nType)
 		return new CServerDummy(this);
 	case ELEMENT_OBJECT:
 		return new CServerObject(this);
+	case ELEMENT_ACTOR:
+		return new CServerActor(this);
 	default:
 		break;
 	}
@@ -1014,6 +1018,41 @@ static bool FunctionCreateObject(IScriptState* pState, int argc, void* pUser)
 	return true;
 }
 
+static bool FunctionCreateActorElement(IScriptState* pState, int argc, void* pUser)
+{
+	CMafiaServerManager* pServerManager = (CMafiaServerManager*)pUser;
+
+	const GChar* sName = pState->CheckString(0);
+	if (!sName)
+		return false;
+
+	if (pServerManager->FromName(sName) != nullptr)
+		return pState->Error(_gstr("An actor element named '%s' already exists"), sName);
+
+	CVector3D vecPos(0.0f, 0.0f, 0.0f);
+	if (!pState->CheckVector3D(1, vecPos))
+		return false;
+
+	int32_t nDimension = 0;
+	if (argc > 2 && !pState->CheckNumber(2, nDimension))
+		return false;
+
+	auto pElement = Strong<CServerActor>::New(pServerManager->Create(ELEMENT_ACTOR));
+	if (pElement == nullptr)
+	{
+		pState->Error(_gstr("Failed to create actor element"));
+		return false;
+	}
+
+	pElement->SetName(sName);
+	pElement->SetPosition(vecPos);
+	pElement->SetDimension(nDimension);
+	pElement->m_pResource = pState->GetResource();
+	pServerManager->RegisterNetObject(pElement);
+	pState->ReturnObject(pElement);
+	return true;
+}
+
 static bool FunctionCreateHuman(IScriptState* pState, int argc, void* pUser)
 {
 	CMafiaServerManager* pServerManager = (CMafiaServerManager*)pUser;
@@ -1438,6 +1477,7 @@ void CMafiaServerManager::RegisterFunctions(CScripting* pScripting)
 	pGameNamespace->RegisterFunction(_gstr("createPed"), _gstr("sv|f"), FunctionCreateHuman, this);
 	pGameNamespace->RegisterFunction(_gstr("createDummyElement"), _gstr("v"), FunctionCreateDummyElement, this);
 	pGameNamespace->RegisterFunction(_gstr("createObject"), _gstr("svv"), FunctionCreateObject, this);
+	pGameNamespace->RegisterFunction(_gstr("createActorElement"), _gstr("sv|i"), FunctionCreateActorElement, this);
 	pGameNamespace->RegisterFunction(_gstr("fadeScreen"), _gstr("xbf|i"), FunctionPlayerFadeScreen, this);
 	pGameNamespace->RegisterFunction(_gstr("changePlayerMap"), _gstr("xs"), FunctionPlayerChangeMap, this);
 
@@ -1462,5 +1502,6 @@ void CMafiaServerManager::RegisterFunctions(CScripting* pScripting)
 		pServerNamespace->RegisterFunction(_gstr("setCVar"), _gstr("s*"), FunctionSetServerCVar, this);
 		pServerNamespace->RegisterFunction(_gstr("setPassword"), _gstr("s"), FunctionSetServerPassword, this);
 		pServerNamespace->AddProperty(this, _gstr("upTime"), ARGUMENT_INTEGER, FunctionGetServerUpTime);
+		
 	}
 }

@@ -6,3 +6,4 @@
 #include "ServerVehicle.h"
 #include "ServerDummy.h"
 #include "ServerObject.h"
+#include "ServerActor.h"

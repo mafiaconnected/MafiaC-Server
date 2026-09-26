@@ -3,7 +3,6 @@
 
 #include "pch.h"
 #include "MafiaServer.h"
-#include <openssl/ssl.h>
 #ifdef _WIN32
 #include <crtdbg.h>
 #include <conio.h>
@@ -28,7 +27,7 @@ EXTERN_C IMAGE_DOS_HEADER __ImageBase;
 #endif
 
 #ifndef _WIN32
-char getch()
+char _getch()
 {
 	char buf = 0;
 	struct termios old = { 0 };
@@ -239,7 +238,7 @@ int main(int argc, char* argv[])
 				_glogwarnprintf(_gstr("*** Start with -allowadmin to ignore this warning ***"));
 
 				_gprintf(_gstr("Would you like to continue startup? (Y/[N])"));
-				int iResult = getch();
+				int iResult = _getch();
 				bool bContinue = iResult == 'Y' || iResult == 'y';
 				_gprintf(_gstr("\n"));
 
@@ -310,7 +309,7 @@ int main(int argc, char* argv[])
 		if (!bSuccess)
 		{
 			_gprintf(_gstr("Press any key to continue ..."));
-			getch();
+			_getch();
 			_gprintf(_gstr("\n"));
 			return EXIT_FAILURE;
 		}

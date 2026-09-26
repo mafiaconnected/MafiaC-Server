@@ -1165,13 +1165,21 @@ bool CBaseServer::ParseConfig(const CServerConfiguration& Config)
 {
 	auto pFileLog = m_pContext->GetFileLog();
 
-	_gstrlcpy(m_szLogPath, Config.GetStringValue(_gstr("logpath"), _gstr("")), ARRAY_COUNT(m_szLogPath));
+	_gstrlcpy(m_szLogPath, Config.GetStringValue(_gstr("logpath"), _gstr("logs/ServerLog.log")), ARRAY_COUNT(m_szLogPath));
 	_gstrlcpy(pFileLog->m_szLogTimeStamp, Config.GetStringValue(_gstr("logtimestamp"), _gstr("%d/%m/%Y - %X")), ARRAY_COUNT(pFileLog->m_szLogTimeStamp));
 
 	if (m_szLogPath[0] != '\0')
 	{
+		time_t rawtime;
+		struct tm* timeinfo;
+		time(&rawtime);
+		timeinfo = localtime(&rawtime);
+
+		GChar szLogFileTime[64];
+		_gstrftime(szLogFileTime, ARRAY_COUNT(szLogFileTime), m_szLogPath, timeinfo);
+
 		GChar szLogFile[64];
-		_gsnprintf(szLogFile, ARRAY_COUNT(szLogFile), _gstr("%s/ServerLog.log"), m_szLogPath);
+		_gsnprintf(szLogFile, ARRAY_COUNT(szLogFile), _gstr("%s"), szLogFileTime);
 
 		auto pStream = m_pContext->GetFileSystem()->Open(szLogFile, true);
 		if (pStream == nullptr)
