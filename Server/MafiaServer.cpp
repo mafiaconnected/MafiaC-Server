@@ -658,9 +658,9 @@ void CMafiaServer::ProcessPacket(Peer_t Peer, unsigned int PacketID, Galactic3D:
 				Packet.Write<int32_t>(pPed->GetId());
 				CBinaryWriter Writer(&Packet);
 				Writer.WriteString(szName);
-				Packet.Write<uint32_t>(nUnk1);
-				Packet.Write<uint32_t>(nUnk2);
-				Packet.Write<uint32_t>(nUnk3);
+				Packet.Write<uint32_t>(iUnknown1); // Jack: Changed from nUnk1/2/3 to these
+				Packet.Write<uint32_t>(iUnknown2);
+				Packet.Write<uint32_t>(iUnknown3);
 				m_pManager->SendPacketExcluding(&Packet, pClient);
 			}
 		}
