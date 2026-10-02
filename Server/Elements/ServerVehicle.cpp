@@ -23,6 +23,11 @@ CServerVehicle::CServerVehicle(CMafiaServerManager* pServerManager) : CServerEnt
 	m_quatRot.w = 0.0f;
 }
 
+CServerVehicle::~CServerVehicle()
+{
+	ClearDamageData();
+}
+
 ReflectedClass* CServerVehicle::GetReflectedClass()
 {
 	return static_cast<CMafiaServerManager*>(m_pNetObjectMgr)->m_pServerVehicleClass;
@@ -52,6 +57,7 @@ bool CServerVehicle::ReadCreatePacket(Stream* pStream)
 	m_Horn = Packet.horn;
 	m_Siren = Packet.siren;
 	m_Lights = Packet.lights;
+	m_Roof = Packet.roof;
 	m_Gear = Packet.gear;
 	m_EngineRPM = Packet.rpm;
 	m_Accelerating = Packet.accel;
@@ -62,6 +68,18 @@ bool CServerVehicle::ReadCreatePacket(Stream* pStream)
 	m_WheelAngle = Packet.wheelAngle;
 	m_Velocity = Packet.speed;
 	m_RotVelocity = Packet.rotSpeed;
+
+	// Damage, only there when the vehicle has some (and never from a Mafia 2 client). It's the end of the packet, so a
+	// bad one is just left off.
+	ClearDamageData();
+	uint32_t uiDamageSize = 0;
+	if (pStream->Read(&uiDamageSize, sizeof(uiDamageSize)) == sizeof(uiDamageSize) && uiDamageSize != 0 && uiDamageSize <= VEHICLEDAMAGE_MAX_SIZE)
+	{
+		uint8_t* pDamage = (uint8_t*)GAlloc(uiDamageSize);
+		if (pStream->Read(pDamage, uiDamageSize) == uiDamageSize)
+			StoreDamageData(pDamage, uiDamageSize);
+		GFree(pDamage);
+	}
 
 	//GChar szHost[256];
 	//GetSyncer()->m_IPAddress.ToString(szHost, ARRAY_SIZE(szHost));
@@ -92,6 +110,7 @@ bool CServerVehicle::ReadSyncPacket(Stream* pStream)
 	m_Horn = Packet.horn;
 	m_Siren = Packet.siren;
 	m_Lights = Packet.lights;
+	m_Roof = Packet.roof;
 	m_Gear = Packet.gear;
 	m_EngineRPM = Packet.rpm;
 	m_Accelerating = Packet.accel;
@@ -129,6 +148,7 @@ bool CServerVehicle::WriteCreatePacket(Stream* pStream)
 	Packet.horn = m_Horn;
 	Packet.siren = m_Siren;
 	Packet.lights = m_Lights;
+	Packet.roof = m_Roof;
 	Packet.gear = m_Gear;
 	Packet.rpm = m_EngineRPM;
 	Packet.accel = m_Accelerating;
@@ -143,6 +163,13 @@ bool CServerVehicle::WriteCreatePacket(Stream* pStream)
 	//_glogprintf(_gstr("Sent create packet for vehicle #%d:\n\tPosition: [%f, %f, %f]\n\tPos. difference: [%f, %f, %f]\n\tRotation: [%f, %f, %f]\n\tRot. difference: [%f, %f, %f]\n\tMafia Rotation Front: [%f, %f, %f]\n\tMafia Rotation Up: [%f, %f, %f]\n\tMafia Rotation Left: [%f, %f, %f]\n\tHealth: %f\n"), GetId(), m_Position.x, m_Position.y, m_Position.z, m_RelPosition.x, m_RelPosition.y, m_RelPosition.z, m_Rotation.x, m_Rotation.y, m_Rotation.z, m_RelRotation.x, m_RelRotation.y, m_RelRotation.z, m_RotationFront.x, m_RotationFront.y, m_RotationFront.z, m_RotationUp.x, m_RotationUp.y, m_RotationUp.z, m_RotationRight.x, m_RotationRight.y, m_RotationRight.z, m_Health);
 
 	if (pStream->Write(&Packet, sizeof(Packet)) != sizeof(Packet))
+		return false;
+
+	uint32_t uiDamageSize = (uint32_t)m_DamageDataSize;
+	if (pStream->Write(&uiDamageSize, sizeof(uiDamageSize)) != sizeof(uiDamageSize))
+		return false;
+
+	if (m_DamageDataSize != 0 && pStream->Write(m_pDamageData, m_DamageDataSize) != m_DamageDataSize)
 		return false;
 
 	return true;
@@ -167,6 +194,7 @@ bool CServerVehicle::WriteSyncPacket(Stream* pStream)
 	Packet.horn = m_Horn;
 	Packet.siren = m_Siren;
 	Packet.lights = m_Lights;
+	Packet.roof = m_Roof;
 	Packet.gear = m_Gear;
 	Packet.rpm = m_EngineRPM;
 	Packet.accel = m_Accelerating;
@@ -229,9 +257,84 @@ void CServerVehicle::Fix()
 {
 	m_Health = 1000.0f;
 
+	// The syncer sends the repaired car's damage once it has repaired it
+	ClearDamageData();
+
 	Packet Packet(MAFIAPACKET_VEHICLE_FIX);
 	Packet.Write<int32_t>(GetId());
 	m_pNetObjectMgr->SendObjectRelatedPacket(&Packet, this);
+}
+
+void CServerVehicle::SetHealth(float fHealth)
+{
+	if (m_Health != fHealth)
+	{
+		m_Health = fHealth;
+
+		Packet Packet(MAFIAPACKET_VEHICLE_SETHEALTH);
+		Packet.Write<int32_t>(GetId());
+		Packet.Write<float>(fHealth);
+		m_pNetObjectMgr->SendObjectRelatedPacket(&Packet, this);
+	}
+}
+
+bool CServerVehicle::StoreDamageData(const uint8_t* pData, size_t Size)
+{
+	if (Size < sizeof(tVehicleDamageHeader) || Size > VEHICLEDAMAGE_MAX_SIZE)
+		return false;
+
+	tVehicleDamageHeader Header;
+	memcpy(&Header, pData, sizeof(Header));
+	if (Header.magic != VEHICLEDAMAGE_MAGIC || Header.version != VEHICLEDAMAGE_VERSION)
+		return false;
+
+	// Only the clients can check the rest, they have the model
+	uint64_t ExpectedSize = sizeof(Header) + (uint64_t)Header.lightCount * VEHICLEDAMAGE_LIGHT_SIZE + Header.partBytes + (uint64_t)Header.wheelCount * VEHICLEDAMAGE_WHEEL_SIZE;
+	if (ExpectedSize != Size)
+		return false;
+
+	ClearDamageData();
+	m_pDamageData = (uint8_t*)GAlloc(Size);
+	_gmemcpy(m_pDamageData, pData, Size);
+	m_DamageDataSize = Size;
+
+	m_Health = Header.health;
+	m_EngineHealth = Header.engineHealth;
+
+	return true;
+}
+
+bool CServerVehicle::SetDamageData(const uint8_t* pData, size_t Size, CNetMachine* pExclude)
+{
+	if (!StoreDamageData(pData, Size))
+		return false;
+
+	if (!IsLocal())
+	{
+		Packet Packet(MAFIAPACKET_VEHICLE_SETDAMAGE);
+		Packet.Write<int32_t>(GetId());
+		Packet.Write<uint32_t>((uint32_t)Size);
+		Packet.Write(pData, Size);
+
+		for (size_t i = 0; i < MAX_MACHINES; i++)
+		{
+			auto pNetMachine = m_pNetObjectMgr->m_pNetMachines->GetMachine(i);
+			if (pNetMachine != nullptr && pNetMachine != pExclude && pNetMachine->m_bJoined && !pNetMachine->m_bConsole && IsCreatedFor(pNetMachine))
+				pNetMachine->SendPacket(&Packet);
+		}
+	}
+
+	return true;
+}
+
+void CServerVehicle::ClearDamageData()
+{
+	if (m_pDamageData != nullptr)
+	{
+		GFree(m_pDamageData);
+		m_pDamageData = nullptr;
+	}
+	m_DamageDataSize = 0;
 }
 
 void CServerVehicle::SetLocked(bool bLocked)

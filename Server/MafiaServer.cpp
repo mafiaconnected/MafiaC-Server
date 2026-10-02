@@ -666,6 +666,32 @@ void CMafiaServer::ProcessPacket(Peer_t Peer, unsigned int PacketID, Galactic3D:
 		}
 		break;
 
+		// A vehicle's syncer reporting new damage. Kept for the scripts and anyone the vehicle streams in for later.
+		case MAFIAPACKET_VEHICLE_SETDAMAGE:
+		{
+			int32_t nVehicleId;
+			if (!Reader.ReadInt32(&nVehicleId, 1))
+				return;
+
+			uint32_t uiSize = 0;
+			if (!Reader.ReadUInt32(&uiSize, 1) || uiSize == 0 || uiSize > VEHICLEDAMAGE_MAX_SIZE)
+				return;
+
+			auto pVehicle = static_cast<CServerVehicle*>(m_pManager->FromId(nVehicleId, ELEMENT_VEHICLE));
+			if (pVehicle == nullptr || pVehicle->GetSyncer() != pClient)
+				break;
+
+			uint8_t* pData = (uint8_t*)Reader.Read(uiSize);
+			if (pData == nullptr)
+				return;
+
+			if (!pVehicle->SetDamageData(pData, uiSize, pClient))
+				_glogwarnprintf(_gstr("Vehicle %d: invalid damage from its syncer (%u bytes)"), nVehicleId, uiSize);
+
+			GFree(pData);
+		}
+		break;
+
 		case MAFIAPACKET_VEHICLE_CREATE:
 		{
 			uint64_t nLocalVehicleId = 0;
