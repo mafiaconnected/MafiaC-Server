@@ -763,7 +763,8 @@ static bool FunctionPlayerHudMsg(IScriptState* pState, int argc, void* pUser)
 	unsigned int color = 0;
 	if (!pState->CheckNumber(2, color)) return false;
 
-	Packet.Write<GChar*>((GChar*)msg);
+	CBinaryWriter Writer(&Packet);
+	Writer.WriteString(msg);
 	Packet.Write<unsigned int>(color);
 
 	pClient->SendPacket(&Packet, PACKETPRIORITY_DEFAULT);
@@ -808,7 +809,8 @@ static bool FunctionPlayerChangeMap(IScriptState* pState, int argc, void* pUser)
 	if (!szMapName) return false;
 
 	Packet Packet(MAFIAPACKET_CHANGEMAP);
-	Packet.Write<GChar*>((GChar*)szMapName);
+	CBinaryWriter Writer(&Packet);
+	Writer.WriteString(szMapName);
 
 	pClient->SendPacket(&Packet, PACKETPRIORITY_DEFAULT);
 
@@ -848,7 +850,8 @@ static bool FunctionPlayerAnnounce(IScriptState* pState, int argc, void* pUser)
 	float time = 0;
 	if (!pState->CheckNumber(2, time)) return false;
 
-	Packet.Write<GChar*>((GChar*)msg);
+	CBinaryWriter Writer(&Packet);
+	Writer.WriteString(msg);
 	Packet.Write<float>(time);
 
 	pClient->SendPacket(&Packet, PACKETPRIORITY_DEFAULT);
