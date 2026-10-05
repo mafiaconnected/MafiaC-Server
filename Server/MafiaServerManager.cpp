@@ -186,13 +186,31 @@ CNetObject* CMafiaServerManager::Create(int32_t nType)
 	return nullptr;
 }
 
-bool CMafiaServerManager::IsAnythingBlocking(CVector3D vecPos)
+// A traffic car's driver goes on with the car, unless it was thrown out of its seat (the car was jacked): the
+// one that was seen thrown out is gone on the client that synced it, so it can't live on anywhere else either.
+bool CMafiaServerManager::ShouldHandOffDroppedElement(CNetObject* pObject)
+{
+	if (!pObject->IsType(ELEMENT_PED))
+		return true;
+
+	auto pHuman = static_cast<CServerHuman*>(pObject);
+	return !pHuman->m_bTrafficDriver || (!pHuman->m_bTrafficDriverUnseated && pHuman->m_nVehicleNetworkIndex != INVALID_NETWORK_ID);
+}
+
+bool CMafiaServerManager::IsAnythingBlocking(CVector3D vecPos, CNetMachine* pIgnoreSyncedBy)
 {
 	for (size_t i = 0; i < m_Objects.GetSize(); i++)
 	{
 		if (m_Objects.IsUsedAt(i) && m_Objects.GetAt(i)->IsType(ELEMENT_ENTITY))
 		{
 			auto pEntity = static_cast<CServerEntity*>(m_Objects.GetAt(i));
+
+			if (pIgnoreSyncedBy != nullptr && pEntity->GetSyncer() == pIgnoreSyncedBy)
+				continue;
+
+			// Pedestrians walk out of the way, and are as dense as traffic itself
+			if (!pEntity->IsType(ELEMENT_VEHICLE) && !pEntity->IsType(ELEMENT_PLAYER))
+				continue;
 
 			CVector3D vecEntityPos;
 			if (pEntity->GetPosition(vecEntityPos))

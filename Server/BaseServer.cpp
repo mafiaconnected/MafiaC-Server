@@ -1005,11 +1005,21 @@ void CBaseServer::ProcessPacket(Peer_t Peer, unsigned int PacketID, Stream* pStr
 
 						pElement->SetCreatedFor(pClient, false);
 
-						// If the syncer wants to delete it and we forced it to always exist for the syncer, let it delete it
 						if (bSyncer && pElement->m_Flags.m_bAlwaysExistForSyncer)
 						{
-							m_pManager->DestroyObject(pElement);
-							return;
+							// Peer2peer (population) elements live on for anyone else who still has them: dropping the
+							// syncer also clears the always-exist flag, and the next syncer is picked from the
+							// machines it's still created for. PossiblyDeleteObject below removes it if there are none.
+							if (pElement->m_Flags.m_bTransient && m_pManager->ShouldHandOffDroppedElement(pElement))
+							{
+								pElement->SetSyncer(nullptr, false);
+							}
+							else
+							{
+								// If the syncer wants to delete it and we forced it to always exist for the syncer, let it delete it
+								m_pManager->DestroyObject(pElement);
+								continue;
+							}
 						}
 
 						// Inform the peer2peer system that a client deleted this element

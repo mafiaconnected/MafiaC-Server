@@ -12,6 +12,7 @@
 #endif
 
 #include <stdio.h>
+#include <stdint.h> // Galactic's headers use the fixed-width types without including it
 
 
 

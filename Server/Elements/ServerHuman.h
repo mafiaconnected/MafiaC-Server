@@ -69,6 +69,11 @@ public:
 	static const uint32_t VEHICLE_STATE_AUTHORITY_MS = 2000;
 	uint32_t m_uiVehicleStateSetTicks = 0;
 	bool m_bVehicleStateSet = false;
+	// Registered by a client as the driver of one of its traffic cars (see CPeer2PeerSystem)
+	bool m_bTrafficDriver = false;
+	// ...and thrown out of its seat since. Its syncer can still report it seated for a moment (until its game gets
+	// to the throw-out), which mustn't put it back in.
+	bool m_bTrafficDriverUnseated = false;
 
 	bool IsVehicleStateAuthoritative();
 	// Records the ped in the seat, taking whoever was in it out of it and the ped out of any vehicle it was in

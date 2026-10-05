@@ -8,7 +8,8 @@ public:
 	CMafiaServer(Galactic3D::Context* pContext);
 	virtual ~CMafiaServer();
 
-	bool m_bSyncLocalEntities;
+	// Take clients' traffic and pedestrians (server.xml synclocalentities)
+	bool m_bSyncLocalEntities = true;
 
 	virtual CNetMachine* NewMachine(CServerManager* pServerManager) override;
 	virtual void ProcessPacket(Peer_t Peer, unsigned int PacketID, Galactic3D::Stream* pStream) override;
