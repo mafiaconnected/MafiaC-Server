@@ -4,7 +4,7 @@
 
 #include "ServerVersion.h"
 
-#define NETGAME_CURRENT_VERSION 6
+#define NETGAME_CURRENT_VERSION 8
 
 #include <Multiplayer/Packets.h>
 
@@ -87,6 +87,8 @@ enum eMafiaPacket : unsigned int
 	// (requester too) starts the enter/exit from that, so they all run it at the same point in the same order.
 	MAFIAPACKET_HUMAN_USEVEHICLE_REQUEST,
 	MAFIAPACKET_HUMAN_USEVEHICLE,
+
+	MAFIAPACKET_VEHICLE_SETHEALTH,
 };
 
 struct tEntityCreatePacket
@@ -156,6 +158,7 @@ struct tVehicleCreatePacket
 	bool horn;
 	bool siren;
 	bool lights;
+	bool roof; // Up (or the model has none)
 	int32_t gear;
 	float rpm;
 	float accel;
@@ -182,6 +185,7 @@ struct tVehicleSyncPacket
 	bool horn;
 	bool siren;
 	bool lights;
+	bool roof; // Up (or the model has none)
 	int32_t gear;
 	float rpm;
 	float accel;
@@ -192,6 +196,35 @@ struct tVehicleSyncPacket
 	float wheelAngle;
 	CVector3D speed;
 	CVector3D rotSpeed;
+};
+
+/*
+	Vehicle damage (Mafia 1), as one blob: the "damage" script property, MAFIAPACKET_VEHICLE_SETDAMAGE (client to server
+	from the vehicle's syncer, server to clients) and an optional uint32 size + blob after tVehicleCreatePacket. The
+	client builds and applies it from the game's own savegame snapshot of the car (MafiaSDK VehicleState); the server
+	only stores it and reads this header.
+
+	tVehicleDamageHeader, then lightCount * VEHICLEDAMAGE_LIGHT_SIZE bytes of lights, partBytes of deformable parts
+	(deformation, glass, fallen off parts) and wheelCount * VEHICLEDAMAGE_WHEEL_SIZE bytes of wheel damage.
+*/
+#define VEHICLEDAMAGE_MAGIC 0x4456434D // "MCVD"
+#define VEHICLEDAMAGE_VERSION 1
+#define VEHICLEDAMAGE_MAX_SIZE 65536
+#define VEHICLEDAMAGE_LIGHT_SIZE 12
+#define VEHICLEDAMAGE_WHEEL_SIZE 12
+
+struct tVehicleDamageHeader
+{
+	uint32_t magic;
+	uint16_t version;
+	uint16_t gameStateVersion;
+	char model[32]; // Lowercase. Only ever applied to a vehicle of the same model.
+	float health;
+	float engineHealth;
+	uint32_t lightCount;
+	uint32_t partCount;
+	uint32_t partBytes;
+	uint32_t wheelCount;
 };
 
 enum eElementCreatedBy : uint8_t

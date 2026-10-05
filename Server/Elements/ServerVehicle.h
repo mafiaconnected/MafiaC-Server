@@ -8,6 +8,7 @@ class CServerVehicle : public CServerEntity
 {
 public:
 	CServerVehicle(CMafiaServerManager* pServerManager);
+	virtual ~CServerVehicle();
 
 	CVector3D m_RotationFront;
 	CVector3D m_RotationUp;
@@ -21,7 +22,7 @@ public:
 	bool m_Horn;
 	bool m_Siren;
 	bool m_Locked = false;
-	bool m_Roof;
+	bool m_Roof = true;
 	bool m_Lights;
 	int m_Gear;
 	float m_EngineRPM;
@@ -35,6 +36,10 @@ public:
 	CVector3D m_RotVelocity;
 	uint32_t m_Damage1;
 	uint32_t m_Damage2;
+
+	// Damage blob (tVehicleDamageHeader), GAlloc'd. Null while the vehicle has none.
+	uint8_t* m_pDamageData = nullptr;
+	size_t m_DamageDataSize = 0;
 
 	// Occupants probably in this vehicle
 	Weak<CServerHuman> m_pProbableOccupants[4];
@@ -53,6 +58,20 @@ public:
 	virtual void Remove() override;
 
 	void Fix();
+
+	float GetHealth() { return m_Health; }
+	void SetHealth(float fHealth);
+
+	// Stores a damage blob and sends it to the clients that have this vehicle, except pExclude (the syncer it came
+	// from). False if it isn't a valid blob.
+	bool SetDamageData(const uint8_t* pData, size_t Size, CNetMachine* pExclude);
+	void ClearDamageData();
+
+private:
+	// SetDamageData without sending it anywhere
+	bool StoreDamageData(const uint8_t* pData, size_t Size);
+
+public:
 
 	bool GetLocked() { return m_Locked; }
 	void SetLocked(bool bLocked);

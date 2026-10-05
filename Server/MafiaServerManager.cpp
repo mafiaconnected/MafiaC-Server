@@ -7,6 +7,7 @@
 #include "Elements/Elements.h"
 
 #include "Utils/VectorTools.h"
+#include "Utils/Base64.h"
 
 class CServerVehicle;
 class CServerHuman;
@@ -542,6 +543,82 @@ static bool FunctionVehicleSetEngineRPM(IScriptState* pState, int argc, void* pU
 	return true;
 }
 
+static bool FunctionVehicleGetHealth(IScriptState* pState, int argc, void* pUser)
+{
+	CMafiaServerManager* pServerManager = (CMafiaServerManager*)pUser;
+	CServerVehicle* pServerVehicle;
+	if (!pState->GetThis(pServerManager->m_pServerVehicleClass, &pServerVehicle))
+		return false;
+	pState->ReturnNumber(pServerVehicle->GetHealth());
+	return true;
+}
+
+static bool FunctionVehicleSetHealth(IScriptState* pState, int argc, void* pUser)
+{
+	CMafiaServerManager* pServerManager = (CMafiaServerManager*)pUser;
+	CServerVehicle* pServerVehicle;
+	if (!pState->GetThis(pServerManager->m_pServerVehicleClass, &pServerVehicle))
+		return false;
+	float fHealth;
+	if (!pState->CheckNumber(0, fHealth))
+		return false;
+	pServerVehicle->SetHealth(fHealth);
+	return true;
+}
+
+// The vehicle's damage (deformation, broken glass/lights, fallen off parts, wheels, health) as a base64 string, for
+// saving and putting back on a vehicle of the same model. Empty while it has none.
+static bool FunctionVehicleGetDamage(IScriptState* pState, int argc, void* pUser)
+{
+	CMafiaServerManager* pServerManager = (CMafiaServerManager*)pUser;
+	CServerVehicle* pServerVehicle;
+	if (!pState->GetThis(pServerManager->m_pServerVehicleClass, &pServerVehicle))
+		return false;
+
+	size_t Length = Base64::GetEncodedLength(pServerVehicle->m_DamageDataSize);
+	GChar* pszDamage = (GChar*)GAlloc((Length + 1) * sizeof(GChar));
+	if (pServerVehicle->m_DamageDataSize != 0)
+		Base64::Encode(pServerVehicle->m_pDamageData, pServerVehicle->m_DamageDataSize, pszDamage);
+	pszDamage[Length] = 0;
+
+	pState->ReturnString(pszDamage, Length);
+
+	GFree(pszDamage);
+	return true;
+}
+
+static bool FunctionVehicleSetDamage(IScriptState* pState, int argc, void* pUser)
+{
+	CMafiaServerManager* pServerManager = (CMafiaServerManager*)pUser;
+	CServerVehicle* pServerVehicle;
+	if (!pState->GetThis(pServerManager->m_pServerVehicleClass, &pServerVehicle))
+		return false;
+
+	size_t Length = 0;
+	const GChar* pszDamage = pState->CheckString(0, &Length);
+	if (pszDamage == nullptr)
+		return false;
+
+	if (Length == 0 || Base64::GetMaxDecodedLength(Length) > VEHICLEDAMAGE_MAX_SIZE)
+	{
+		pState->Error(_gstr("invalid vehicle damage"));
+		return false;
+	}
+
+	uint8_t* pData = (uint8_t*)GAlloc(Base64::GetMaxDecodedLength(Length));
+	size_t Size;
+	bool bSet = Base64::Decode(pszDamage, Length, pData, Size) && pServerVehicle->SetDamageData(pData, Size, nullptr);
+	GFree(pData);
+
+	if (!bSet)
+	{
+		pState->Error(_gstr("invalid vehicle damage"));
+		return false;
+	}
+
+	return true;
+}
+
 static bool FunctionVehicleGetEngineHealth(IScriptState* pState, int argc, void* pUser)
 {
 	CMafiaServerManager* pServerManager = (CMafiaServerManager*)pUser;
@@ -763,7 +840,8 @@ static bool FunctionPlayerHudMsg(IScriptState* pState, int argc, void* pUser)
 	unsigned int color = 0;
 	if (!pState->CheckNumber(2, color)) return false;
 
-	Packet.Write<GChar*>((GChar*)msg);
+	CBinaryWriter Writer(&Packet);
+	Writer.WriteString(msg);
 	Packet.Write<unsigned int>(color);
 
 	pClient->SendPacket(&Packet, PACKETPRIORITY_DEFAULT);
@@ -808,7 +886,8 @@ static bool FunctionPlayerChangeMap(IScriptState* pState, int argc, void* pUser)
 	if (!szMapName) return false;
 
 	Packet Packet(MAFIAPACKET_CHANGEMAP);
-	Packet.Write<GChar*>((GChar*)szMapName);
+	CBinaryWriter Writer(&Packet);
+	Writer.WriteString(szMapName);
 
 	pClient->SendPacket(&Packet, PACKETPRIORITY_DEFAULT);
 
@@ -848,7 +927,8 @@ static bool FunctionPlayerAnnounce(IScriptState* pState, int argc, void* pUser)
 	float time = 0;
 	if (!pState->CheckNumber(2, time)) return false;
 
-	Packet.Write<GChar*>((GChar*)msg);
+	CBinaryWriter Writer(&Packet);
+	Writer.WriteString(msg);
 	Packet.Write<float>(time);
 
 	pClient->SendPacket(&Packet, PACKETPRIORITY_DEFAULT);
@@ -1427,7 +1507,7 @@ void CMafiaServerManager::RegisterFunctions(CScripting* pScripting)
 		//m_pServerVehicleClass->AddProperty(this, _gstr("locked"), ARGUMENT_BOOLEAN, FunctionVehicleGetLocked, FunctionVehicleSetLocked);
 		m_pServerVehicleClass->AddProperty(this, _gstr("siren"), ARGUMENT_BOOLEAN, FunctionVehicleGetSiren, FunctionVehicleSetSiren);
 		m_pServerVehicleClass->AddProperty(this, _gstr("engine"), ARGUMENT_BOOLEAN, FunctionVehicleGetEngine, FunctionVehicleSetEngine);
-		//m_pServerVehicleClass->AddProperty(this, _gstr("roof"), ARGUMENT_BOOLEAN, FunctionVehicleGetRoof, FunctionVehicleSetRoof);
+		m_pServerVehicleClass->AddProperty(this, _gstr("roof"), ARGUMENT_BOOLEAN, FunctionVehicleGetRoof, FunctionVehicleSetRoof);
 		m_pServerVehicleClass->AddProperty(this, _gstr("lights"), ARGUMENT_BOOLEAN, FunctionVehicleGetLights, FunctionVehicleSetLights);
 		m_pServerVehicleClass->AddProperty(this, _gstr("fuel"), ARGUMENT_FLOAT, FunctionVehicleGetFuel, FunctionVehicleSetFuel);
 		m_pServerVehicleClass->AddProperty(this, _gstr("wheelAngle"), ARGUMENT_FLOAT, FunctionVehicleGetWheelAngle, FunctionVehicleSetWheelAngle);
@@ -1437,6 +1517,8 @@ void CMafiaServerManager::RegisterFunctions(CScripting* pScripting)
 		//m_pServerVehicleClass->AddProperty(this, _gstr("turnVelocity"), ARGUMENT_VECTOR3D, FunctionVehicleGetRotationVelocity, FunctionVehicleSetRotationVelocity);
 		//m_pServerVehicleClass->AddProperty(this, _gstr("velocity"), ARGUMENT_VECTOR3D, FunctionVehicleGetVelocity, FunctionVehicleSetVelocity);
 		m_pServerVehicleClass->AddProperty(this, _gstr("engineHealth"), ARGUMENT_FLOAT, FunctionVehicleGetEngineHealth, FunctionVehicleSetEngineHealth);
+		m_pServerVehicleClass->AddProperty(this, _gstr("health"), ARGUMENT_FLOAT, FunctionVehicleGetHealth, FunctionVehicleSetHealth);
+		m_pServerVehicleClass->AddProperty(this, _gstr("damage"), ARGUMENT_STRING, FunctionVehicleGetDamage, FunctionVehicleSetDamage);
 		m_pServerVehicleClass->RegisterFunction(_gstr("fix"), _gstr("t"), FunctionVehicleFix, this);
 		m_pServerVehicleClass->RegisterFunction(_gstr("getOccupant"), _gstr("ti"), FunctionVehicleGetOccupant, this);
 		m_pServerVehicleClass->RegisterFunction(_gstr("getOccupants"), _gstr("t"), FunctionVehicleGetOccupants, this);
