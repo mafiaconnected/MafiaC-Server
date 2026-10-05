@@ -44,11 +44,12 @@ void CPeer2PeerSystem::ProcessPacket(Peer_t Peer, unsigned int PacketID, Galacti
 					ReplyWithElementId(Guid, INVALID_NETWORK_ID);
 					return;
 				}
-				if (pVehicle->m_ucCreatedBy == ELEMENTCREATEDBY_POPULATION)
+				// The create packet doesn't carry m_ucCreatedBy, and only the client's traffic sends this packet
+				pVehicle->m_ucCreatedBy = ELEMENTCREATEDBY_POPULATION;
 				{
 					CVector3D vecPos;
 					pVehicle->GetPosition(vecPos);
-					if (m_pManager->IsAnythingBlocking(vecPos))
+					if (m_pManager->IsAnythingBlocking(vecPos, pClient))
 					{
 						//_glogwarnprintf(_gstr("PEER2PEER: Rejected vehicle %llu"), Guid);
 
@@ -66,6 +67,8 @@ void CPeer2PeerSystem::ProcessPacket(Peer_t Peer, unsigned int PacketID, Galacti
 					pVehicle->SetCreatedFor(pClient, true);
 					pVehicle->SetSyncer(pClient, false);
 				}
+				else
+					ReplyWithElementId(Guid, INVALID_NETWORK_ID);
 			}
 			break;
 
@@ -82,6 +85,24 @@ void CPeer2PeerSystem::ProcessPacket(Peer_t Peer, unsigned int PacketID, Galacti
 					ReplyWithElementId(Guid, INVALID_NETWORK_ID);
 					break;
 				}
+				// Only the client's pedestrians (and traffic drivers) send this packet
+				pPed->m_ucCreatedBy = ELEMENTCREATEDBY_POPULATION;
+
+				// A driver comes in already seated. The create packet only records which vehicle, so the seat itself
+				// has to be taken here, or a player getting in wouldn't throw it out (CServerHuman::EnterVehicleSeat).
+				if (pPed->m_nVehicleNetworkIndex != INVALID_NETWORK_ID)
+				{
+					int8_t nSeat = pPed->m_nSeat;
+					auto pVehicle = static_cast<CServerVehicle*>(m_pManager->FromId(pPed->m_nVehicleNetworkIndex, ELEMENT_VEHICLE));
+					if (pVehicle == nullptr || nSeat < 0 || nSeat >= ARRAY_COUNT(CServerVehicle::m_pProbableOccupants))
+					{
+						ReplyWithElementId(Guid, INVALID_NETWORK_ID);
+						break;
+					}
+
+					pPed->m_bTrafficDriver = true;
+					pPed->EnterVehicleSeat(pVehicle, nSeat);
+				}
 				if (m_pManager->RegisterNetObject(pPed))
 				{
 					//_glogprintf(_gstr("PEER2PEER: Civilian %llu assigned to %d"), Guid, pPed->GetId());
@@ -91,6 +112,8 @@ void CPeer2PeerSystem::ProcessPacket(Peer_t Peer, unsigned int PacketID, Galacti
 					pPed->SetCreatedFor(pClient, true);
 					pPed->SetSyncer(pClient, false);
 				}
+				else
+					ReplyWithElementId(Guid, INVALID_NETWORK_ID);
 			}
 			break;
 

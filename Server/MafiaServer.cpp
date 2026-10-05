@@ -766,6 +766,7 @@ bool CMafiaServer::ParseConfig(const CServerConfiguration& Config)
 		return false;
 
 	_gstrlcpy(m_szMap, Config.GetStringValue(_gstr("mapname"), _gstr("")), ARRAY_COUNT(m_szMap));
+	m_bSyncLocalEntities = Config.GetBoolValue(_gstr("synclocalentities"), true);
 
 	return true;
 }

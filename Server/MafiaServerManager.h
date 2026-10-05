@@ -59,8 +59,10 @@ public:
 	Galactic3D::ReflectedClass* m_pServerActorClass;
 
 	virtual CNetObject* Create(int32_t nType) override;
+	virtual bool ShouldHandOffDroppedElement(CNetObject* pObject) override;
 
-	bool IsAnythingBlocking(CVector3D vecPos);
+	// pIgnoreSyncedBy: skip what that client syncs - its own traffic already knows where its own cars are
+	bool IsAnythingBlocking(CVector3D vecPos, CNetMachine* pIgnoreSyncedBy = nullptr);
 
 protected:
 	void RegisterFunctions(CScripting* pScripting);

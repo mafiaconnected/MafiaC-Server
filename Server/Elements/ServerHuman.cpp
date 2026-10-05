@@ -121,7 +121,7 @@ bool CServerHuman::ReadSyncPacket(Stream* pStream)
 	m_fHealth = Packet.health;
 	// Just after an approved enter/exit the server's record stands. Otherwise (a ped that got out or in some way that
 	// never went through a request) what the syncer reports is what corrects it.
-	if (!IsVehicleStateAuthoritative())
+	if (!IsVehicleStateAuthoritative() && !m_bTrafficDriverUnseated)
 	{
 		m_nVehicleNetworkIndex = Packet.vehicleNetworkIndex;
 		m_nSeat = (Packet.seat >= 0 && Packet.seat < ARRAY_COUNT(CServerVehicle::m_pProbableOccupants)) ? Packet.seat : -1;
@@ -493,6 +493,8 @@ void CServerHuman::EnterVehicleSeat(CServerVehicle* pVehicle, int8_t iSeat)
 			pDisplaced->m_nSeat = -1;
 			pDisplaced->m_bVehicleStateSet = true;
 			pDisplaced->m_uiVehicleStateSetTicks = OS::GetTicks();
+			if (pDisplaced->m_bTrafficDriver)
+				pDisplaced->m_bTrafficDriverUnseated = true;
 		}
 	}
 
