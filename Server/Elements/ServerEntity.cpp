@@ -35,11 +35,16 @@ CServerEntity::CServerEntity(CMafiaServerManager* pServerManager) : CNetObject(p
 
 void CServerEntity::SetHeading(float fHeading)
 {
-	m_Rotation = CVecTools::ComputeDirEuler(CVecTools::RadToDeg(fHeading));
+	if (static_cast<CMafiaServerManager*>(m_pNetObjectMgr)->IsMafiaTwo())
+		m_Rotation = CVector3D(0.0f, 0.0f, fHeading);
+	else
+		m_Rotation = CVecTools::ComputeDirEuler(CVecTools::RadToDeg(fHeading));
 }
 
 float CServerEntity::GetHeading(void)
 {
+	if (static_cast<CMafiaServerManager*>(m_pNetObjectMgr)->IsMafiaTwo())
+		return m_Rotation.z;
 	return CVecTools::DegToRad(CVecTools::DirToRotation360(CVecTools::EulerToDir(m_Rotation)));
 }
 

@@ -3,6 +3,7 @@
 
 #include "pch.h"
 #include "MafiaServer.h"
+#include "CrashDump.h"
 #ifdef _WIN32
 #include <crtdbg.h>
 #include <conio.h>
@@ -94,6 +95,9 @@ int _tmain(int argc, _TCHAR* argv[])
 int main(int argc, char* argv[])
 #endif
 {
+	// Before anything else, and in particular before SpiderMonkey installs its own fault handlers, which chain to ours
+	CCrashDump::Install();
+
 #ifdef _WIN32
 	_CrtSetDbgFlag(_CRTDBG_LEAK_CHECK_DF | _CRTDBG_ALLOC_MEM_DF);
 	_CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_WNDW);

@@ -264,6 +264,8 @@ void CServerHuman::Shoot(bool state, const CVector3D& distPos)
 
 void CServerHuman::SetHealth(float fHealth)
 {
+	m_fHealth = fHealth;
+
 	Packet Packet(MAFIAPACKET_HUMAN_SETHEALTH);
 	Packet.Write<int32_t>(GetId());
 	Packet.Write<float>(fHealth);
@@ -303,7 +305,8 @@ void CServerHuman::ClearInventory()
 {
 	for (int i = 0; i < 8; i++)
 	{
-		TakeWeapon(items[i].weapId);
+		if (items[i].weapId != 0)
+			TakeWeapon(items[i].weapId);
 	}
 }
 
@@ -313,9 +316,9 @@ void CServerHuman::GiveWeapon(unsigned short ucWeapon, unsigned short ucAmmo1, u
 	{
 		auto index = GetFirstEmptyWeaponIndex();
 
-		if (index < 8)
+		if (index >= 0 && index < 8)
 		{
-			InventoryItem item = items[index];
+			InventoryItem& item = items[index];
 
 			item.weapId = ucWeapon;
 			item.ammo1 = ucAmmo1;
@@ -373,7 +376,7 @@ void CServerHuman::TakeWeapon(unsigned short ucWeapon)
 	{
 		auto index = GetIndexOfWeapon(ucWeapon);
 
-		InventoryItem item = items[index];
+		InventoryItem& item = items[index];
 
 		item.weapId = 0;
 		item.ammo1 = 0;
@@ -451,7 +454,65 @@ bool CServerHuman::CanExitVehicle(void)
 
 void CServerHuman::WarpIntoVehicle(CServerVehicle* pVehicle, int8_t iSeat)
 {
+	if (pVehicle == nullptr)
+	{
+		RemoveFromVehicle();
+		return;
+	}
 
+	EnterVehicleSeat(pVehicle, iSeat);
+	m_bVehicleStateSet = true;
+	m_uiVehicleStateSetTicks = OS::GetTicks();
+
+	CVector3D vecPos;
+	if (pVehicle->GetPosition(vecPos))
+		CServerEntity::SetPosition(vecPos);
+
+	Packet Packet(MAFIAPACKET_HUMAN_WARPINTOVEHICLE);
+	Packet.Write<int32_t>(GetId());
+	Packet.Write<int32_t>(pVehicle->GetId());
+	Packet.Write<int8_t>(iSeat);
+	m_pNetObjectMgr->SendObjectRelatedPacket(&Packet, this);
+
+	// The driver drives it
+	if (iSeat == 0 && GetSyncer() != nullptr && pVehicle->CanBeSyncer(GetSyncer()))
+		pVehicle->SetSyncer(GetSyncer(), true);
+}
+
+void CServerHuman::RemoveFromVehicle()
+{
+	LeaveVehicleSeat();
+
+	Packet Packet(MAFIAPACKET_HUMAN_REMOVEFROMVEHICLE);
+	Packet.Write<int32_t>(GetId());
+	m_pNetObjectMgr->SendObjectRelatedPacket(&Packet, this);
+}
+
+void CServerHuman::PlayAnimation(const GChar* pszAnimation, bool bRepeat)
+{
+	Packet Packet(MAFIAPACKET_HUMAN_PLAYANIMATION);
+	Packet.Write<int32_t>(GetId());
+	CBinaryWriter Writer(&Packet);
+	Writer.WriteString(pszAnimation);
+	Packet.Write<bool>(bRepeat);
+	m_pNetObjectMgr->SendObjectRelatedPacket(&Packet, this);
+}
+
+void CServerHuman::StopAnimation()
+{
+	Packet Packet(MAFIAPACKET_HUMAN_STOPANIMATION);
+	Packet.Write<int32_t>(GetId());
+	m_pNetObjectMgr->SendObjectRelatedPacket(&Packet, this);
+}
+
+void CServerHuman::SetWeapon(int16_t iWeapon)
+{
+	m_WeaponId = iWeapon;
+
+	Packet Packet(MAFIAPACKET_HUMAN_CHANGEWEAP);
+	Packet.Write<int32_t>(GetId());
+	Packet.Write<int32_t>((int32_t)iWeapon);
+	m_pNetObjectMgr->SendObjectRelatedPacket(&Packet, this);
 }
 
 bool CServerHuman::IsVehicleStateAuthoritative()

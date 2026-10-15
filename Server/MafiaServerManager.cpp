@@ -35,7 +35,8 @@ void CMafiaClient::SpawnPlayer(const CVector3D& vecPos, float fRotation, const G
 	// The special "set position" packet was fucking this up
 	// I removed the packet send for now. This will just update the net object's position data
 	pPlayer->SetPosition(vecPos);
-	pPlayer->SetRotation(CVecTools::ComputeDirEuler(fRotation));
+	if (!static_cast<CMafiaServerManager*>(m_pNetObjectMgr)->IsMafiaTwo())
+		pPlayer->SetRotation(CVecTools::ComputeDirEuler(fRotation));
 
 	if (!m_pNetObjectMgr->RegisterNetObject(pPlayer))
 		return;
@@ -189,6 +190,11 @@ CNetObject* CMafiaServerManager::Create(int32_t nType)
 
 // A traffic car's driver goes on with the car, unless it was thrown out of its seat (the car was jacked): the
 // one that was seen thrown out is gone on the client that synced it, so it can't live on anywhere else either.
+bool CMafiaServerManager::IsMafiaTwo()
+{
+	return m_pMafiaServer->m_GameId == GAME_MAFIA_TWO;
+}
+
 bool CMafiaServerManager::ShouldHandOffDroppedElement(CNetObject* pObject)
 {
 	if (!pObject->IsType(ELEMENT_PED))
@@ -1025,7 +1031,7 @@ static bool FunctionCreateVehicle(IScriptState* pState, int argc, void* pUser)
 	pServerVehicle = Strong<CServerVehicle>::New(pServerManager->Create(ELEMENT_VEHICLE));
 
 	//angle = CVecTools::RadToDeg(angle);
-	CVector3D vecRot = CVecTools::ComputeDirEuler(angle);
+	CVector3D vecRot = pServerManager->IsMafiaTwo() ? CVector3D(0.0f, 0.0f, angle) : CVecTools::ComputeDirEuler(angle);
 
 	//_glogprintf(_gstr("ROTATION: %f, %f, %f"), vecRot.x, vecRot.y, vecRot.z);
 
@@ -1173,6 +1179,8 @@ static bool FunctionCreateHuman(IScriptState* pState, int argc, void* pUser)
 
 	pPed->SetModel(sModel);
 	pPed->SetPosition(vecPos);
+	if (pServerManager->IsMafiaTwo())
+		pPed->SetHeading(angle);
 	pPed->m_pResource = pState->GetResource();
 	pServerManager->RegisterNetObject(pPed);
 	pPed->OnSpawned();
@@ -1386,7 +1394,7 @@ static bool FunctionPedSetHealth(IScriptState* pState, int argc, void* pUser)
 		return false;
 
 	float health = 0;
-	if (pState->CheckNumber(0, health))
+	if (!pState->CheckNumber(0, health))
 		return false;
 
 	pServerPed->SetHealth(health);
@@ -1493,6 +1501,352 @@ static bool FunctionGetElementCount(IScriptState* pState, int argc, void* pUser)
 	return true;
 }
 
+// Ped and vehicle functions added for Mafia 2. Most work with Mafia 1 too, the Mafia 2 looks only do anything there.
+
+static CServerHuman* GetThisHuman(IScriptState* pState, void* pUser)
+{
+	CMafiaServerManager* pServerManager = (CMafiaServerManager*)pUser;
+	CServerHuman* pServerHuman;
+	if (!pState->GetThis(pServerManager->m_pServerHumanClass, &pServerHuman))
+		return nullptr;
+	return pServerHuman;
+}
+
+static CServerVehicle* GetThisVehicle(IScriptState* pState, void* pUser)
+{
+	CMafiaServerManager* pServerManager = (CMafiaServerManager*)pUser;
+	CServerVehicle* pServerVehicle;
+	if (!pState->GetThis(pServerManager->m_pServerVehicleClass, &pServerVehicle))
+		return nullptr;
+	return pServerVehicle;
+}
+
+static bool FunctionPedKill(IScriptState* pState, int argc, void* pUser)
+{
+	auto pPed = GetThisHuman(pState, pUser);
+	if (pPed == nullptr)
+		return false;
+	pPed->Kill();
+	return true;
+}
+
+static bool FunctionPedTakeWeapon(IScriptState* pState, int argc, void* pUser)
+{
+	auto pPed = GetThisHuman(pState, pUser);
+	if (pPed == nullptr)
+		return false;
+	uint16_t usWeapon = 0;
+	if (!pState->CheckNumber(0, usWeapon))
+		return false;
+	pPed->TakeWeapon(usWeapon);
+	return true;
+}
+
+static bool FunctionPedClearWeapons(IScriptState* pState, int argc, void* pUser)
+{
+	auto pPed = GetThisHuman(pState, pUser);
+	if (pPed == nullptr)
+		return false;
+	pPed->ClearInventory();
+	return true;
+}
+
+static bool FunctionPedGetWeapon(IScriptState* pState, int argc, void* pUser)
+{
+	auto pPed = GetThisHuman(pState, pUser);
+	if (pPed == nullptr)
+		return false;
+	pState->ReturnNumber(pPed->m_WeaponId);
+	return true;
+}
+
+static bool FunctionPedSetWeapon(IScriptState* pState, int argc, void* pUser)
+{
+	auto pPed = GetThisHuman(pState, pUser);
+	if (pPed == nullptr)
+		return false;
+	int32_t iWeapon = 0;
+	if (!pState->CheckNumber(0, iWeapon))
+		return false;
+	pPed->SetWeapon((int16_t)iWeapon);
+	return true;
+}
+
+static bool FunctionPedWarpIntoVehicle(IScriptState* pState, int argc, void* pUser)
+{
+	CMafiaServerManager* pServerManager = (CMafiaServerManager*)pUser;
+	auto pPed = GetThisHuman(pState, pUser);
+	if (pPed == nullptr)
+		return false;
+	CServerVehicle* pVehicle;
+	if (!pState->CheckClass(pServerManager->m_pServerVehicleClass, 0, false, &pVehicle))
+		return false;
+	int32_t iSeat = 0;
+	if (argc > 1 && !pState->CheckNumber(1, iSeat))
+		return false;
+	if (iSeat < 0 || iSeat >= (int32_t)ARRAY_COUNT(CServerVehicle::m_pProbableOccupants))
+		return pState->Error(_gstr("invalid seat %d"), iSeat);
+	pPed->WarpIntoVehicle(pVehicle, (int8_t)iSeat);
+	return true;
+}
+
+static bool FunctionPedRemoveFromVehicle(IScriptState* pState, int argc, void* pUser)
+{
+	auto pPed = GetThisHuman(pState, pUser);
+	if (pPed == nullptr)
+		return false;
+	pPed->RemoveFromVehicle();
+	return true;
+}
+
+static bool FunctionPedPlayAnimation(IScriptState* pState, int argc, void* pUser)
+{
+	auto pPed = GetThisHuman(pState, pUser);
+	if (pPed == nullptr)
+		return false;
+	const GChar* pszAnimation = pState->CheckString(0);
+	if (pszAnimation == nullptr)
+		return false;
+	bool bRepeat = false;
+	if (argc > 1 && !pState->CheckBoolean(1, bRepeat))
+		return false;
+	pPed->PlayAnimation(pszAnimation, bRepeat);
+	return true;
+}
+
+static bool FunctionPedStopAnimation(IScriptState* pState, int argc, void* pUser)
+{
+	auto pPed = GetThisHuman(pState, pUser);
+	if (pPed == nullptr)
+		return false;
+	pPed->StopAnimation();
+	return true;
+}
+
+static bool FunctionPedGetCrouching(IScriptState* pState, int argc, void* pUser)
+{
+	auto pPed = GetThisHuman(pState, pUser);
+	if (pPed == nullptr)
+		return false;
+	pState->ReturnBoolean(pPed->m_IsCrouching);
+	return true;
+}
+
+static bool FunctionPedGetAiming(IScriptState* pState, int argc, void* pUser)
+{
+	auto pPed = GetThisHuman(pState, pUser);
+	if (pPed == nullptr)
+		return false;
+	pState->ReturnBoolean(pPed->m_IsAiming);
+	return true;
+}
+
+static bool FunctionPedGetShooting(IScriptState* pState, int argc, void* pUser)
+{
+	auto pPed = GetThisHuman(pState, pUser);
+	if (pPed == nullptr)
+		return false;
+	pState->ReturnBoolean(pPed->m_IsShooting);
+	return true;
+}
+
+static bool FunctionPedGetAimTarget(IScriptState* pState, int argc, void* pUser)
+{
+	auto pPed = GetThisHuman(pState, pUser);
+	if (pPed == nullptr)
+		return false;
+	pState->ReturnVector3D(pPed->m_AimVector);
+	return true;
+}
+
+static bool FunctionVehicleExplode(IScriptState* pState, int argc, void* pUser)
+{
+	auto pVehicle = GetThisVehicle(pState, pUser);
+	if (pVehicle == nullptr)
+		return false;
+	pVehicle->Explode();
+	return true;
+}
+
+static bool FunctionVehicleGetHorn(IScriptState* pState, int argc, void* pUser)
+{
+	auto pVehicle = GetThisVehicle(pState, pUser);
+	if (pVehicle == nullptr)
+		return false;
+	pState->ReturnBoolean(pVehicle->m_Horn);
+	return true;
+}
+
+static bool FunctionVehicleGetColour1(IScriptState* pState, int argc, void* pUser)
+{
+	auto pVehicle = GetThisVehicle(pState, pUser);
+	if (pVehicle == nullptr)
+		return false;
+	pState->ReturnNumber(pVehicle->m_Mafia2.primaryColour);
+	return true;
+}
+
+static bool FunctionVehicleSetColour1(IScriptState* pState, int argc, void* pUser)
+{
+	auto pVehicle = GetThisVehicle(pState, pUser);
+	if (pVehicle == nullptr)
+		return false;
+	uint32_t uiColour;
+	if (!pState->CheckNumber(0, uiColour))
+		return false;
+	tVehicleMafia2Packet State = pVehicle->m_Mafia2;
+	State.primaryColour = uiColour & 0xFFFFFF;
+	State.flags |= VEHICLEMAFIA2_COLOURS;
+	pVehicle->SetMafia2State(State, nullptr);
+	return true;
+}
+
+static bool FunctionVehicleGetColour2(IScriptState* pState, int argc, void* pUser)
+{
+	auto pVehicle = GetThisVehicle(pState, pUser);
+	if (pVehicle == nullptr)
+		return false;
+	pState->ReturnNumber(pVehicle->m_Mafia2.secondaryColour);
+	return true;
+}
+
+static bool FunctionVehicleSetColour2(IScriptState* pState, int argc, void* pUser)
+{
+	auto pVehicle = GetThisVehicle(pState, pUser);
+	if (pVehicle == nullptr)
+		return false;
+	uint32_t uiColour;
+	if (!pState->CheckNumber(0, uiColour))
+		return false;
+	tVehicleMafia2Packet State = pVehicle->m_Mafia2;
+	State.secondaryColour = uiColour & 0xFFFFFF;
+	State.flags |= VEHICLEMAFIA2_COLOURS;
+	pVehicle->SetMafia2State(State, nullptr);
+	return true;
+}
+
+static bool FunctionVehicleSetColours(IScriptState* pState, int argc, void* pUser)
+{
+	auto pVehicle = GetThisVehicle(pState, pUser);
+	if (pVehicle == nullptr)
+		return false;
+	uint32_t uiPrimary, uiSecondary;
+	if (!pState->CheckNumber(0, uiPrimary))
+		return false;
+	if (!pState->CheckNumber(1, uiSecondary))
+		return false;
+	tVehicleMafia2Packet State = pVehicle->m_Mafia2;
+	State.primaryColour = uiPrimary & 0xFFFFFF;
+	State.secondaryColour = uiSecondary & 0xFFFFFF;
+	State.flags |= VEHICLEMAFIA2_COLOURS;
+	pVehicle->SetMafia2State(State, nullptr);
+	return true;
+}
+
+static bool FunctionVehicleGetPlate(IScriptState* pState, int argc, void* pUser)
+{
+	auto pVehicle = GetThisVehicle(pState, pUser);
+	if (pVehicle == nullptr)
+		return false;
+	CString Plate(true, pVehicle->m_Mafia2.plate);
+	pState->ReturnString(Plate.CString());
+	return true;
+}
+
+static bool FunctionVehicleSetPlate(IScriptState* pState, int argc, void* pUser)
+{
+	auto pVehicle = GetThisVehicle(pState, pUser);
+	if (pVehicle == nullptr)
+		return false;
+	const GChar* pszPlate = pState->CheckString(0);
+	if (pszPlate == nullptr)
+		return false;
+	UTF8String Plate(false, pszPlate);
+	tVehicleMafia2Packet State = pVehicle->m_Mafia2;
+	if (strlen(Plate.CString()) >= sizeof(State.plate) - 1)
+		return pState->Error(_gstr("plate text too long (6 characters at most)"));
+	memset(State.plate, 0, sizeof(State.plate));
+	memcpy(State.plate, Plate.CString(), strlen(Plate.CString()));
+	pVehicle->SetMafia2State(State, nullptr);
+	return true;
+}
+
+static bool FunctionVehicleGetDirt(IScriptState* pState, int argc, void* pUser)
+{
+	auto pVehicle = GetThisVehicle(pState, pUser);
+	if (pVehicle == nullptr)
+		return false;
+	pState->ReturnNumber(pVehicle->m_Mafia2.dirt);
+	return true;
+}
+
+static bool FunctionVehicleSetDirt(IScriptState* pState, int argc, void* pUser)
+{
+	auto pVehicle = GetThisVehicle(pState, pUser);
+	if (pVehicle == nullptr)
+		return false;
+	float fDirt;
+	if (!pState->CheckNumber(0, fDirt))
+		return false;
+	tVehicleMafia2Packet State = pVehicle->m_Mafia2;
+	State.dirt = fDirt < 0.0f ? 0.0f : (fDirt > 1.0f ? 1.0f : fDirt);
+	pVehicle->SetMafia2State(State, nullptr);
+	return true;
+}
+
+static bool FunctionVehicleGetTuning(IScriptState* pState, int argc, void* pUser)
+{
+	auto pVehicle = GetThisVehicle(pState, pUser);
+	if (pVehicle == nullptr)
+		return false;
+	pState->ReturnNumber(pVehicle->m_Mafia2.tuning);
+	return true;
+}
+
+static bool FunctionVehicleSetTuning(IScriptState* pState, int argc, void* pUser)
+{
+	auto pVehicle = GetThisVehicle(pState, pUser);
+	if (pVehicle == nullptr)
+		return false;
+	int32_t iTuning;
+	if (!pState->CheckNumber(0, iTuning))
+		return false;
+	tVehicleMafia2Packet State = pVehicle->m_Mafia2;
+	State.tuning = iTuning;
+	State.flags |= VEHICLEMAFIA2_TUNING;
+	pVehicle->SetMafia2State(State, nullptr);
+	return true;
+}
+
+#define VEHICLE_MAFIA2_FLAG_PROPERTY(Name, Flag) \
+	static bool FunctionVehicleGet##Name(IScriptState* pState, int argc, void* pUser) \
+	{ \
+		auto pVehicle = GetThisVehicle(pState, pUser); \
+		if (pVehicle == nullptr) \
+			return false; \
+		pState->ReturnBoolean(pVehicle->GetMafia2Flag(Flag)); \
+		return true; \
+	} \
+	static bool FunctionVehicleSet##Name(IScriptState* pState, int argc, void* pUser) \
+	{ \
+		auto pVehicle = GetThisVehicle(pState, pUser); \
+		if (pVehicle == nullptr) \
+			return false; \
+		bool bOn; \
+		if (!pState->CheckBoolean(0, bOn)) \
+			return false; \
+		pVehicle->SetMafia2Flag(Flag, bOn); \
+		return true; \
+	}
+
+VEHICLE_MAFIA2_FLAG_PROPERTY(Beacon, VEHICLEMAFIA2_BEACON)
+VEHICLE_MAFIA2_FLAG_PROPERTY(TaxiLight, VEHICLEMAFIA2_TAXILIGHT)
+VEHICLE_MAFIA2_FLAG_PROPERTY(IndicatorLeft, VEHICLEMAFIA2_INDICATORLEFT)
+VEHICLE_MAFIA2_FLAG_PROPERTY(IndicatorRight, VEHICLEMAFIA2_INDICATORRIGHT)
+VEHICLE_MAFIA2_FLAG_PROPERTY(Hood, VEHICLEMAFIA2_HOOD)
+VEHICLE_MAFIA2_FLAG_PROPERTY(Trunk, VEHICLEMAFIA2_TRUNK)
+VEHICLE_MAFIA2_FLAG_PROPERTY(Wipers, VEHICLEMAFIA2_WIPERS)
+
 void CMafiaServerManager::RegisterFunctions(CScripting* pScripting)
 {
 	auto pGameNamespace = pScripting->m_Global.AddNamespace(_gstr("mafia"));
@@ -1522,7 +1876,23 @@ void CMafiaServerManager::RegisterFunctions(CScripting* pScripting)
 	}
 
 	{
-		//m_pServerVehicleClass->AddProperty(this, _gstr("locked"), ARGUMENT_BOOLEAN, FunctionVehicleGetLocked, FunctionVehicleSetLocked);
+		m_pServerVehicleClass->AddProperty(this, _gstr("locked"), ARGUMENT_BOOLEAN, FunctionVehicleGetLocked, FunctionVehicleSetLocked);
+		m_pServerVehicleClass->AddProperty(this, _gstr("horn"), ARGUMENT_BOOLEAN, FunctionVehicleGetHorn);
+		m_pServerVehicleClass->RegisterFunction(_gstr("explode"), _gstr("t"), FunctionVehicleExplode, this);
+		// Mafia 2
+		m_pServerVehicleClass->AddProperty(this, _gstr("colour1"), ARGUMENT_INTEGER, FunctionVehicleGetColour1, FunctionVehicleSetColour1);
+		m_pServerVehicleClass->AddProperty(this, _gstr("colour2"), ARGUMENT_INTEGER, FunctionVehicleGetColour2, FunctionVehicleSetColour2);
+		m_pServerVehicleClass->RegisterFunction(_gstr("setColours"), _gstr("tii"), FunctionVehicleSetColours, this);
+		m_pServerVehicleClass->AddProperty(this, _gstr("plate"), ARGUMENT_STRING, FunctionVehicleGetPlate, FunctionVehicleSetPlate);
+		m_pServerVehicleClass->AddProperty(this, _gstr("dirt"), ARGUMENT_FLOAT, FunctionVehicleGetDirt, FunctionVehicleSetDirt);
+		m_pServerVehicleClass->AddProperty(this, _gstr("tuning"), ARGUMENT_INTEGER, FunctionVehicleGetTuning, FunctionVehicleSetTuning);
+		m_pServerVehicleClass->AddProperty(this, _gstr("beacon"), ARGUMENT_BOOLEAN, FunctionVehicleGetBeacon, FunctionVehicleSetBeacon);
+		m_pServerVehicleClass->AddProperty(this, _gstr("taxiLight"), ARGUMENT_BOOLEAN, FunctionVehicleGetTaxiLight, FunctionVehicleSetTaxiLight);
+		m_pServerVehicleClass->AddProperty(this, _gstr("indicatorLeft"), ARGUMENT_BOOLEAN, FunctionVehicleGetIndicatorLeft, FunctionVehicleSetIndicatorLeft);
+		m_pServerVehicleClass->AddProperty(this, _gstr("indicatorRight"), ARGUMENT_BOOLEAN, FunctionVehicleGetIndicatorRight, FunctionVehicleSetIndicatorRight);
+		m_pServerVehicleClass->AddProperty(this, _gstr("hood"), ARGUMENT_BOOLEAN, FunctionVehicleGetHood, FunctionVehicleSetHood);
+		m_pServerVehicleClass->AddProperty(this, _gstr("trunk"), ARGUMENT_BOOLEAN, FunctionVehicleGetTrunk, FunctionVehicleSetTrunk);
+		m_pServerVehicleClass->AddProperty(this, _gstr("wipers"), ARGUMENT_BOOLEAN, FunctionVehicleGetWipers, FunctionVehicleSetWipers);
 		m_pServerVehicleClass->AddProperty(this, _gstr("siren"), ARGUMENT_BOOLEAN, FunctionVehicleGetSiren, FunctionVehicleSetSiren);
 		m_pServerVehicleClass->AddProperty(this, _gstr("engine"), ARGUMENT_BOOLEAN, FunctionVehicleGetEngine, FunctionVehicleSetEngine);
 		m_pServerVehicleClass->AddProperty(this, _gstr("roof"), ARGUMENT_BOOLEAN, FunctionVehicleGetRoof, FunctionVehicleSetRoof);
@@ -1548,7 +1918,7 @@ void CMafiaServerManager::RegisterFunctions(CScripting* pScripting)
 		m_pServerHumanClass->AddProperty(this, _gstr("skin"), ARGUMENT_STRING, FunctionPedGetSkin, FunctionPedSetSkin);
 		m_pServerHumanClass->AddProperty(this, _gstr("vehicle"), ARGUMENT_OBJECT, FunctionPedGetOccupiedVehicle);
 		m_pServerHumanClass->AddProperty(this, _gstr("seat"), ARGUMENT_INTEGER, FunctionPedGetSeat);
-		m_pServerHumanClass->AddProperty(this, _gstr("health"), ARGUMENT_FLOAT, FunctionPedGetHealth);
+		m_pServerHumanClass->AddProperty(this, _gstr("health"), ARGUMENT_FLOAT, FunctionPedGetHealth, FunctionPedSetHealth);
 		m_pServerHumanClass->AddProperty(this, _gstr("animationState"), ARGUMENT_INTEGER, FunctionPedGetAnimationState);
 		//m_pServerPedClass->AddProperty(this, _gstr("weaponAmmunition"), ARGUMENT_INTEGER, FunctionPedGetWeaponAmmunition);
 		//m_pServerPedClass->AddProperty(this, _gstr("weaponClipAmmunition"), ARGUMENT_INTEGER, FunctionPedGetWeaponClipAmmunition);
@@ -1556,6 +1926,18 @@ void CMafiaServerManager::RegisterFunctions(CScripting* pScripting)
 		m_pServerHumanClass->AddProperty(this, _gstr("isEnteringVehicle"), ARGUMENT_BOOLEAN, FunctionPedIsEnteringExitingVehicle);
 		m_pServerHumanClass->AddProperty(this, _gstr("isExitingVehicle"), ARGUMENT_BOOLEAN, FunctionPedIsEnteringExitingVehicle);
 		m_pServerHumanClass->RegisterFunction(_gstr("giveWeapon"), _gstr("tiii"), FunctionHumanGiveWeapon, this);
+		m_pServerHumanClass->RegisterFunction(_gstr("takeWeapon"), _gstr("ti"), FunctionPedTakeWeapon, this);
+		m_pServerHumanClass->RegisterFunction(_gstr("clearWeapons"), _gstr("t"), FunctionPedClearWeapons, this);
+		m_pServerHumanClass->AddProperty(this, _gstr("weapon"), ARGUMENT_INTEGER, FunctionPedGetWeapon, FunctionPedSetWeapon);
+		m_pServerHumanClass->RegisterFunction(_gstr("kill"), _gstr("t"), FunctionPedKill, this);
+		m_pServerHumanClass->RegisterFunction(_gstr("warpIntoVehicle"), _gstr("tx|i"), FunctionPedWarpIntoVehicle, this);
+		m_pServerHumanClass->RegisterFunction(_gstr("removeFromVehicle"), _gstr("t"), FunctionPedRemoveFromVehicle, this);
+		m_pServerHumanClass->RegisterFunction(_gstr("playAnimation"), _gstr("ts|b"), FunctionPedPlayAnimation, this);
+		m_pServerHumanClass->RegisterFunction(_gstr("stopAnimation"), _gstr("t"), FunctionPedStopAnimation, this);
+		m_pServerHumanClass->AddProperty(this, _gstr("crouching"), ARGUMENT_BOOLEAN, FunctionPedGetCrouching);
+		m_pServerHumanClass->AddProperty(this, _gstr("aiming"), ARGUMENT_BOOLEAN, FunctionPedGetAiming);
+		m_pServerHumanClass->AddProperty(this, _gstr("shooting"), ARGUMENT_BOOLEAN, FunctionPedGetShooting);
+		m_pServerHumanClass->AddProperty(this, _gstr("aimTarget"), ARGUMENT_VECTOR3D, FunctionPedGetAimTarget);
 	}
 
 	{

@@ -81,6 +81,16 @@ bool CServerVehicle::ReadCreatePacket(Stream* pStream)
 		GFree(pDamage);
 	}
 
+	if (static_cast<CMafiaServerManager*>(m_pNetObjectMgr)->IsMafiaTwo())
+	{
+		tVehicleMafia2Packet Mafia2;
+		if (pStream->Read(&Mafia2, sizeof(Mafia2)) == sizeof(Mafia2))
+		{
+			Mafia2.plate[sizeof(Mafia2.plate) - 1] = '\0';
+			m_Mafia2 = Mafia2;
+		}
+	}
+
 	//GChar szHost[256];
 	//GetSyncer()->m_IPAddress.ToString(szHost, ARRAY_SIZE(szHost));
 	//_glogprintf(_gstr("Got create packet for vehicle #%d (%s - ip %s):\n\tPosition: [%f, %f, %f]\n\tPos. difference: [%f, %f, %f]\n\tRotation: [%f, %f, %f]\n\tRot. difference: [%f, %f, %f]\n\tMafia Rotation Front: [%f, %f, %f]\n\tMafia Rotation Up: [%f, %f, %f]\n\tMafia Rotation Left: [%f, %f, %f]\n\tHealth: %f\n"), GetId(), GetSyncer()->GetName(), szHost, m_Position.x, m_Position.y, m_Position.z, m_RelPosition.x, m_RelPosition.y, m_RelPosition.z, m_Rotation.x, m_Rotation.y, m_Rotation.z, m_RelRotation.x, m_RelRotation.y, m_RelRotation.z, m_RotationFront.x, m_RotationFront.y, m_RotationFront.z, m_RotationUp.x, m_RotationUp.y, m_RotationUp.z, m_RotationRight.x, m_RotationRight.y, m_RotationRight.z, m_Health);
@@ -102,25 +112,14 @@ bool CServerVehicle::ReadSyncPacket(Stream* pStream)
 	m_RotationUp = Packet.rotationUp;
 	m_RotationRight = Packet.rotationRight;
 	m_quatRot = Packet.quatRot;
-	m_Health = Packet.health;
-	m_EngineHealth = Packet.engineHealth;
-	m_Fuel = Packet.fuel;
-	m_SoundEnabled = Packet.sound;
-	m_Engine = Packet.engineOn;
-	m_Horn = Packet.horn;
-	m_Siren = Packet.siren;
-	m_Lights = Packet.lights;
-	m_Roof = Packet.roof;
-	m_Gear = Packet.gear;
 	m_EngineRPM = Packet.rpm;
 	m_Accelerating = Packet.accel;
 	m_Breakval = Packet.brake;
 	m_Handbrake = Packet.handBrake;
-	m_SpeedLimit = Packet.speedLimit;
 	m_Clutch = Packet.clutch;
 	m_WheelAngle = Packet.wheelAngle;
-	m_Velocity = Packet.speed;
-	m_RotVelocity = Packet.rotSpeed;
+	m_Velocity = m_RelPosition;
+	m_RotVelocity = m_RelRotation;
 
 	// Note: Commented out because GetSyncer() currently can be -1 here, which caused a server crash.
 	//GChar szHost[256];
@@ -172,6 +171,9 @@ bool CServerVehicle::WriteCreatePacket(Stream* pStream)
 	if (m_DamageDataSize != 0 && pStream->Write(m_pDamageData, m_DamageDataSize) != m_DamageDataSize)
 		return false;
 
+	if (static_cast<CMafiaServerManager*>(m_pNetObjectMgr)->IsMafiaTwo() && pStream->Write(&m_Mafia2, sizeof(m_Mafia2)) != sizeof(m_Mafia2))
+		return false;
+
 	return true;
 }
 
@@ -186,25 +188,12 @@ bool CServerVehicle::WriteSyncPacket(Stream* pStream)
 	Packet.rotationUp = m_RotationUp;
 	Packet.rotationRight = m_RotationRight;
 	Packet.quatRot = m_quatRot;
-	Packet.health = m_Health;
-	Packet.engineHealth = m_EngineHealth;
-	Packet.fuel = m_Fuel;
-	Packet.sound = m_SoundEnabled;
-	Packet.engineOn = m_Engine;
-	Packet.horn = m_Horn;
-	Packet.siren = m_Siren;
-	Packet.lights = m_Lights;
-	Packet.roof = m_Roof;
-	Packet.gear = m_Gear;
 	Packet.rpm = m_EngineRPM;
 	Packet.accel = m_Accelerating;
 	Packet.brake = m_Breakval;
 	Packet.handBrake = m_Handbrake;
-	Packet.speedLimit = m_SpeedLimit;
 	Packet.clutch = m_Clutch;
 	Packet.wheelAngle = m_WheelAngle;
-	Packet.speed = m_Velocity;
-	Packet.rotSpeed = m_RotVelocity;
 
 	//_glogprintf(_gstr("Sent sync packet for vehicle #%d:\n\tPosition: [%f, %f, %f]\n\tPos. difference: [%f, %f, %f]\n\tRotation: [%f, %f, %f]\n\tRot. difference: [%f, %f, %f]\n\tMafia Rotation Front: [%f, %f, %f]\n\tMafia Rotation Up: [%f, %f, %f]\n\tMafia Rotation Left: [%f, %f, %f]\n\tHealth: %f\n"), GetId(), m_Position.x, m_Position.y, m_Position.z, m_RelPosition.x, m_RelPosition.y, m_RelPosition.z, m_Rotation.x, m_Rotation.y, m_Rotation.z, m_RelRotation.x, m_RelRotation.y, m_RelRotation.z, m_RotationFront.x, m_RotationFront.y, m_RotationFront.z, m_RotationUp.x, m_RotationUp.y, m_RotationUp.z, m_RotationRight.x, m_RotationRight.y, m_RotationRight.z, m_Health);
 
@@ -325,6 +314,96 @@ bool CServerVehicle::SetDamageData(const uint8_t* pData, size_t Size, CNetMachin
 	}
 
 	return true;
+}
+
+void CServerVehicle::GetState(tVehicleStatePacket& State)
+{
+	State.health = m_Health;
+	State.engineHealth = m_EngineHealth;
+	State.fuel = m_Fuel;
+	State.speedLimit = m_SpeedLimit;
+	State.gear = (int8_t)m_Gear;
+	State.flags = 0;
+	if (m_SoundEnabled) State.flags |= VEHICLESTATE_SOUND;
+	if (m_Engine) State.flags |= VEHICLESTATE_ENGINE;
+	if (m_Horn) State.flags |= VEHICLESTATE_HORN;
+	if (m_Siren) State.flags |= VEHICLESTATE_SIREN;
+	if (m_Lights) State.flags |= VEHICLESTATE_LIGHTS;
+	if (m_Roof) State.flags |= VEHICLESTATE_ROOF;
+}
+
+void CServerVehicle::SetState(const tVehicleStatePacket& State, CNetMachine* pExclude)
+{
+	tVehicleStatePacket OldState;
+	GetState(OldState);
+
+	m_Health = State.health;
+	m_EngineHealth = State.engineHealth;
+	m_Fuel = State.fuel;
+	m_SpeedLimit = State.speedLimit;
+	m_Gear = State.gear;
+	m_SoundEnabled = (State.flags & VEHICLESTATE_SOUND) != 0;
+	m_Engine = (State.flags & VEHICLESTATE_ENGINE) != 0;
+	m_Horn = (State.flags & VEHICLESTATE_HORN) != 0;
+	m_Siren = (State.flags & VEHICLESTATE_SIREN) != 0;
+	m_Lights = (State.flags & VEHICLESTATE_LIGHTS) != 0;
+	m_Roof = (State.flags & VEHICLESTATE_ROOF) != 0;
+
+	tVehicleStatePacket NewState;
+	GetState(NewState);
+	if (memcmp(&NewState, &OldState, sizeof(NewState)) == 0 || IsLocal())
+		return;
+
+	Packet Packet(MAFIAPACKET_VEHICLE_STATE);
+	Packet.Write<int32_t>(GetId());
+	Packet.Write(&NewState, sizeof(NewState));
+
+	for (size_t i = 0; i < MAX_MACHINES; i++)
+	{
+		auto pNetMachine = m_pNetObjectMgr->m_pNetMachines->GetMachine(i);
+		if (pNetMachine != nullptr && pNetMachine != pExclude && pNetMachine->m_bJoined && !pNetMachine->m_bConsole && IsCreatedFor(pNetMachine))
+			pNetMachine->SendPacket(&Packet);
+	}
+}
+
+void CServerVehicle::SetMafia2State(const tVehicleMafia2Packet& State, CNetMachine* pExclude)
+{
+	tVehicleMafia2Packet NewState = State;
+	NewState.plate[sizeof(NewState.plate) - 1] = '\0';
+	if (memcmp(&NewState, &m_Mafia2, sizeof(NewState)) == 0)
+		return;
+	m_Mafia2 = NewState;
+
+	if (IsLocal())
+		return;
+
+	Packet Packet(MAFIAPACKET_VEHICLE_MAFIA2);
+	Packet.Write<int32_t>(GetId());
+	Packet.Write(&m_Mafia2, sizeof(m_Mafia2));
+
+	for (size_t i = 0; i < MAX_MACHINES; i++)
+	{
+		auto pNetMachine = m_pNetObjectMgr->m_pNetMachines->GetMachine(i);
+		if (pNetMachine != nullptr && pNetMachine != pExclude && pNetMachine->m_bJoined && !pNetMachine->m_bConsole && IsCreatedFor(pNetMachine))
+			pNetMachine->SendPacket(&Packet);
+	}
+}
+
+void CServerVehicle::SetMafia2Flag(uint16_t usFlag, bool bOn)
+{
+	tVehicleMafia2Packet State = m_Mafia2;
+	if (bOn)
+		State.flags |= usFlag;
+	else
+		State.flags &= ~usFlag;
+	SetMafia2State(State, nullptr);
+}
+
+void CServerVehicle::Explode()
+{
+	Packet Packet(MAFIAPACKET_VEHICLE_EXPLODE);
+	Packet.Write<int32_t>(GetId());
+	m_pNetObjectMgr->SendObjectRelatedPacket(&Packet, this);
 }
 
 void CServerVehicle::ClearDamageData()

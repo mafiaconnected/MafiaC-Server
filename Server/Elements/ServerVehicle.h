@@ -41,6 +41,9 @@ public:
 	uint8_t* m_pDamageData = nullptr;
 	size_t m_DamageDataSize = 0;
 
+	// Mafia 2's looks and extra lights (only sent on a Mafia 2 server)
+	tVehicleMafia2Packet m_Mafia2 = {};
+
 	// Occupants probably in this vehicle
 	Weak<CServerHuman> m_pProbableOccupants[4];
 
@@ -66,6 +69,17 @@ public:
 	// from). False if it isn't a valid blob.
 	bool SetDamageData(const uint8_t* pData, size_t Size, CNetMachine* pExclude);
 	void ClearDamageData();
+
+	// From the syncer (pExclude) or a script (null). Sent to the other clients that have the vehicle if it changed.
+	void SetMafia2State(const tVehicleMafia2Packet& State, CNetMachine* pExclude);
+	void SetMafia2Flag(uint16_t usFlag, bool bOn);
+	bool GetMafia2Flag(uint16_t usFlag) { return (m_Mafia2.flags & usFlag) != 0; }
+
+	void Explode();
+
+	void GetState(tVehicleStatePacket& State);
+	// From the syncer (pExclude). Sent on to the other clients that have the vehicle, if it changed.
+	void SetState(const tVehicleStatePacket& State, CNetMachine* pExclude);
 
 private:
 	// SetDamageData without sending it anywhere

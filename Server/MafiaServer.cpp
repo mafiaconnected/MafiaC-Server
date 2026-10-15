@@ -411,6 +411,22 @@ void CMafiaServer::ProcessPacket(Peer_t Peer, unsigned int PacketID, Galactic3D:
 		}
 		break;
 
+		case MAFIAPACKET_HUMAN_FALL:
+		{
+			int32_t nPedId;
+			Reader.ReadInt32(&nPedId, 1);
+
+			CServerHuman* pPed = (CServerHuman*)m_pManager->FromId(nPedId, ELEMENT_PED);
+			if (pPed == nullptr || pClient != pPed->GetSyncer())
+				break;
+
+			// The ped is already in the air on its syncer, so there's nothing left for a script to prevent
+			CArguments Args(1);
+			Args.AddObject(pPed);
+			static_cast<CMafiaServerManager*>(m_pManager)->m_pOnPedFallEventType->Trigger(Args);
+		}
+		break;
+
 		case MAFIAPACKET_HUMAN_ENTERINGVEHICLE:
 		{
 			int32_t nPedId;
@@ -535,6 +551,15 @@ void CMafiaServer::ProcessPacket(Peer_t Peer, unsigned int PacketID, Galactic3D:
 				Packet.Write<int8_t>(nSeat);
 				m_pManager->SendPacketExcluding(&Packet, pClient);
 			}
+
+			// The exit has already happened on the syncer, so there's nothing left for a script to prevent
+			{
+				CArguments Args(3);
+				Args.AddObject(pPed);
+				Args.AddObject(pVehicle);
+				Args.AddNumber(nSeat);
+				static_cast<CMafiaServerManager*>(m_pManager)->m_pOnPedExitedVehicleEventType->Trigger(Args);
+			}
 		}
 		break;
 
@@ -569,6 +594,15 @@ void CMafiaServer::ProcessPacket(Peer_t Peer, unsigned int PacketID, Galactic3D:
 				Packet.Write<int32_t>(pVehicle->GetId());
 				Packet.Write<int8_t>(nSeat);
 				m_pManager->SendPacketExcluding(&Packet, pClient);
+			}
+
+			// The enter has already happened on the syncer, so there's nothing left for a script to prevent
+			{
+				CArguments Args(3);
+				Args.AddObject(pPed);
+				Args.AddObject(pVehicle);
+				Args.AddNumber(nSeat);
+				static_cast<CMafiaServerManager*>(m_pManager)->m_pOnPedEnteredVehicleEventType->Trigger(Args);
 			}
 
 			if (nSeat == 0 && pVehicle->CanBeSyncer(pClient))
@@ -689,6 +723,44 @@ void CMafiaServer::ProcessPacket(Peer_t Peer, unsigned int PacketID, Galactic3D:
 				_glogwarnprintf(_gstr("Vehicle %d: invalid damage from its syncer (%u bytes)"), nVehicleId, uiSize);
 
 			GFree(pData);
+		}
+		break;
+
+		// A vehicle's syncer reporting a change to its state (lights, roof, health, ...)
+		case MAFIAPACKET_VEHICLE_STATE:
+		{
+			int32_t nVehicleId;
+			if (!Reader.ReadInt32(&nVehicleId, 1))
+				return;
+
+			tVehicleStatePacket State;
+			if (pStream->Read(&State, sizeof(State)) != sizeof(State))
+				return;
+
+			auto pVehicle = static_cast<CServerVehicle*>(m_pManager->FromId(nVehicleId, ELEMENT_VEHICLE));
+			if (pVehicle == nullptr || pVehicle->GetSyncer() != pClient)
+				break;
+
+			pVehicle->SetState(State, pClient);
+		}
+		break;
+
+		// A Mafia 2 vehicle's syncer reporting its looks changed (the driver put the beacon on ...)
+		case MAFIAPACKET_VEHICLE_MAFIA2:
+		{
+			int32_t nVehicleId;
+			if (!Reader.ReadInt32(&nVehicleId, 1))
+				return;
+
+			tVehicleMafia2Packet State;
+			if (pStream->Read(&State, sizeof(State)) != sizeof(State))
+				return;
+
+			auto pVehicle = static_cast<CServerVehicle*>(m_pManager->FromId(nVehicleId, ELEMENT_VEHICLE));
+			if (pVehicle == nullptr || pVehicle->GetSyncer() != pClient)
+				break;
+
+			pVehicle->SetMafia2State(State, pClient);
 		}
 		break;
 

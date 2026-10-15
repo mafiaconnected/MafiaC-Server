@@ -62,6 +62,11 @@ public:
 	virtual bool CanExitVehicle();
 
 	virtual void WarpIntoVehicle(CServerVehicle* pVehicle, int8_t iSeat);
+	void RemoveFromVehicle();
+
+	void PlayAnimation(const GChar* pszAnimation, bool bRepeat);
+	void StopAnimation();
+	void SetWeapon(int16_t iWeapon);
 
 	// Where the server itself has put this ped: set when an enter/exit was approved (MAFIAPACKET_HUMAN_USEVEHICLE).
 	// The ped's own sync packets report it too, but one that was already in flight when the enter/exit was decided

@@ -58,6 +58,10 @@ public:
 	Galactic3D::ReflectedClass* m_pServerObjectClass;
 	Galactic3D::ReflectedClass* m_pServerActorClass;
 
+	// Positions and rotations are the game's own: Mafia 1's is Y up with its rotations as directions, Mafia 2's is Z up with
+	// euler angles in radians (rotation.z the heading)
+	bool IsMafiaTwo();
+
 	virtual CNetObject* Create(int32_t nType) override;
 	virtual bool ShouldHandOffDroppedElement(CNetObject* pObject) override;
 

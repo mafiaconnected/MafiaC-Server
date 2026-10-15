@@ -4,7 +4,7 @@
 
 #include "ServerVersion.h"
 
-#define NETGAME_CURRENT_VERSION 8
+#define NETGAME_CURRENT_VERSION 7
 
 #include <Multiplayer/Packets.h>
 
@@ -89,6 +89,24 @@ enum eMafiaPacket : unsigned int
 	MAFIAPACKET_HUMAN_USEVEHICLE,
 
 	MAFIAPACKET_VEHICLE_SETHEALTH,
+
+	// tVehicleStatePacket after the vehicle id. From a vehicle's syncer when its state changes, and from the server to
+	// the clients that have the vehicle when the server's copy changes.
+	MAFIAPACKET_VEHICLE_STATE,
+	// Sent by a ped's syncer when the game puts the ped into its falling state. Given a fixed id instead of the next
+	// in sequence because the client and server enums don't list the same packets on every branch.
+	MAFIAPACKET_HUMAN_FALL = MAFIAPACKET_NONE + 0x100,
+
+	// Server to the clients that have the ped: put it straight into a vehicle seat (ped id, vehicle id, int8 seat), or out of
+	// whatever vehicle it's in (ped id)
+	MAFIAPACKET_HUMAN_WARPINTOVEHICLE = MAFIAPACKET_NONE + 0x101,
+	MAFIAPACKET_HUMAN_REMOVEFROMVEHICLE = MAFIAPACKET_NONE + 0x102,
+	// tVehicleMafia2Packet after the vehicle id. Mafia 2 vehicles' looks and extra lights, from the server when a script
+	// changes them and from the vehicle's syncer when its driver does.
+	MAFIAPACKET_VEHICLE_MAFIA2 = MAFIAPACKET_NONE + 0x103,
+	// Server to the clients that have the ped: play an animation on it (ped id, string name, bool repeat), or stop it (ped id)
+	MAFIAPACKET_HUMAN_PLAYANIMATION = MAFIAPACKET_NONE + 0x104,
+	MAFIAPACKET_HUMAN_STOPANIMATION = MAFIAPACKET_NONE + 0x105,
 };
 
 struct tEntityCreatePacket
@@ -171,31 +189,63 @@ struct tVehicleCreatePacket
 	CVector3D rotSpeed;
 };
 
+// Only what changes all the time while driving. The rest is tVehicleStatePacket. The speed and turn speed are the
+// entity sync packet's positionRel and rotationRel.
 struct tVehicleSyncPacket
 {
 	CVector3D rotationFront;
 	CVector3D rotationUp;
 	CVector3D rotationRight;
 	CQuaternion quatRot;
-	float health;
-	float engineHealth;
-	float fuel;
-	bool sound;
-	bool engineOn;
-	bool horn;
-	bool siren;
-	bool lights;
-	bool roof; // Up (or the model has none)
-	int32_t gear;
 	float rpm;
 	float accel;
 	float brake;
 	float handBrake;
-	float speedLimit;
 	float clutch;
 	float wheelAngle;
-	CVector3D speed;
-	CVector3D rotSpeed;
+};
+
+#define VEHICLESTATE_SOUND (1 << 0)
+#define VEHICLESTATE_ENGINE (1 << 1)
+#define VEHICLESTATE_HORN (1 << 2)
+#define VEHICLESTATE_SIREN (1 << 3)
+#define VEHICLESTATE_LIGHTS (1 << 4)
+#define VEHICLESTATE_ROOF (1 << 5) // Up (or the model has none)
+
+// Vehicle state that only changes now and then, sent reliably and only when it changes (MAFIAPACKET_VEHICLE_STATE).
+// Streaming in gets it from tVehicleCreatePacket.
+struct tVehicleStatePacket
+{
+	float health;
+	float engineHealth;
+	float fuel;
+	float speedLimit;
+	int8_t gear;
+	uint8_t flags; // VEHICLESTATE_*
+};
+
+#define VEHICLEMAFIA2_BEACON (1 << 0)
+#define VEHICLEMAFIA2_TAXILIGHT (1 << 1)
+#define VEHICLEMAFIA2_HOOD (1 << 2) // Open
+#define VEHICLEMAFIA2_TRUNK (1 << 3) // Open
+#define VEHICLEMAFIA2_WIPERS (1 << 4)
+#define VEHICLEMAFIA2_INDICATORLEFT (1 << 5)
+#define VEHICLEMAFIA2_INDICATORRIGHT (1 << 6)
+#define VEHICLEMAFIA2_COLOURS (1 << 7) // The colours were set (otherwise the game picks)
+#define VEHICLEMAFIA2_TUNING (1 << 8) // The tuning table was set
+
+/*
+	Mafia 2 vehicle looks and lights that Mafia 1 has no use for: after the damage in a vehicle's create packet (only on a
+	"mafia:two" server, so a Mafia 1 server's packets are unchanged) and in MAFIAPACKET_VEHICLE_MAFIA2.
+*/
+struct tVehicleMafia2Packet
+{
+	uint32_t primaryColour; // 0xRRGGBB
+	uint32_t secondaryColour;
+	char plate[8]; // Empty for the game's own
+	float dirt; // 0-1
+	int32_t tuning;
+	uint16_t flags; // VEHICLEMAFIA2_*
 };
 
 /*
